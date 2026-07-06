@@ -1,65 +1,116 @@
+import "./member.css";
 import Image from "next/image";
 
-export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+export default function Member() {
+    return (
+        <>
+            {/* Header */}
+            <header className="header">
+                <div className="logo">
+                    {/* Logo */}
+                    <Image src="" alt="" />
+                </div>
+                <nav>
+                    <a href="">基礎點</a>
+                    <a href="">關於分潤</a>
+                    <a href="">關於我們</a>
+                    <a href="">聯絡我們</a>
+                </nav>
+                <div className="user-area">
+                    <span className="cart">🛒</span>
+                    <Image className="header-avatar" src="/test.png" alt="" width={32} height={32} />
+                    <span>您好，王大明</span>
+                </div>
+            </header>
+
+            {/* Main */}
+            <div className="container">
+                <aside className="sidebar">
+                    <div className="profile">
+                        <Image className="avatar" src="" alt=""/>
+                        <h2>王大明</h2>
+                    </div>
+                    <ul>
+                        <li>會員資料</li>
+                        <li>會員等級</li>
+                        <li>我的訂單</li>
+                        <li className="active">我的優惠</li>
+                        <li>我的評價</li>
+                        <li>收藏清單</li>
+                        <li>最近瀏覽</li>
+                    </ul>
+                </aside>
+
+                {/* 右側 */}
+                <section className="content">
+                    {/* Banner */}
+                    <div className="point-banner">
+                        <div className="point-info">
+                            <h1>0</h1>
+                            <p >累積紅利點，即可折抵下次消費金額</p>
+                        </div>
+                    </div>
+                        <div className="exchange">
+                            兌換詳情
+                        </div>
+                    {/* Tabs */}
+                    <div className="tabs">
+                        <button className="active">全部</button>
+                        <button>已獲得</button>
+                        <button>已使用</button>
+                        <button>已過期</button>
+                    </div>
+                    {/* List */}
+
+                    <div className="history">
+                        <div className="history-item">
+                            <div>
+                                <div className="date">
+                                    2023/08/17
+                                </div>
+                                <div className="title">
+                                    購買活動消費
+                                </div>
+                            </div>
+                            <span className="minus">
+                                -46
+                            </span>
+                        </div>
+                        <div className="history-item">
+                            <div>
+                                <div className="date">
+                                    2023/08/16
+                                </div>
+                                <div className="title">
+                                    購買活動消費 No-show Refund
+                                </div>
+                                <div className="order">
+                                    訂單編號:540051526
+                                </div>
+                            </div>
+                            <span className="plus">
+                                +14
+                            </span>
+                        </div>
+                        <div className="history-item">
+                            <div>
+                                <div className="date">
+                                    2023/08/14
+                                </div>
+                                <div className="title">
+                                    購買活動消費 日本JR關西地區鐵路周遊券
+                                </div>
+                                <div className="order">
+                                    訂單編號:540051234
+                                </div>
+                            </div>
+                            <span className="plus">
+                                +32
+                            </span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </>
+    );
 }
