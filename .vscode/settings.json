@@ -11,5 +11,22 @@
         "statusBar.debuggingForeground": "#FEFCFC",
         "statusBar.noFolderBackground": "#551913",
         "statusBar.noFolderForeground": "#FEFCFC"
+    },
+    "prettier.resolveGlobalModules": false,
+    "prettier.prettierPath": "./node_modules/prettier",
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "prettier.logLevel": "debug",
+    "[html]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[vue]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     }
 }
