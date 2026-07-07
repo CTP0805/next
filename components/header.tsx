@@ -1,6 +1,7 @@
 "use client";
-
+import React from "react";
 import Image from "next/image";
+import "@/app/member.css";
 
 export default function Header() {
     return (

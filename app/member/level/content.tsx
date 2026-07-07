@@ -9,8 +9,10 @@ export default function content() {
                             <h1>0</h1>
                             <p >累積紅利點，即可折抵下次消費金額</p>
                         </div>
-                        <div className="exchange">
-                            兌換詳情
+                        <div className="exchange bg-amber-50 w-[80px] h-[32px] rounded-[2px]">
+                            <a href="./level/points" className="">
+                                傻幣詳情
+                            </a>
                         </div>
                     </div>
                         
