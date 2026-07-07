@@ -24,3 +24,280 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Microsoft JhengHei";
+}
+
+body{
+    background:#f5f5f5;
+}
+
+.header{
+
+    width:100%;
+    height:72px;
+
+    background:#71c8d4;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    padding:0 120px;
+}
+
+.logo img{
+
+    width:45px;
+}
+
+nav{
+
+    display:flex;
+    gap:40px;
+}
+
+nav a{
+
+    text-decoration:none;
+    color:white;
+    font-size:14px;
+}
+
+.user-area{
+
+    display:flex;
+    align-items:center;
+    gap:15px;
+
+    color:white;
+}
+
+.header-avatar{
+
+    width:32px;
+    height:32px;
+
+    border-radius:50%;
+}
+
+.container{
+    width:1280px;
+    margin:40px auto;
+    display:flex;
+    gap:30px;
+}
+
+.sidebar{
+    width:320px;
+    background:white;
+    border-radius:10px;
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+    overflow:hidden;
+}
+
+.profile{
+    padding:40px 0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    border-bottom:1px solid #eee;
+}
+
+.avatar{
+    width:90px;
+    height:90px;
+    border-radius:50%;
+    margin-bottom:20px;
+}
+
+.profile h2{
+    font-size:28px;
+}
+
+.sidebar ul{
+
+    list-style:none;
+}
+
+.sidebar li{
+
+    padding:18px 35px;
+
+    border-bottom:1px solid #eee;
+
+    color:#777;
+
+    cursor:pointer;
+}
+
+.sidebar li.active{
+
+    color:#59c8d5;
+
+    font-weight:bold;
+}
+
+.content{
+
+    flex:1;
+
+    background:white;
+
+    border-radius:10px;
+
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+
+    overflow:hidden;
+}
+
+.point-banner{
+
+    height:210px;
+
+    position:relative;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    border-bottom:1px solid #eee;
+}
+
+.point-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* 整體垂直置中 */
+  align-items: center;     /* 水平置中 */
+
+  height: 100%;
+    width: 100%;
+
+  background: url("/test.png") center/cover no-repeat;
+  text-align: center;
+}
+
+
+.point-info h1{
+
+    font-size:60px;
+  margin: 0;
+  line-height: 1;
+    color:rgb(0, 0, 0);
+}
+
+.point-info p{
+
+    color:rgb(0, 0, 0);
+
+    margin-top:10px;
+}
+.exchange{
+
+    position:absolute;
+
+    bottom:15px;
+
+    right:20px;
+
+    color:#555;
+
+    cursor:pointer;
+}
+
+.tabs{
+
+    display:flex;
+
+    gap:40px;
+
+    padding:20px 35px;
+
+    border-bottom:1px solid #eee;
+}
+
+.tabs button{
+
+    border:none;
+
+    background:none;
+
+    cursor:pointer;
+
+    color:#777;
+
+    font-size:15px;
+}
+
+.tabs .active{
+
+    color:#58c7d3;
+
+    font-weight:bold;
+}
+
+.history{
+
+    padding:0 35px;
+}
+
+.history-item{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:25px 0;
+
+    border-bottom:1px solid #eee;
+}
+
+.date{
+
+    color:#999;
+
+    font-size:13px;
+
+    margin-bottom:8px;
+}
+
+.title{
+
+    font-size:16px;
+
+    margin-bottom:6px;
+}
+
+.order{
+
+    color:#999;
+
+    font-size:13px;
+}
+
+.plus{
+
+    color:#38c172;
+
+    font-size:20px;
+
+    font-weight:bold;
+}
+
+.minus{
+
+    color:#888;
+
+    font-size:20px;
+
+    font-weight:bold;
+}
