@@ -9,7 +9,9 @@ export default function Member() {
             <Header />
             <div className="container">
                 <Sidebar />
-                <Content />
+                <section className="content">
+                    <Content />
+                </section>
             </div>
         </>
     );

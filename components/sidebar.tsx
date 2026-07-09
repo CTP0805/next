@@ -8,7 +8,6 @@ export default function sidebar() {
     return (
         <aside className="sidebar">
             <div className="profile">
-                
                 <h2>王大明</h2>
             </div>
             <ul>
@@ -23,7 +22,7 @@ export default function sidebar() {
                     </Link>
                 </li>
                 <li>
-                    <Link href="/member/orders">
+                    <Link href="/member/order">
                         我的訂單
                     </Link>
                 </li>

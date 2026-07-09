@@ -2,7 +2,7 @@
 export default function content() {
     return (
         <>
-            <section className="content">
+            
                     {/* Banner */}
                     <div className="point-banner">
                         <div className="point-info">
@@ -72,7 +72,7 @@ export default function content() {
                             </span>
                         </div>
                     </div>
-                </section>
+
         </>
     );
 }
