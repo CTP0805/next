@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
+import PopularDestinations from "@/components/PopularDestinations";
 import Footer from "@/components/Footer";
 import IconMenu from "@/components/IconMenu";
 export default function Home() {
@@ -8,9 +9,7 @@ export default function Home() {
     <>
       <Header />
       <HeroSection />
-      <div className="mx-auto mt-25 flex h-10 w-20 items-center justify-center bg-teal-400">
-        熱門地區
-      </div>
+      <PopularDestinations />
       <Footer />
     </>
   );
