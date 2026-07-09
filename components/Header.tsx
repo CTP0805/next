@@ -29,20 +29,28 @@ export default function Navbar() {
 
   // 設定樣式邏輯
   // 若是首頁且未捲動，使用透明；其他情況（非首頁 或 已捲動）使用固定背景色 (例如 bg-black)
-  const navStyle = isHomePage && !isScrolled ? "bg-transparent" : "bg-black";
+  const navStyle =
+    isHomePage && !isScrolled ? "bg-transparent" : "bg-[#45cad5]";
 
   return (
     <nav
-      className={`fixed top-0 left-0 z-50 flex h-16 w-full items-center justify-between px-2 text-gray-200 xl:px-37.5 ${navStyle}`}
+      className={`fixed top-0 left-0 z-50 flex h-[100px] w-full items-center justify-between px-2 text-gray-200 xl:px-37.5 ${navStyle}`}
     >
       {/* 左側 Logo */}
       <div className="flex shrink-0 items-center">
         <Link href="/">
-          <Image src="/icon/logo.svg" alt="Logo" width={50} height={50} />
+          <Image
+            src="/icon/logo.svg"
+            alt="Logo"
+            width={50}
+            height={50}
+            className="h-auto w-auto"
+            priority
+          />
         </Link>
       </div>
-      <div className="rounded-4xl border border-red-100">
-        <input type="text" className="border-red-100" />
+      <div className="rounded-4xl">
+        <input type="text" />
       </div>
       {/* 中間導覽 */}
       <div className="hidden items-center xl:flex">
@@ -63,7 +71,13 @@ export default function Navbar() {
         <div className="px-2">
           {" "}
           <Link href="/cart" className="flex shrink-0 items-center gap-2">
-            <Image src="/icon/cart.svg" alt="Logo" width={20} height={20} />
+            <Image
+              src="/icon/cart.svg"
+              alt="Logo"
+              width={20}
+              height={20}
+              className="h-auto w-auto"
+            />
           </Link>
         </div>
         <div className="px-2">
@@ -80,7 +94,13 @@ export default function Navbar() {
       </ul>
       <div className="dropdown dropdown-end xl:hidden">
         <div tabIndex={0} role="button" className="">
-          <Image src="/icon/bars.svg" alt="Logo" width={20} height={20} />
+          <Image
+            src="/icon/bars.svg"
+            alt="Logo"
+            width={20}
+            height={20}
+            className="h-auto w-auto"
+          />
         </div>
         <div className="dropdown-content menu rounded-box z-1 w-52 p-2">
           {navLinks.map((link, index) => (

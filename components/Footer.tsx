@@ -9,11 +9,11 @@ export default function Footer() {
       <Image
         src="/images/footer.webp"
         alt="Hero Background"
-        className="-z-10 h-full w-full object-fill"
+        className="z-1 h-full w-full object-fill"
         fill
       />
       {/* 2. 內層容器：限制最大寬度、水平置中並設定間距 */}
-      <div className="mx-auto hidden max-w-7xl gap-30 text-white md:flex">
+      <div className="z-2 mx-auto hidden max-w-7xl gap-30 text-white md:flex">
         <nav className="flex flex-col gap-2">
           <h6 className="text-xl md:text-2xl">認識 KKlook</h6>
           <Link href="/about" className="link link-hover">

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Header from "@/components/header";
+import Header from "@/components/Header";
 import "./content.css";
 // import Sidebar from "@/components/sidebar";   // 如果不需要可先註解
 

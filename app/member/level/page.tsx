@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Header from "@/components/header";
+import Header from "@/components/Header";
 import Sidebar from "@/components/sidebar";
 import Content from "./content";
 
