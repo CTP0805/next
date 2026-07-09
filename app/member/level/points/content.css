@@ -18,9 +18,21 @@
 
 /* ==================== Hero Section ==================== */
 .hero-section {
-  background: bg-amber-300;
-  padding: 4rem 0 5rem;
+  background-image: url('/banner.png');     /* ← 修正檔名 */
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;                   /* 改成 cover 更適合 hero */
+  padding: 5rem 0 6rem;
+  position: relative;
   overflow: hidden;
+  min-height: 620px;                        /* 最小高度 */
+}
+
+@media (min-width: 768px) {
+  .hero-section {
+    padding: 6rem 0 7rem;
+    min-height: 720px;
+  }
 }
 
 .hero-container {
@@ -29,12 +41,26 @@
   align-items: center;
   justify-content: center;
   gap: 3rem;
+  position: relative;
+  z-index: 2;
 }
 
 @media (min-width: 768px) {
   .hero-container {
     flex-direction: row;
-    gap: 4rem;
+    gap: 5rem;
+    align-items: center;
+  }
+}
+
+.hero-text {
+  text-align: center;
+  max-width: 480px;
+}
+
+@media (min-width: 768px) {
+  .hero-text {
+    text-align: left;
   }
 }
 
@@ -42,49 +68,39 @@
   font-size: 2.75rem;
   line-height: 1.15;
   font-weight: 700;
-  color: #0F2C2E;           /* 更深主色，提升對比 */
+  color: #0F2C2E;
   margin-bottom: 1.25rem;
-  text-align: center;
 }
 
 @media (min-width: 768px) {
   .hero-text h1 {
-    font-size: 3.25rem;
-    text-align: left;
+    font-size: 3.4rem;
   }
 }
 
 .hero-text p {
   font-size: 1.2rem;
-  line-height: 1.6;
-  color: #374151;           /* 深灰，提升可讀性 */
-  text-align: center;
-  max-width: 420px;
-}
-
-@media (min-width: 768px) {
-  .hero-text p {
-    text-align: left;
-    max-width: none;
-  }
+  line-height: 1.65;
+  color: #374151;
+  margin-bottom: 2rem;
 }
 
 .cta-button {
   background-color: #00B2A9;
   color: white;
-  cursor:pointer;
-  padding: 16px 36px;
-  border-radius: 12px;     /* 更現代的圓角 */
+  padding: 16px 40px;
+  border-radius: 9999px;        /* 更現代的膠囊形狀 */
   font-weight: 600;
-  font-size: 1.1rem;
-  box-shadow: 0 4px 12px rgba(0, 178, 169, 0.3);
-  transition: all 0.3s ease;
+  font-size: 1.12rem;
+  box-shadow: 0 4px 15px rgba(0, 178, 169, 0.35);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-block;
 }
 
 .cta-button:hover {
   background-color: #008F88;
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0, 178, 169, 0.4);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 178, 169, 0.45);
 }
 
 /* ==================== 通用標題 ==================== */
@@ -98,14 +114,17 @@
 .use-section h2 {
   font-size: 2.35rem;
   font-weight: 700;
-  color: #0F2C2E;           /* 統一主標題顏色 */
+  align-items: center;
+  justify-content: center;
+  
+  color: #0F2C2E;
   margin-bottom: 2.5rem;
 }
 
 /* 大優幣是什麼？ */
 .what-is-section p {
   font-size: 1.15rem;
-  line-height: 1.75;
+  line-height: 1.8;
   color: #4B5563;
   max-width: 680px;
   margin: 0 auto;
@@ -114,8 +133,6 @@
 .highlight {
   color: #00A89F;
   font-weight: 600;
-  margin-top: 2rem;
-  font-size: 1.1rem;
 }
 
 /* ==================== 大優幣怎麼拿 ==================== */
@@ -137,18 +154,17 @@
   background: white;
   padding: 2.75rem 2rem;
   border-radius: 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
   transition: all 0.3s ease;
-  text-align: left;
 }
 
 .earn-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 30px rgba(0, 0, 0, 0.1);
 }
 
 .earn-card h3 {
-  font-size: 1.5rem;
+  font-size: 1.55rem;
   color: #1F2A2E;
   margin-bottom: 1rem;
   font-weight: 600;
@@ -156,18 +172,18 @@
 
 .earn-card p {
   color: #4B5563;
-  line-height: 1.7;
+  line-height: 1.75;
 }
 
 .icon {
-  width: 72px;
-  height: 72px;
+  width: 76px;
+  height: 76px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.75rem;
+  font-size: 2.8rem;
   margin-bottom: 1.75rem;
-  border-radius: 16px;
+  border-radius: 18px;
 }
 
 .earn-card:nth-child(1) .icon { background-color: #FFF7ED; }
@@ -178,12 +194,11 @@
   font-size: 1.2rem;
   color: #374151;
   max-width: 620px;
-  margin: 0 auto;
+  margin: 0 auto 2rem;
   line-height: 1.8;
 }
 
 .note {
-  margin-top: 2rem;
   font-size: 1rem;
   color: #6B7280;
 }

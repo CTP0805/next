@@ -7,18 +7,13 @@ export default function Member() {
   return (
     <>
       <Header />
-      
-      <main className="benefits-page">
-        <section className="hero-section ">
+      <main className="benefits-page ">
+        <section className="hero-section  ">
             <div className="hero-container">
               <div className="hero-text">
                 <h1>體驗活動賺取優幣</h1>
                 <p>完成活動簽到即可賺取優幣，大優幣可用於折抵下次消費</p>
                 <button className="cta-button">查看大優幣</button>
-              </div>
-
-              <div className="hero-image">
-                <Image src="/images/hero-surfer.png" alt="衝浪賺優幣" width={420} height={380} priority className="drop-shadow-xl bg-amber-100"/>
               </div>
             </div>
           </section>
