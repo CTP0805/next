@@ -11,6 +11,10 @@
   "dependencies": {
     "lucide-react": "^1.23.0",
     "daisyui": "^5.6.13",
+    "@ckeditor/ckeditor5-react": "^11.2.0",
+    "ckeditor5": "^48.3.0",
+    "dompurify": "^3.4.11",
+    "marked": "^18.0.5",
     "next": "16.2.10",
     "react": "19.2.4",
     "react-dom": "19.2.4",

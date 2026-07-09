@@ -18,7 +18,7 @@
 
 /* ==================== Hero Section ==================== */
 .hero-section {
-  background-image: url('/banner.png');     /* ← 修正檔名 */
+  background-image: url('/baner.png');     /* ← 修正檔名 */
   background-repeat: no-repeat;
   background-position: center center;
   background-size: cover;                   /* 改成 cover 更適合 hero */
