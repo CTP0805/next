@@ -11,9 +11,9 @@ const experienceTypes = [
 ] as const;
 
 export default function FilterPanel() {
-  const maxPrice = 9999;
-  const [price, setPrice] = useState(3500);
-  const priceProgress = (price / maxPrice) * 100;
+  const totalMaxLimit = 9999;
+  const [minPrice, setMinPrice] = useState(0);
+  const [maxPrice, setMaxPrice] = useState(3500);
 
   return (
     <aside className="h-fit overflow-hidden rounded-lg border border-[#E3E7E9] bg-white">
@@ -36,7 +36,7 @@ export default function FilterPanel() {
                 <input
                   type="checkbox"
                   defaultChecked={index === 3}
-                  className="size-4 accent-[#68BBC3]"
+                  className="checkbox border-[#DDE2E4] bg-white checked:border-[#68BBC3] checked:bg-[#68BBC3] checked:white"
                 />
                 <span className="flex-1">{label}</span>
                 <span className="text-xs text-[#9AA0A5]">{count}</span>
@@ -66,21 +66,49 @@ export default function FilterPanel() {
           <legend className="mb-3 text-[16px] font-extrabold text-[#34393E]">
             價格範圍
           </legend>
-          <p className="mb-3 text-sm font-medium text-[#8B9297]">
-            NT$0 - NT${price.toLocaleString("zh-TW")}
+
+          <p className="mb-4 text-sm font-medium text-[#8B9297]">
+            NT${minPrice.toLocaleString("zh-TW")} - NT$
+            {maxPrice.toLocaleString("zh-TW")}
           </p>
-          <input
-            type="range"
-            min="0"
-            max={maxPrice}
-            value={price}
-            onChange={(event) => setPrice(Number(event.target.value))}
-            aria-label="價格範圍"
-            style={{
-              background: `linear-gradient(to right, #68BBC3 0%, #68BBC3 ${priceProgress}%, #DFE3E5 ${priceProgress}%, #DFE3E5 100%)`,
-            }}
-            className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[#68BBC3] [&::-moz-range-thumb]:size-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border [&::-moz-range-thumb]:border-[#DCE2E4] [&::-moz-range-thumb]:bg-white [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-[#DCE2E4] [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-sm"
-          />
+
+          <div className="relative h-5 w-full">
+            {/* 灰色軌道 */}
+            <div className="absolute top-1/2 h-1.5 w-full -translate-y-1/2 rounded-full bg-[#DFE3E5]" />
+
+            {/* 💡 藍綠色進度條：公式直接寫在 style 裡面了！ */}
+            <div
+              className="absolute top-1/2 h-1.5 rounded-full bg-[#68BBC3] -translate-y-1/2"
+              style={{
+                left: `${(minPrice / totalMaxLimit) * 100}%`,
+                right: `${100 - (maxPrice / totalMaxLimit) * 100}%`,
+              }}
+            />
+
+            {/* 左滑塊 (最低價) */}
+            <input
+              type="range"
+              min="0"
+              max={totalMaxLimit}
+              value={minPrice}
+              onChange={(e) =>
+                setMinPrice(Math.min(Number(e.target.value), maxPrice))
+              }
+              className="pointer-events-none absolute top-1/2 w-full -translate-y-1/2 appearance-none bg-transparent h-1.5 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-[#DCE2E4] [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-sm"
+            />
+
+            {/* 右滑塊 (最高價) */}
+            <input
+              type="range"
+              min="0"
+              max={totalMaxLimit}
+              value={maxPrice}
+              onChange={(e) =>
+                setMaxPrice(Math.max(Number(e.target.value), minPrice))
+              }
+              className="pointer-events-none absolute top-1/2 w-full -translate-y-1/2 appearance-none bg-transparent h-1.5 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-[#DCE2E4] [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-sm"
+            />
+          </div>
         </fieldset>
       </div>
     </aside>

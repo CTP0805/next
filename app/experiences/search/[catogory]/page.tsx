@@ -129,22 +129,20 @@ export default function ExperienceCategoryPage() {
         aria-label="Navbar 元件預留區"
         className="h-20 w-full bg-[#68BBC3]"
       />
-
       <main className="mx-auto w-full max-w-[1280px] px-6 pb-32 pt-10 max-sm:px-4">
         <nav aria-label="麵包屑" className="text-sm font-medium text-[#747B81]">
-          首頁 <span className="mx-1 text-[#A5AAAE]">›</span>
-          <span className="font-bold text-[#68BBC3]">巴黎</span>
+          <span className="text-[#68BBC3]">首頁</span>
+          <span> › </span>
+          <span>巴黎</span>
         </nav>
 
         <h1 className="mt-6 text-[30px] font-extrabold leading-tight text-[#292E33]">
           與 <span className="text-[#68BBC3]">巴黎</span> 相關的體驗
         </h1>
-
         <div className="mt-9 grid grid-cols-[280px_minmax(0,1fr)] items-start gap-8 max-lg:grid-cols-1">
           <div className="max-lg:hidden">
             <FilterPanel />
           </div>
-
           <section aria-label="巴黎體驗列表" className="min-w-0">
             <div className="mb-6 flex items-center justify-between gap-4">
               <p className="text-[17px] font-bold text-[#596066]">
@@ -153,13 +151,12 @@ export default function ExperienceCategoryPage() {
                 </span>
                 項體驗可預訂
               </p>
-
               <label className="flex items-center gap-3 text-sm font-medium text-[#777E84]">
                 <span className="max-sm:hidden">排序方式</span>
                 <select
                   defaultValue="popular"
                   aria-label="排序方式"
-                  className="h-10 rounded-md border border-[#DDE2E4] bg-white px-4 text-sm font-bold text-[#4D545A] outline-none focus:border-[#68BBC3] focus:ring-2 focus:ring-[#68BBC3]/20"
+                  className="h-10 rounded-md border border-[#DDE2E4] bg-white px-4 text-sm font-bold text-[#4D545A] outline-none hover:border-[#68BBC3] hover:ring-2 hover:ring-[#68BBC3]/20"
                 >
                   <option value="popular">熱門推薦</option>
                   <option value="rating">評價最高</option>
@@ -168,12 +165,11 @@ export default function ExperienceCategoryPage() {
               </label>
             </div>
 
-            <div className="grid grid-cols-3 gap-x-7 gap-y-14 max-md:grid-cols-2 max-sm:grid-cols-1">
+            <div className="grid grid-cols-4 gap-x-6 gap-y-14 max-md:grid-cols-2 max-sm:grid-cols-1">
               {experiences.map((experience) => (
                 <ExperienceCard key={experience.id} experience={experience} />
               ))}
             </div>
-
             <nav
               aria-label="商品列表分頁"
               className="mt-20 flex items-center justify-center gap-2"
@@ -203,11 +199,7 @@ export default function ExperienceCategoryPage() {
           </section>
         </div>
       </main>
-
-      <footer
-        aria-label="Footer 元件預留區"
-        className="h-[420px] w-full bg-[#D9ECEE]"
-      />
+      <footer className="h-[500px] w-full bg-[#686868]" />
     </div>
   );
 }
