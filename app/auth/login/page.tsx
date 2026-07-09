@@ -35,7 +35,7 @@ export default function LoginPage() {
   // isLoading 用來控制按下登入後，按鈕顯示「登入中」
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { auth, authInit, login, logout, getAuthHeader } = useAuth();
+  const { login } = useAuth();
 
   // 使用者按下「登入」按鈕時會執行這個函式
   async function handleLogin(

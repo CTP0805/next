@@ -62,7 +62,7 @@ export function AuthContextProvider({
   const [auth, setAuth] = useState(emptyAuth);
   const [authInit, setAuthInit] = useState(false); // 標示有沒有檢查過 localStorage，true 為已檢查，false 為未檢查
   const router = useRouter();
-  
+
   const login: LoginFunction = async (email, password) => {
     // step1. 前端格式驗證
     // step1. 格式驗證
@@ -89,6 +89,7 @@ export function AuthContextProvider({
     try {
       const response = await fetch(`${API_SERVER}/api/auth/login`, {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -107,7 +108,7 @@ export function AuthContextProvider({
       if (response.ok) {
         setAuth(result.data); // 記在 state
         // 💡💡💡 待修改 HttpOnly Cookie
-        localStorage.setItem(storageKey, JSON.stringify(result.data)); // 記在 localStorage
+        // localStorage.setItem(storageKey, JSON.stringify(result.data)); // 記在 localStorage
         toast.success(result.message || "登入成功(前端)");
         // 之後你可以改成 router.push("/")
         router.push("/");
@@ -121,10 +122,28 @@ export function AuthContextProvider({
     return false;
   };
 
+  const logout = async (): Promise<void> => {
+    try {
+      await fetch(`${API_SERVER}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.warn(error);
+    }
+
+    setAuth(emptyAuth);
+    // 💡💡💡TODO : 點下登出後 如果使用者原本是在會員中心或購物車 要跳轉到首頁
+    router.push("/auth/login");
+  };
+
+  /*
   const logout = (): void => {
     setAuth(emptyAuth); // 清除 state，還原成初始值
-    localStorage.removeItem(storageKey); // 清除 localStorage
+    // localStorage.removeItem(storageKey); // 清除 localStorage
+    
   };
+  */
 
   const getAuthHeader = (): Record<string, string> => {
     if (auth.token) {

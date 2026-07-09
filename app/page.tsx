@@ -1,9 +1,11 @@
 import Image from "next/image";
-import Header from "@/components/Header";
+import Header from "@/components/header";
 import HeroSection from "@/components/HeroSection";
 import Footer from "@/components/Footer";
 import IconMenu from "@/components/IconMenu";
+
 export default function Home() {
+
   return (
     <>
       <Header />
@@ -12,6 +14,7 @@ export default function Home() {
         熱門地區
       </div>
       <Footer />
+      
     </>
   );
 }
