@@ -5,16 +5,10 @@ import { Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { z } from "zod";
-import toast, { Toaster } from "react-hot-toast";
-import { API_SERVER } from "@/config/api-path";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+import toast, { Toaster } from "react-hot-toast";
 
-const loginSchema = z.object({
-  email: z.email({ message: "請輸入正確的 Email 格式" }),
-  password: z.string().min(8, { message: "請輸入8位以上的密碼(要做這個嗎?)" }),
-
-});
 
 // 還不確定用不用的到
 type LoginRequest = {
@@ -29,7 +23,7 @@ type LoginResponse = {
   user?: User;
 };
 
-const { auth, authInit, login, logout, getAuthHeader } = useAuth();
+
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -41,6 +35,7 @@ export default function LoginPage() {
   // isLoading 用來控制按下登入後，按鈕顯示「登入中」
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { auth, authInit, login, logout, getAuthHeader } = useAuth();
 
   // 使用者按下「登入」按鈕時會執行這個函式
   async function handleLogin(
@@ -49,26 +44,19 @@ export default function LoginPage() {
     // 阻止表單預設刷新頁面的行為
     e.preventDefault();
 
-    // step1. 格式驗證
-    // 如果帳號或密碼沒填，就先提醒使用者
-    if (!email || !password) {
-      toast.error("請輸入帳號和密碼");
-      return;
-    }
+    // 等等就會替換成這段
+  try {
+    setIsLoading(true);
+    await login(email, password);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setIsLoading(false);
+  }
 
-    const trimmedEmail = email.trim();
-    const zodResult = loginSchema.safeParse({
-      email: trimmedEmail,
-      password,
-    });
 
-    if (!zodResult.success) {
-      if (zodResult.error?.issues?.length) {
-        toast.error(zodResult.error.issues[0].message);
-        return;
-      }
-    }
-
+    
+    /*
     try {
       // 開始送資料時，讓按鈕變成 loading 狀態
       setIsLoading(true);
@@ -112,9 +100,11 @@ export default function LoginPage() {
       // 不管成功或失敗，都把 loading 關掉
       setIsLoading(false);
     }
+    */
   }
 
   return (
+    
     <>
       <main className="min-h-screen bg-[url('/images/login-bg.jpg')] bg-cover bg-left text-white">
         <div>
