@@ -3,8 +3,6 @@
 export default function CheckPage() {
   return (
 <>
-      <div>header</div>
-
       {/* 最外層淺灰底容器 */}
       <div className="w-full bg-slate-50 min-h-[calc(100vh-160px)] py-10">
         
@@ -164,8 +162,6 @@ export default function CheckPage() {
 
         </div>
       </div>
-
-      <div>footer</div>
     </>
   );
 }

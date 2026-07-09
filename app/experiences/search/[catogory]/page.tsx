@@ -125,10 +125,7 @@ const experiences: Experience[] = [
 export default function ExperienceCategoryPage() {
   return (
     <div className="min-h-screen bg-white text-[#292D32]">
-      <header
-        aria-label="Navbar 元件預留區"
-        className="h-20 w-full bg-[#68BBC3]"
-      />
+     
       <main className="mx-auto w-full max-w-[1280px] px-6 pb-32 pt-10 max-sm:px-4">
         <nav aria-label="麵包屑" className="text-sm font-medium text-[#747B81]">
           <span className="text-[#68BBC3]">首頁</span>
@@ -199,7 +196,6 @@ export default function ExperienceCategoryPage() {
           </section>
         </div>
       </main>
-      <footer className="h-[500px] w-full bg-[#686868]" />
     </div>
   );
 }

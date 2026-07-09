@@ -34,8 +34,6 @@ export default function CartPage() {
 
   return (
     <>
-      <div>header</div>
-
       {/* ======= 三元運算 判斷購物車有無商品====== */}
       {cartItems.length > 0 ? (
         /* 購物車有商品介面 */
@@ -164,7 +162,6 @@ export default function CartPage() {
           </div>
         </div>
       )}
-      <div>footer</div>
     </>
   );
 }

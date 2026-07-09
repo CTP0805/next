@@ -32,9 +32,11 @@ export default function Navbar() {
   const navStyle =
     isHomePage && !isScrolled ? "bg-transparent" : "bg-[#45cad5]";
 
+  const navPosition = isHomePage ? "fixed" : "sticky"
+
   return (
     <nav
-      className={`fixed top-0 left-0 z-50 flex h-[100px] w-full items-center justify-between px-2 text-gray-200 xl:px-37.5 ${navStyle}`}
+      className={`${navPosition} top-0 left-0 z-50 flex h-[100px] w-full items-center justify-between px-2 text-gray-200 xl:px-37.5 ${navStyle}`}
     >
       {/* 左側 Logo */}
       <div className="flex shrink-0 items-center">

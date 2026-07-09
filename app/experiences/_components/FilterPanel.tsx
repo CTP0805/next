@@ -36,7 +36,7 @@ export default function FilterPanel() {
                 <input
                   type="checkbox"
                   defaultChecked={index === 3}
-                  className="checkbox border-[#DDE2E4] bg-white checked:border-[#68BBC3] checked:bg-[#68BBC3] checked:white"
+                  className="checkbox border-[#DDE2E4] bg-white checked:border-[#68BBC3] checked:bg-[#68BBC3] checked:text-white"
                 />
                 <span className="flex-1">{label}</span>
                 <span className="text-xs text-[#9AA0A5]">{count}</span>

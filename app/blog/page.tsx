@@ -5,7 +5,6 @@ import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';                    // ← 新增
 import blogData from '@/data/blogPosts.json';
-import Header from '@/components/header';
 
 interface BlogPost {
   id: number;
@@ -60,7 +59,6 @@ export default function BlogListPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-        <Header />
       {/* Hero Banner */}
       <div className="relative h-[420px] bg-cover bg-center" style={{ backgroundImage: "url('https://placehold.co/1920x600/0f766e/ffffff?text=MaoDay+全球旅遊')" }}>
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/80" />
@@ -203,12 +201,6 @@ export default function BlogListPage() {
           </div>
         )}
       </div>
-
-      <footer className="bg-gray-900 text-gray-400 py-16 text-sm">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-          © 2026 MaoDay - 你的旅行靈感來源
-        </div>
-      </footer>
     </div>
   );
 }
