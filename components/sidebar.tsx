@@ -23,7 +23,7 @@ export default function sidebar() {
                     </Link>
                 </li>
                 <li>
-                    <Link href="/member/orders">
+                    <Link href="/member/order">
                         我的訂單
                     </Link>
                 </li>

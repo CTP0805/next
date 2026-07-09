@@ -1,14 +1,27 @@
 "use client";
 
+import { useState } from "react";
+
 export default function PaymentPage() {
-  //新增點擊事件函式(串接金流)
+
+  // 管理選中的付款方式
+  const [paymentMethod, setPaymentMethod] = useState("credit-card");
+  // 管理是否同意條款 (這才是真正的 checkbox)
+  const [isAgreed, setIsAgreed] = useState(false);
+
   const handlePayment = () => {
+    if (!isAgreed) {
+      alert("請先勾選同意服務條款與隱私權");
+      return;
+    }
+
     const amount = 923; // 畫面上的總計金額
     const items = "濟州島9.81 Park門票"; // 右欄的商品名稱
 
     // 直接導向後端 Express 的 Port 3001 的 /ecpay 路由
-    window.location.href = `http://localhost:3001/ecpay?amount=${amount}&items=${encodeURIComponent(items)}`;
+    window.location.href = `http://localhost:3001/ecpay?amount=${amount}&items=${encodeURIComponent(items)}&method=${paymentMethod}`;
   };
+
   return (
     <>
       <div>header</div>
@@ -18,7 +31,6 @@ export default function PaymentPage() {
         <div className="mx-auto w-full max-w-[1280px] px-4">
           {/* ==================== 1. 頂部步驟進度條 (DaisyUI Steps) ==================== */}
           <div className="mb-10 flex w-full justify-center">
-            {/* 使用我們上次修正成功的 grid-cols-3 強制撐開 */}
             <ul className="steps grid w-full max-w-7xl grid-cols-3 text-sm">
               <li className="step step-accent">選擇方案</li>
               <li className="step step-accent">填寫資料</li>
@@ -34,30 +46,33 @@ export default function PaymentPage() {
               <div className="rounded-lg border border-gray-100 bg-white p-6 shadow-sm">
                 <div className="flex flex-col gap-4">
                   {/* 選項 1：信用卡/記帳卡 */}
-                  <label className="flex cursor-pointer items-center justify-between rounded-xl border p-4 transition hover:bg-slate-50/50">
+                  <label className="flex cursor-pointer items-center justify-between  p-4 transition text-gray-800 rounded-xl border border-transparent hover:border-black hover:bg-slate-50/50 ">
                     <div className="flex items-center gap-3">
-                      {/* DaisyUI Radio 元件 */}
+                      {/* 修正：type 改為 radio */}
                       <input
-                        type="checkbox"
+                        type="radio"
                         name="payment-method"
                         className="radio radio-error radio-sm"
-                        defaultChecked
+                        checked={paymentMethod === "credit-card"}
+                        onChange={() => setPaymentMethod("credit-card")}
                       />
                       <span className="text-sm font-medium">信用卡/記帳卡</span>
                     </div>
                   </label>
 
                   {/* 選項 2：LINE Pay */}
-                  <label className="flex cursor-pointer items-center justify-between rounded-xl border p-4 transition hover:bg-slate-50/50">
+                  <label className="flex cursor-pointer items-center justify-between  p-4 transition text-gray-800 rounded-xl border border-transparent hover:border-black hover:bg-slate-50/50">
                     <div className="flex items-center gap-3">
+                      {/* 修正：type 改為 radio */}
                       <input
-                        type="checkbox"
+                        type="radio"
                         name="payment-method"
                         className="radio radio-error radio-sm"
+                        checked={paymentMethod === "line-pay"}
+                        onChange={() => setPaymentMethod("line-pay")}
                       />
                       <span className="text-sm font-medium">LINE Pay</span>
                     </div>
-                    {/* LINE Pay 綠色小標誌（暫時用文字/Badge模擬，你之後可以用圖片） */}
                     <span className="rounded bg-[#00c300] px-2 py-1 text-[10px] font-bold text-white">
                       LINE Pay
                     </span>
@@ -68,11 +83,14 @@ export default function PaymentPage() {
               {/* 區塊 B：同意條款與確認付款大方塊 */}
               <div className="flex flex-col items-center justify-between gap-6 rounded-lg border border-gray-100 bg-white p-8 shadow-sm md:flex-row">
                 {/* 左側：隱私權條款勾選說明 */}
-                <label className="flex items-center gap-2 text-sm text-gray-600">
+                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                  {/* 修正：條款同意應該是 checkbox 樣式，這裡改回 checkbox 確保勾選視覺 */}
                   <input
                     type="checkbox"
-                    name="payment"
-                    className="radio radio-error radio-sm"
+                    name="agreement"
+                    className="checkbox checkbox-error checkbox-sm rounded"
+                    checked={isAgreed}
+                    onChange={(e) => setIsAgreed(e.target.checked)}
                   />
                   <span>我了解並同意C旅服務條款與隱私權</span>
                 </label>
@@ -92,7 +110,7 @@ export default function PaymentPage() {
               </div>
             </div>
 
-            {/* 【右欄：訂單明細摘要卡片（這頁數據略有不同）】 寬度佔 1/3 */}
+            {/* 【右欄：訂單明細摘要卡片】 寬度佔 1/3 */}
             <div className="sticky top-4 w-full rounded-lg border border-gray-100 bg-white p-6 shadow-sm lg:flex-[1]">
               <h3 className="mb-2 text-sm font-bold text-gray-800">
                 濟州島9.81 Park門票
@@ -132,13 +150,10 @@ export default function PaymentPage() {
                 </div>
               </div>
 
-              {/* 酷幣回饋提示 */}
               <div className="mt-6 rounded-lg border border-cyan-100 bg-cyan-50/60 p-3 text-xs text-cyan-600">
                 <p>
-                  你可獲得 <span className="font-bold text-orange-500">3</span>{" "}
-                  大傻幣
+                  你可獲得 <span className="font-bold text-orange-500">3</span> 大傻幣
                 </p>
-                {/* 註：設計圖字體有點模糊，我先暫打大傻幣，你可以改成正確的專案代幣名稱如大禮幣、大福幣等！ */}
               </div>
             </div>
           </div>
