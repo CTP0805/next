@@ -1,4 +1,8 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
+import { HiOutlineHeart, HiHeart } from "react-icons/hi";
 
 type Experience = {
   id: number;
@@ -15,9 +19,11 @@ export default function ExperienceCard({
 }: {
   experience: Experience;
 }) {
+  const [isFavorite, setIsFavorite] = useState(false);
+
   return (
-    <article className="group min-w-0 rounded-lg bg-white transition-[transform,box-shadow] duration-500 ease-out will-change-transform hover:-translate-y-2 hover:shadow-[0_16px_34px_rgba(39,68,72,0.16)] focus-within:-translate-y-2 focus-within:shadow-[0_16px_34px_rgba(39,68,72,0.16)]">
-      <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-[#EEF1F2]">
+    <div className="card bg-white w-full h-[340px] shadow-sm flex flex-col overflow-hidden transition-all duration-500 ease-out will-change-transform hover:-translate-y-2 hover:shadow-[0_16px_34px_rgba(39,68,72,0.16)] focus-within:-translate-y-2 focus-within:shadow-[0_16px_34px_rgba(39,68,72,0.16)]">
+      <figure className="relative h-[55%] w-full overflow-hidden shrink-0">
         <Image
           src={experience.image}
           alt={experience.title}
@@ -27,14 +33,18 @@ export default function ExperienceCard({
         />
         <button
           type="button"
-          aria-label={`將「${experience.title}」加入我的最愛`}
-          className="absolute right-3 top-3 grid size-9 place-items-center text-[29px] leading-none text-black/45 [-webkit-text-stroke:2px_white] [paint-order:stroke_fill] transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#68BBC3]"
+          aria-label={isFavorite ? "取消收藏" : "加入最愛"}
+          className="absolute right-3 top-3 z-10 cursor-pointer p-1"
+          onClick={() => setIsFavorite(!isFavorite)}
         >
-          ♥
+          {isFavorite ? (
+            <HiHeart className="size-6 text-red-500 drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)] scale-110 transition-transform duration-200" />
+          ) : (
+            <HiOutlineHeart className="size-6 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] hover:text-red-500 transition-colors" />
+          )}
         </button>
-      </div>
-
-      <div className="px-4 pb-5 pt-3">
+      </figure>
+      <div className="h-[45%] px-4 pb-6 pt-3 flex flex-col">
         <p className="text-xs font-medium text-[#858C91]">
           {experience.location}
         </p>
@@ -47,10 +57,10 @@ export default function ExperienceCard({
             ({experience.reviews})
           </span>
         </p>
-        <p className="mt-3 text-[18px] font-extrabold text-[#30353A]">
+        <p className="mt-auto text-[18px] font-extrabold text-[#30353A]">
           {experience.price}
         </p>
       </div>
-    </article>
+    </div>
   );
 }

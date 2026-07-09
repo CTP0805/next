@@ -1,4 +1,4 @@
-import Image from "next/image";
+import FavoriteCard from "@/app/member/_components/FavoriteCard";
 
 type FavoriteItem = {
   id: number;
@@ -94,52 +94,6 @@ const favoriteItems: FavoriteItem[] = [
   },
 ];
 
-function FavoriteRow({ item }: { item: FavoriteItem }) {
-  return (
-    <article className="relative grid min-h-[200px] grid-cols-[220px_minmax(0,1fr)] gap-6 border-b border-[#ECEFF0] py-7 last:border-b-0 max-md:grid-cols-[150px_minmax(0,1fr)] max-md:gap-4 max-sm:grid-cols-1">
-      <div className="relative h-[172px] overflow-hidden rounded-md bg-[#EEF1F2] max-md:h-[150px] max-sm:h-[220px]">
-        <Image
-          src={item.image}
-          alt={item.title}
-          fill
-          sizes="(max-width: 640px) calc(100vw - 48px), 220px"
-          className="object-cover"
-        />
-      </div>
-
-      <div className="flex min-w-0 flex-col py-2 pr-16 max-sm:pr-0">
-        <h2 className="text-[17px] font-bold leading-7 text-[#2B2F33]">
-          {item.title}
-        </h2>
-        <p className="mt-1 text-sm font-medium text-[#7A8187]">
-          {item.location}
-        </p>
-
-        <div className="mt-2 flex flex-wrap items-center gap-x-2 text-sm">
-          <span className="font-extrabold text-[#F4A629]">★ {item.rating}</span>
-          <span className="font-medium text-[#6F777D]">{item.reviews}</span>
-        </div>
-
-        <span className="mt-3 w-fit rounded bg-[#E8F7F7] px-3 py-1 text-xs font-bold text-[#409DA5]">
-          {item.tag}
-        </span>
-
-        <p className="mt-auto self-end text-[20px] font-extrabold text-[#30343A]">
-          {item.price}
-        </p>
-      </div>
-
-      <button
-        type="button"
-        aria-label={`將「${item.title}」移出我的最愛`}
-        className="absolute right-2 top-8 grid size-10 place-items-center text-[30px] leading-none text-[#EF5963] transition-transform hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#68BBC3]"
-      >
-        ♥
-      </button>
-    </article>
-  );
-}
-
 export default function FavoritesPage() {
   return (
     <div className="min-h-screen bg-[#F7F7F7] text-[#292D32]">
@@ -151,7 +105,7 @@ export default function FavoritesPage() {
       <main className="mx-auto grid w-full max-w-[1280px] grid-cols-[280px_minmax(0,1fr)] gap-6 px-6 pb-28 pt-16 max-lg:grid-cols-1 max-sm:px-4 max-sm:pt-8">
         <aside
           aria-label="會員中心側欄元件預留區"
-          className="min-h-[640px]:rounded-lg bg-white shadow-[0_5px_18px_rgba(30,48,52,0.09)] max-lg:hidden"
+          className="min-h-[640px] rounded-lg bg-white shadow-[0_5px_18px_rgba(30,48,52,0.09)] max-lg:hidden"
         />
 
         <section className="overflow-hidden rounded-lg bg-white shadow-[0_5px_18px_rgba(30,48,52,0.09)]">
@@ -172,11 +126,13 @@ export default function FavoritesPage() {
               </p>
 
               <label className="flex shrink-0 items-center gap-3 text-sm font-medium text-[#8A9196]">
-                <span className="max-sm:hidden">排序方式</span>
+                <span className="max-sm:hidden whitespace-nowrap">
+                  排序方式
+                </span>
                 <select
                   aria-label="排序方式"
                   defaultValue="latest"
-                  className="h-10 rounded-md border border-[#E1E5E7] bg-white px-4 text-sm font-bold text-[#454B50] outline-none focus:border-[#68BBC3] focus:ring-2 focus:ring-[#68BBC3]/20"
+                  className="select select-bordered h-10 min-h-10 rounded-md border border-[#E1E5E7] bg-white pl-4 pr-10 text-sm font-bold text-[#454B50] outline-none hover:border-[#68BBC3]"
                 >
                   <option value="latest">最新</option>
                   <option value="rating">評價最高</option>
@@ -185,9 +141,9 @@ export default function FavoritesPage() {
               </label>
             </div>
 
-            <div>
+            <div className="flex flex-col mt-6">
               {favoriteItems.map((item) => (
-                <FavoriteRow key={item.id} item={item} />
+                <FavoriteCard key={item.id} item={item} />
               ))}
             </div>
 
