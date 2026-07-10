@@ -114,7 +114,7 @@ export default function LoginPage() {
         {/* 背景遮罩 */}
         <div className="min-h-screen bg-black/10 backdrop-brightness-75">
           {/* 外層 container：負責控制整體寬度與 RWD 留白 */}
-          <section className="container mx-auto flex min-h-[calc(100vh-100px)] w-[66%] items-center justify-center pt-[100px]">
+          <section className="container mx-auto flex min-h-[calc(100vh-100px)] w-[66%] items-center justify-center py-[50px]">
             {/* 
             卡片主體：
             手機：只顯示表單，寬度 max-w-md
@@ -179,7 +179,7 @@ export default function LoginPage() {
                     disabled={isLoading}
                     className="mt-6 h-[56px] w-full rounded-full border border-sky-200 bg-[#68BBC3]/85 text-2xl font-bold tracking-wide text-white hover:bg-[#68BBC3] sm:h-[70px] sm:text-[24px]"
                   >
-                    {isLoading ? "登入中.." : "登入"}
+                    {isLoading ? "登入中..." : "登入"}
                   </button>
 
                   {/* 分隔線 */}
