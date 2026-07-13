@@ -58,7 +58,7 @@
   }
 
   p {
-    @apply text-base text-[20px] leading-relaxed;
+    @apply text-base leading-relaxed;
   }
 
   label {
@@ -78,6 +78,9 @@
 
   /* 自訂 p 字體大小 */
   .p-text-14{
+    @apply text-[14px];
+  }
+  .span-text-14{
     @apply text-[14px];
   }
 }

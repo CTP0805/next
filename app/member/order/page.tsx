@@ -11,7 +11,6 @@ const initialOrders = [
       { label: "日期", value: "2026-09-10" },
       { label: "數量", value: "每人 x 2 " },
     ],
-    priceLabel: "實付金額",
     price: 11849,
     status: "訂單已確認",
     image: "/images/experiences/bastille-market.jpg",
@@ -25,7 +24,6 @@ const initialOrders = [
       { label: "日期", value: "2026-09-15" },
       { label: "數量", value: "每人 x 2 " },
     ],
-    price_Label: "實付金額",
     price: 8888,
     status: "訂單已確認",
     image: "/images/experiences/montmartre-art.jpg",
@@ -84,7 +82,7 @@ export default function OrderPage() {
 
                 {/* 金額顯示 */}
                 <div className="mt-2 text-sm font-bold text-gray-800">
-                  <span>{order.priceLabel}：</span>
+                  <span>實付金額：</span>
                   <span className="text-base text-gray-900">
                     NT$ {order.price.toLocaleString()}
                   </span>
@@ -92,15 +90,17 @@ export default function OrderPage() {
 
                 {/* 綠色狀態標籤 */}
                 <div className="mt-1">
+                  <span className="mr-2 text-sm font-bold text-gray-800"> 訂單編號：{order.id}</span>
+
                   <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-600">
-                    {order.status}
+                   {order.status}
                   </span>
                 </div>
 
                 {/* 查看憑證按鈕 (DaisyUI btn-outline) */}
                 <div className="mt-3">
                   <button className="btn btn-sm btn-outline rounded-lg border-gray-300 px-4 font-medium text-gray-700 hover:bg-gray-50">
-                    訂單明細
+                    訂單憑證
                   </button>
                 </div>
               </div>

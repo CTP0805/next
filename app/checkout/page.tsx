@@ -1,4 +1,5 @@
 "use client";
+import Link from 'next/link';
 
 export default function CheckPage() {
   return (
@@ -12,8 +13,8 @@ export default function CheckPage() {
           {/* ==================== 1. 頂部步驟進度條 (DaisyUI Steps) ==================== */}
           <div className="w-full flex justify-center mb-10">
             <ul className="steps id-steps w-full max-w-7xl text-sm grid grid-cols-3">
-              <li className="step step-accent">選擇方案</li>
               <li className="step step-accent">填寫資料</li>
+              <li className="step">選擇付款</li>
               <li className="step">完成付款</li>
             </ul>
           </div>
@@ -120,9 +121,11 @@ export default function CheckPage() {
               </div>
               <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border lg:bg-transparent lg:shadow-none lg:border-none lg:p-0">
                 <span className="text-xs text-gray-500 lg:w-2/3">前往付款後，訂單即送出，請於下一步選擇付款方式</span>
+                <Link href="/payment/">
                 <button className="btn bg-[#45cad5] hover:bg-[#36b3be] text-white border-none px-10">
                   前往付款
                 </button>
+                </Link>
               </div>
 
             </div>

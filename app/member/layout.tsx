@@ -11,7 +11,7 @@ export default function OrderLayout({
       <main className="min-h-screen bg-zinc-100 p-6">
         <MemberPanel />
       </main>
-      <div className="min-h-screen flex-1 bg-amber-200 p-6">
+      <div className="min-h-screen flex-1 bg-white p-6">
         {children}
       </div>
     </div>
