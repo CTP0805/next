@@ -60,21 +60,29 @@ export default function BlogListPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Banner */}
-      <div className="relative h-[420px] bg-cover bg-center" style={{ backgroundImage: "url('https://placehold.co/1920x600/0f766e/ffffff?text=MaoDay+全球旅遊')" }}>
+      <div className="relative h-[420px] overflow-hidden">
+        <Image
+          src="/images/carousel1.jpg"
+          alt="全球旅遊攻略"
+          fill
+          priority
+          className="object-cover object-center"
+          sizes="100vw"
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/80" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-6">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-tight">全球旅遊攻略</h1>
-          <p className="text-xl mb-10 max-w-md">選擇目的地，探索專屬旅行靈感</p>
-          
-          <div className="flex flex-wrap justify-center gap-4 max-w-4xl">
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center text-white">
+          <h1 className="mb-6 text-5xl font-bold tracking-tight md:text-6xl">全球旅遊攻略</h1>
+          <p className="mb-10 max-w-md text-xl">選擇目的地，探索專屬旅行靈感</p>
+
+          <div className="flex max-w-4xl flex-wrap justify-center gap-4">
             {countries.map((country) => (
               <button
                 key={country}
-                onClick={() => setSelectedCountry(country)}
-                className={`px-8 py-4 rounded-2xl font-medium text-lg transition-all duration-300 shadow-lg hover:shadow-xl active:scale-95 ${
-                  selectedCountry === country 
-                    ? 'bg-white text-teal-700 scale-105' 
-                    : 'bg-white/20 hover:bg-white/30 backdrop-blur text-white border border-white/30'
+                onClick={() => setSelectedCountry(country === selectedCountry ? null : country)}
+                className={`rounded-2xl px-8 py-4 text-lg font-medium shadow-lg transition-all duration-300 hover:shadow-xl active:scale-95 ${
+                  selectedCountry === country
+                    ? "scale-105 bg-white text-teal-700"
+                    : "border border-white/30 bg-white/20 text-white backdrop-blur hover:bg-white/30"
                 }`}
               >
                 {country}
@@ -96,15 +104,14 @@ export default function BlogListPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {(selectedCountry ? filteredPosts : featuredPosts).map((post) => (
               <Link href={`/blog/${post.slug}`} key={post.id} className="group">
-                <div className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer">
-                  <div className="relative h-64 overflow-hidden">
-                    <Image 
-                      src={post.cover_image} 
+                <div className="cursor-pointer overflow-hidden rounded-3xl bg-white shadow-lg transition-all duration-500 hover:shadow-2xl">
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <Image
+                      src={post.cover_image}
                       alt={post.title}
                       fill
-                      className="object-cover group-hover:scale-110 transition duration-700"
+                      className="object-cover object-center transition duration-700 group-hover:scale-110"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      unoptimized={true}                    // ← 建議保留
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   </div>
@@ -148,14 +155,13 @@ export default function BlogListPage() {
                 {latestPosts.map((post) => (
                   <Link href={`/blog/${post.slug}`} key={post.id} className="group block">
                     <div className="flex gap-8 cursor-pointer">
-                      <div className="relative w-72 h-48 flex-shrink-0 rounded-3xl overflow-hidden shadow-md">
-                        <Image 
-                          src={post.cover_image} 
-                          alt={post.title} 
+                      <div className="relative h-52 w-72 flex-shrink-0 overflow-hidden rounded-3xl shadow-md sm:h-56">
+                        <Image
+                          src={post.cover_image}
+                          alt={post.title}
                           fill
-                          className="object-cover group-hover:scale-105 transition duration-500"
-                          sizes="(max-width: 768px) 100vw, 272px"
-                          unoptimized={true}
+                          className="object-cover object-center transition duration-500 group-hover:scale-105"
+                          sizes="(max-width: 768px) 100vw, 288px"
                         />
                       </div>
                       <div className="flex-1 pt-2">

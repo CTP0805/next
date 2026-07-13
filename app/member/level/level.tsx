@@ -41,9 +41,9 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
   };
 
   return (
-    <div className="w-full rounded-3xl border border-gray-100 bg-white p-8 shadow-sm">
+    <div className="w-full min-w-0">
       {/* ELITE STATUS 卡片 */}
-      <div className="relative mb-8 rounded-2xl bg-gradient-to-r from-teal-400 via-cyan-500 to-teal-500 p-8 text-white">
+      <div className="relative mb-8 rounded-2xl bg-gradient-to-r from-teal-400 via-cyan-500 to-teal-500 p-6 text-white sm:p-8">
         <div className="flex items-start justify-between">
           <div>
             <div className="mb-1 flex items-center gap-2">
