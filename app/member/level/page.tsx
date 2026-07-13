@@ -8,7 +8,7 @@ export default function MemberLevelPage() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   return (
-    <div className="flex gap-8 p-8">
+    <div className="w-full min-w-0 max-w-full">
       <MemberLevelRightPanel onOpenDetail={() => setIsDetailOpen(true)} />
 
       <MemberLevelDetailDrawer

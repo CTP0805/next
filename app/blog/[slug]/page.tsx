@@ -3,7 +3,8 @@ import React from "react";
 import blogData from "@/data/blogPosts.json";
 import Link from "next/link";
 import Image from "next/image";
-import RichTextContent from "@/components/RichTextContent"; // ← 只保留這一個
+import RichTextContent from "@/components/RichTextContent";
+import BlogCommentSection from "../_components/BlogCommentSection";
 
 interface BlogPost {
   id: number;
@@ -90,27 +91,31 @@ export default async function BlogDetail({
             <span>作者：MaoDay 編輯部</span>
           </div>
 
-          <Image
-            src={post.cover_image}
-            alt={post.title}
-            className="mb-12 w-full rounded-3xl shadow-lg"
-            width={800}
-            height={450}
-            priority
-          />
+          <div className="relative mb-12 aspect-[16/9] w-full overflow-hidden rounded-3xl shadow-lg">
+            <Image
+              src={post.cover_image}
+              alt={post.title}
+              fill
+              className="object-cover object-center"
+              sizes="(max-width: 1024px) 100vw, 66vw"
+              priority
+            />
+          </div>
 
           {/* 文章內容 - 使用 RichTextContent 元件 */}
           <article className="prose prose-lg prose-headings:font-bold prose-a:text-teal-600 max-w-none">
             <RichTextContent content={post.content} />
           </article>
+
+          <BlogCommentSection postSlug={post.slug} />
         </div>
 
         {/* 右側推薦文章 */}
         <div className="lg:col-span-4">
-          <div className="sticky top-8">
+          <div className="sticky top-28">
             <h3 className="mb-8 border-b pb-4 text-2xl font-bold">推薦閱讀</h3>
 
-            <div className="space-y-8">
+            <div className="space-y-10">
               {recommendations.length > 0 ? (
                 recommendations.map((rec: BlogPost) => (
                   <Link
@@ -118,14 +123,13 @@ export default async function BlogDetail({
                     key={rec.id}
                     className="group block"
                   >
-                    <div className="mb-4 overflow-hidden rounded-2xl">
+                    <div className="relative mb-4 aspect-[4/3] min-h-[240px] overflow-hidden rounded-2xl">
                       <Image
                         src={rec.cover_image}
                         alt={rec.title}
-                        className="h-44 w-full object-cover transition duration-500 group-hover:scale-105"
-                        width={800}
-                        height={450}
-                        priority
+                        fill
+                        className="object-cover object-center transition duration-500 group-hover:scale-105"
+                        sizes="(max-width: 1024px) 100vw, 33vw"
                       />
                     </div>
                     <div>
