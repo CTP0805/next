@@ -65,7 +65,6 @@ export function AuthContextProvider({
 
   const login: LoginFunction = async (email, password) => {
     // step1. 前端格式驗證
-    // step1. 格式驗證
     // 如果帳號或密碼沒填，就先提醒使用者
     if (!email || !password) {
       toast.error("請輸入帳號和密碼");
@@ -117,7 +116,7 @@ export function AuthContextProvider({
     } catch (error) {
       // 如果網路壞掉、後端沒開，會進到這裡
       console.warn(error);
-      toast.error("系統發生錯誤，請稍後再試(後端沒開)");
+      toast.error("系統發生錯誤，請稍後再試(後端有問題)");
     }
     return false;
   };
@@ -152,6 +151,7 @@ export function AuthContextProvider({
     return {};
   };
 
+  // 這邊也可以註解掉了
   useEffect(() => {
     if (authInit) return; // authInit = true --> 已經檢查過了，就什麼事都不做
 

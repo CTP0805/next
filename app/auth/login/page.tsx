@@ -8,7 +8,10 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import toast, { Toaster } from "react-hot-toast";
-
+import { API_SERVER } from "@/config/api-path";
+import useFirebase, {
+  type GoogleProviderData,
+} from "../_hook/use-firebase/index";
 
 // 還不確定用不用的到
 type LoginRequest = {
@@ -23,8 +26,6 @@ type LoginResponse = {
   user?: User;
 };
 
-
-
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,6 +37,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { login } = useAuth();
+  const { loginGoogle } = useFirebase(); // 第三方登入
 
   // 使用者按下「登入」按鈕時會執行這個函式
   async function handleLogin(
@@ -45,17 +47,15 @@ export default function LoginPage() {
     e.preventDefault();
 
     // 等等就會替換成這段
-  try {
-    setIsLoading(true);
-    await login(email, password);
-  } catch (error) {
-    console.error(error);
-  } finally {
-    setIsLoading(false);
-  }
+    try {
+      setIsLoading(true);
+      await login(email, password);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
 
-
-    
     /*
     try {
       // 開始送資料時，讓按鈕變成 loading 狀態
@@ -103,8 +103,45 @@ export default function LoginPage() {
     */
   }
 
+  // google 第三方登入
+  async function handleGoogleLogin(providerData: GoogleProviderData) {
+    try {
+      setIsLoading(true);
+
+      // 前端送什麼？
+      // 送 Google / Firebase 回傳的 providerData 給後端
+      // 裡面會有 uid、email、displayName、photoURL、providerId
+      const response = await fetch(`${API_SERVER}/api/auth/oauth-google`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(providerData),
+      });
+
+      // 後端回什麼？
+      // success、message、data，並且後端會順便把 JWT 寫進 HttpOnly Cookie
+      const result = await response.json();
+
+      if (!response.ok) {
+        toast.error(result.message || "Google 登入失敗");
+        return;
+      }
+
+      toast.success(result.message || "Google 登入成功");
+
+      // 登入成功後導回首頁
+      router.push("/");
+    } catch (error) {
+      console.warn(error);
+      toast.error("Google 登入時發生錯誤，請稍後再試");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
-    
     <>
       <main className="min-h-screen bg-[url('/images/login-bg.jpg')] bg-cover bg-left text-white">
         <div>
@@ -114,7 +151,7 @@ export default function LoginPage() {
         {/* 背景遮罩 */}
         <div className="min-h-screen bg-black/10 backdrop-brightness-75">
           {/* 外層 container：負責控制整體寬度與 RWD 留白 */}
-          <section className="container mx-auto flex min-h-[calc(100vh-100px)] w-[66%] items-center justify-center pt-[100px]">
+          <section className="container mx-auto flex min-h-[calc(100vh-100px)] w-[90%] items-center justify-center py-[50px] xl:w-[66%]">
             {/* 
             卡片主體：
             手機：只顯示表單，寬度 max-w-md
@@ -179,7 +216,7 @@ export default function LoginPage() {
                     disabled={isLoading}
                     className="mt-6 h-[56px] w-full rounded-full border border-sky-200 bg-[#68BBC3]/85 text-2xl font-bold tracking-wide text-white hover:bg-[#68BBC3] sm:h-[70px] sm:text-[24px]"
                   >
-                    {isLoading ? "登入中.." : "登入"}
+                    {isLoading ? "登入中..." : "登入"}
                   </button>
 
                   {/* 分隔線 */}
@@ -192,12 +229,16 @@ export default function LoginPage() {
                   {/* Google 登入 */}
                   <button
                     type="button"
+                    disabled={isLoading}
+                    onClick={() => {
+                      loginGoogle(handleGoogleLogin);
+                    }}
                     className="flex h-[56px] w-full items-center justify-center gap-3 rounded-xl border border-white/80 bg-white/5 text-xl font-bold hover:bg-white/15 sm:h-[64px] sm:gap-4 sm:text-[24px]"
                   >
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-2xl font-bold sm:h-9 sm:w-9">
                       <FcGoogle />
                     </span>
-                    <span>使用 Google 登入</span>
+                    <span>{isLoading ? "Google 登入中..." : "使用 Google 登入"}</span>
                   </button>
 
                   <p className="mt-6 text-center text-[16px]">
