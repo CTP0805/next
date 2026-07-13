@@ -44,7 +44,7 @@ export default function OrderPage() {
       {/* 訂單有商品 */}
       <div className="w-full text-gray-800">
         {/* 頁面大標題 */}
-        <h3 className="mb-6 border-b pb-3 text-lg font-bold text-gray-700">
+        <h3 className="mb-6 hidden border-b pb-3 text-lg font-bold text-gray-700 md:flex">
           歷史訂單
         </h3>
         {/* 訂單列表容器 */}
@@ -90,10 +90,13 @@ export default function OrderPage() {
 
                 {/* 綠色狀態標籤 */}
                 <div className="mt-1">
-                  <span className="mr-2 text-sm font-bold text-gray-800"> 訂單編號：{order.id}</span>
+                  <span className="mr-2 text-sm font-bold text-gray-800">
+                    {" "}
+                    訂單編號：{order.id}
+                  </span>
 
                   <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-600">
-                   {order.status}
+                    {order.status}
                   </span>
                 </div>
 

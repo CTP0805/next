@@ -108,88 +108,78 @@ export default function FavoritesPage() {
           - 手機版：max-md:shadow-none max-md:rounded-none，拔掉重複的陰影跟圓角，
                    直接融入 layout 的大白底背景中！
         */}
-        <div className="rounded-lg bg-white shadow-[0_5px_18px_rgba(30,48,52,0.09)] max-md:rounded-none max-md:shadow-none sm:overflow-hidden">
-          {/* 💡 修正 3：標題「我的心願清單」，手機版高度太空，微調內邊距 */}
-          <header className="border-b border-[#ECEFF0] px-8 py-6 max-sm:sticky max-sm:top-[100px] max-sm:z-30 max-sm:bg-white max-sm:px-0 max-sm:py-3">
-            <h3 className="text-xl leading-tight font-extrabold text-[#2E3338] max-sm:text-center">
-              {/* 📱 手機版顯示「心願清單」 */}
-              <span className="hidden max-sm:inline">心願清單</span>
 
-              {/* 💻 電腦版顯示「我的心願清單」 */}
-              <span className="inline max-sm:hidden">我的心願清單</span>
-            </h3>
-          </header>
+        {/* 💡 修正 3：標題「我的心願清單」，手機版高度太空，微調內邊距 */}
 
-          <div className="px-8 max-sm:px-0">
-            {/* 
+        <div className="px-8 max-sm:px-0">
+          {/* 
               💡 修正 4：
               - 加上 items-center，強迫「目前有12個體驗」跟「下拉選單」不論在哪種螢幕都垂直完美置中！
               - 攤平結構：把之前的 label 套娃改成乾淨的平級結構。
             */}
-            <div className="flex min-h-[92px] items-center justify-between gap-4 border-b border-[#ECEFF0] max-md:hidden max-sm:min-h-0 max-sm:py-4">
-              <p className="text-[17px] font-bold text-[#51585E] max-sm:text-[15px]">
-                目前有{" "}
-                <span className="text-[22px] font-extrabold text-[#68BBC3] max-sm:text-lg">
-                  12
-                </span>{" "}
-                個體驗等你去實現
-              </p>
+          <div className="flex min-h-[92px] items-center justify-between gap-4 border-b border-[#ECEFF0] max-md:hidden max-sm:min-h-0 max-sm:py-4">
+            <p className="text-[17px] font-bold text-[#51585E] max-sm:text-[15px]">
+              目前有{" "}
+              <span className="text-[22px] font-extrabold text-[#68BBC3] max-sm:text-lg">
+                12
+              </span>{" "}
+              個體驗等你去實現
+            </p>
 
-              <div className="flex shrink-0 items-center gap-2">
-                <span className="text-sm font-medium whitespace-nowrap text-[#8A9196] max-sm:hidden">
-                  排序方式
-                </span>
-                <select
-                  aria-label="排序方式"
-                  defaultValue="latest"
-                  className="select select-bordered h-10 min-h-10 rounded-md border border-[#E1E5E7] bg-white pr-10 pl-4 text-sm font-bold text-[#454B50] outline-none hover:border-[#68BBC3]"
-                >
-                  <option value="latest">最新</option>
-                  <option value="rating">評價最高</option>
-                  <option value="price-low">價格低到高</option>
-                </select>
-              </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="text-sm font-medium whitespace-nowrap text-[#8A9196] max-sm:hidden">
+                排序方式
+              </span>
+              <select
+                aria-label="排序方式"
+                defaultValue="latest"
+                className="select select-bordered h-10 min-h-10 rounded-md border border-[#E1E5E7] bg-white pr-10 pl-4 text-sm font-bold text-[#454B50] outline-none hover:border-[#68BBC3]"
+              >
+                <option value="latest">最新</option>
+                <option value="rating">評價最高</option>
+                <option value="price-low">價格低到高</option>
+              </select>
             </div>
+          </div>
 
-            {/* 卡片列表 */}
-            <div className="mt-6 flex flex-col gap-4 max-sm:mt-4">
-              {favoriteItems.map((item) => (
-                <FavoriteCard key={item.id} item={item} />
-              ))}
-            </div>
+          {/* 卡片列表 */}
+          <div className="mt-6 flex flex-col gap-4 max-sm:mt-4">
+            {favoriteItems.map((item) => (
+              <FavoriteCard key={item.id} item={item} />
+            ))}
+          </div>
 
-            {/* 
+          {/* 
               💡 修正 5：複製剛才最成功的「手機版到底提示」！
               - 手機版：顯示溫馨橫線提示。
               - 電腦版：維持原樣 1, 2 分頁。
             */}
-            <nav
-              aria-label="心願清單分頁"
-              className="flex items-center justify-center gap-2 py-10 max-sm:py-6"
-            >
-              {/* 📱 手機版專屬：溫馨的到底提示 */}
-              <div className="hidden flex-col items-center gap-2 py-2 max-md:flex">
-                <p className="text-sm font-medium tracking-wide text-[#8A9196]">
-                  到底了！暫時沒有其他體驗囉
-                </p>
-              </div>
+          <nav
+            aria-label="心願清單分頁"
+            className="flex items-center justify-center gap-2 py-10 max-sm:py-6"
+          >
+            {/* 📱 手機版專屬：溫馨的到底提示 */}
+            <div className="hidden flex-col items-center gap-2 py-2 max-md:flex">
+              <p className="text-sm font-medium tracking-wide text-[#8A9196]">
+                到底了！暫時沒有其他體驗囉
+              </p>
+            </div>
 
-              {/* 💻 電腦版分頁：加上 max-md:hidden 在手機版藏起來 */}
-              <button
-                type="button"
-                aria-current="page"
-                className="grid size-9 place-items-center rounded-md bg-[#68BBC3] text-sm font-extrabold text-white max-md:hidden"
-              >
-                1
-              </button>
-              <button
-                type="button"
-                className="grid size-9 place-items-center rounded-md border border-[#E1E5E7] bg-white text-sm font-bold text-[#5B6268] hover:border-[#68BBC3] max-md:hidden"
-              >
-                2
-              </button>
-            </nav>
-          </div>
+            {/* 💻 電腦版分頁：加上 max-md:hidden 在手機版藏起來 */}
+            <button
+              type="button"
+              aria-current="page"
+              className="grid size-9 place-items-center rounded-md bg-[#68BBC3] text-sm font-extrabold text-white max-md:hidden"
+            >
+              1
+            </button>
+            <button
+              type="button"
+              className="grid size-9 place-items-center rounded-md border border-[#E1E5E7] bg-white text-sm font-bold text-[#5B6268] hover:border-[#68BBC3] max-md:hidden"
+            >
+              2
+            </button>
+          </nav>
         </div>
       </div>
     </div>

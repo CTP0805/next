@@ -41,7 +41,7 @@ export default function MemberMobileHeader() {
       </Link>
 
       {/* 中間標題 */}
-      <p className=" text-black">{title}</p>
+      <p className="text-[20px] text-black">{title}</p>
     </header>
   );
 }
