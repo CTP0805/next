@@ -1,19 +1,20 @@
-import Image from "next/image";
-import Header from "@/components/header";
-import Sidebar from "@/components/sidebar";
-import Content from "./content";
+"use client";
 
-export default function Member() {
-    return (
-        <>
-            <Header />
-            <div className="container">
-                <Sidebar />
-                <section className="content">
-                    <Content />
-                </section>
-            </div>
-        </>
-    );
+import { useState } from "react";
+import MemberLevelRightPanel from "./level";
+import MemberLevelDetailDrawer from "./levelcontent";
+
+export default function MemberLevelPage() {
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  return (
+    <div className="flex gap-8 p-8">
+      <MemberLevelRightPanel onOpenDetail={() => setIsDetailOpen(true)} />
+
+      <MemberLevelDetailDrawer
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+      />
+    </div>
+  );
 }
-
