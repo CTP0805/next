@@ -9,7 +9,7 @@ export default function Navbar() {
   const navLinks = [
     { name: "部落格", href: "/blog" },
     { name: "體驗分類", href: "/categories" },
-    { name: "關於我們", href: "/about" },
+    { name: "品牌介紹", href: "/about" },
     { name: "聯絡我們", href: "/contact" },
   ];
 
@@ -57,7 +57,7 @@ export default function Navbar() {
         <input
           type="text"
           placeholder="搜尋景點、地區或城市"
-          className="h-[40px] w-full rounded-[25px] bg-gray-300/20 pr-4 pl-10 placeholder:text-white/70"
+          className="h-[40px] w-full rounded-[25px] bg-gray-300/20 pr-4 pl-10 text-[16px] placeholder:text-white/70"
         />
       </div>
       {/* 中間導覽 */}
@@ -76,7 +76,7 @@ export default function Navbar() {
 
       {/* 右側功能區 */}
       <ul className="flex items-center">
-        <div className="px-2">
+        <div className="group relative px-2">
           {" "}
           <Link href="/cart" className="flex shrink-0 items-center gap-2">
             <Image
@@ -87,6 +87,29 @@ export default function Navbar() {
               className="h-auto w-auto"
             />
           </Link>
+          {/* 2. 中間這層透明的區塊 (橋樑) */}
+          {/* 只要 top-full 加上一點高度，讓它與下方的視窗重疊即可 */}
+          <div className="absolute top-full right-0 h-4 w-full bg-transparent"></div>
+          {/* 3. 購物車視窗 */}
+          {/* 注意：這裡的 top 設定為 top-[calc(100%+16px)] 以避開那 16px 的透明區塊，或者直接讓它緊貼透明區塊 */}
+          <div className="absolute top-[calc(100%+1rem)] right-0 z-50 hidden w-64 rounded-md border bg-white p-4 shadow-lg group-hover:block">
+            {" "}
+            <div className="relative mx-auto mb-4 h-48 w-48">
+              <Image
+                src="/icon/cart.svg"
+                alt="購物車空空的"
+                fill
+                className="bg-amber-400 object-contain text-black" // 確保圖片維持比例並在容器內顯示
+              />
+            </div>
+            <h3 className="mb-2 text-2xl font-bold text-gray-700">
+              購物車暫無商品{" "}
+            </h3>
+            <p className="mb-8 cursor-pointer text-[12px] text-teal-500">
+              您的購物車目前是空的，快去尋找下一 個冒險目的地吧！{" "}
+            </p>
+            <button className="bg-[#45cad5] ">進入購物車</button>
+          </div>
         </div>
         <div className="px-2">
           <Link href="/auth/login" className="hover:text-gray-300">
