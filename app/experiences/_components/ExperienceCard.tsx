@@ -22,8 +22,8 @@ export default function ExperienceCard({
   const [isFavorite, setIsFavorite] = useState(false);
 
   return (
-    <div className="card bg-white w-full h-[340px] shadow-sm flex flex-col overflow-hidden transition-all duration-500 ease-out will-change-transform hover:-translate-y-2 hover:shadow-[0_16px_34px_rgba(39,68,72,0.16)] focus-within:-translate-y-2 focus-within:shadow-[0_16px_34px_rgba(39,68,72,0.16)]">
-      <figure className="relative h-[55%] w-full overflow-hidden shrink-0">
+    <div className="card flex w-full flex-col overflow-hidden bg-white shadow-sm transition-all duration-500 ease-out will-change-transform md:h-[340px] md:hover:-translate-y-2 md:hover:shadow-[0_16px_34px_rgba(39,68,72,0.16)]">
+      <figure className="relative aspect-[16/10] w-full shrink-0 overflow-hidden md:aspect-auto md:h-[190px]">
         <Image
           src={experience.image}
           alt={experience.title}
@@ -34,30 +34,30 @@ export default function ExperienceCard({
         <button
           type="button"
           aria-label={isFavorite ? "取消收藏" : "加入最愛"}
-          className="absolute right-3 top-3 z-10 cursor-pointer p-1"
+          className="absolute top-3 right-3 z-10 cursor-pointer p-1 transition-transform duration-300 hover:scale-110 active:scale-95"
           onClick={() => setIsFavorite(!isFavorite)}
         >
           {isFavorite ? (
-            <HiHeart className="size-6 text-red-500 drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)] scale-110 transition-transform duration-200" />
+            <HiHeart className="size-6 text-red-500 drop-shadow-[0_2px_5px_rgba(0,0,0,0.2)] filter" />
           ) : (
-            <HiOutlineHeart className="size-6 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] hover:text-red-500 transition-colors" />
+            <HiOutlineHeart className="size-6 text-white drop-shadow-[0_0_2px_rgba(0,0,0,0.25)] drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)] filter transition-colors" />
           )}
         </button>
       </figure>
-      <div className="h-[45%] px-4 pb-6 pt-3 flex flex-col">
-        <p className="text-xs font-medium text-[#858C91]">
+      <div className="flex flex-1 flex-col px-4 pt-3 pb-6">
+        <p className="text-[12px] font-medium text-[#858C91]">
           {experience.location}
         </p>
-        <h2 className="mt-1 line-clamp-2 text-[16px] font-extrabold leading-6 text-[#2E3338]">
+        <p className="mt-1 line-clamp-2 h-auto text-[16px] leading-6 font-extrabold text-[#2E3338] max-md:leading-tight md:h-[48px]">
           {experience.title}
-        </h2>
-        <p className="mt-0.5 text-sm font-bold">
+        </p>
+        <p className="mt-1 text-[12px] font-bold">
           <span className="text-[#F4A629]">{experience.rating}</span>
           <span className="ml-1 font-medium text-[#8A9196]">
             ({experience.reviews})
           </span>
         </p>
-        <p className="mt-auto text-[18px] font-extrabold text-[#30353A]">
+        <p className="mt-4 text-[16px] font-extrabold text-[#30353A] md:mt-auto">
           {experience.price}
         </p>
       </div>

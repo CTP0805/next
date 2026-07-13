@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // ⭕️ 補上這段：徹底關閉左下角煩人的「N」開發工具貼片
+  devIndicators: false,
   images: {
     // 1. 安全設定（原本的設定）
     dangerouslyAllowSVG: true,
