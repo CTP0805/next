@@ -80,6 +80,7 @@
     @apply text-[14px];
   }
 
+
   .profile-input {
     @apply border border-zinc-200 text-black;
   }

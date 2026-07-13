@@ -103,7 +103,7 @@ export default function LoginPage() {
         {/* 背景遮罩 */}
         <div className="min-h-screen bg-black/10 backdrop-brightness-75">
           {/* 外層 container：負責控制整體寬度與 RWD 留白 */}
-          <section className="container mx-auto flex min-h-[calc(100vh-100px)] w-[66%] items-center justify-center py-[50px]">
+          <section className="container mx-auto flex min-h-[calc(100vh-100px)] w-[90%] items-center justify-center py-[50px] xl:w-[66%]">
             {/* 
             卡片主體：
             手機：只顯示表單，寬度 max-w-md

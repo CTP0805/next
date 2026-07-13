@@ -23,13 +23,13 @@ export default function ProfileFormTabs() {
 
   return (
     <section className="min-h-screen">
-      <div className="min-h-[740px] w-full px-16 py-10">
+      <div className="min-h-[740px] w-full ">
         <div className="border-b border-[#d9d9d9]">
           <div className="flex gap-8">
             <button
               type="button"
               onClick={() => setActiveTab("profile")}
-              className={`px-3 pb-3 text-[20px] ${
+              className={`px-3 pb-3 text-[18px] ${
                 activeTab === "profile"
                   ? "border-b border-[#7fc4cf] text-[#6fb8c4]"
                   : "text-[#d4d4d4]"
@@ -41,7 +41,7 @@ export default function ProfileFormTabs() {
             <button
               type="button"
               onClick={() => setActiveTab("password")}
-              className={`px-3 pb-3 text-[20px] ${
+              className={`px-3 pb-3 text-[18px] ${
                 activeTab === "password"
                   ? "border-b border-[#7fc4cf] text-[#6fb8c4]"
                   : "text-[#d4d4d4]"
@@ -65,10 +65,9 @@ export default function ProfileFormTabs() {
                   className="profile-input"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="email" className="profile-label">
                   電子信箱 <span className="text-red-500">*</span>
@@ -84,7 +83,7 @@ export default function ProfileFormTabs() {
 
               <div>
                 <label htmlFor="phone" className="profile-label">
-                  手機 
+                  手機
                 </label>
                 <input
                   id="phone"
@@ -94,7 +93,7 @@ export default function ProfileFormTabs() {
                   onChange={(e) => setPhone(e.target.value)}
                 />
               </div>
-            
+
               <div>
                 <label htmlFor="gender" className="profile-label">
                   性別
@@ -107,7 +106,7 @@ export default function ProfileFormTabs() {
                   onChange={(e) => setGender(e.target.value)}
                 />
               </div>
-            
+
               <div>
                 <label htmlFor="birthday" className="profile-label">
                   生日
