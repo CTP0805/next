@@ -1,0 +1,106 @@
+"use client";
+import { useState } from "react";
+
+function Stepper({
+  value,
+  onChange,
+  label,
+}: {
+  value: number;
+  onChange: (value: number) => void;
+  label: string;
+}) {
+  return (
+    <div className="flex items-center justify-between border-b border-[#EBEEEF] py-4 last:border-0">
+      <span className="text-sm font-bold text-[#555D63]">{label}</span>
+      <div className="flex items-center gap-4">
+        <button
+          type="button"
+          aria-label={`減少${label}人數`}
+          onClick={() => onChange(Math.max(0, value - 1))}
+          className="grid size-7 place-items-center rounded-full border border-[#D9DFE1] text-[#697178] hover:border-[#68BBC3]"
+        >
+          −
+        </button>
+        <span className="w-4 text-center text-sm font-extrabold">{value}</span>
+        <button
+          type="button"
+          aria-label={`增加${label}人數`}
+          onClick={() => onChange(value + 1)}
+          className="grid size-7 place-items-center rounded-full border border-[#D9DFE1] text-[#697178] hover:border-[#68BBC3]"
+        >
+          ＋
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function BookingCard() {
+  const [adults, setAdults] = useState(2);
+  const [children, setChildren] = useState(0);
+  const unitPrice = 1960;
+  const total = adults * unitPrice;
+
+  return (
+    <aside className="sticky top-28 rounded-lg border border-[#DDE3E5] bg-white p-6 shadow-[0_8px_24px_rgba(34,57,61,0.10)]">
+      <p className="text-[15px] font-bold text-[#858D92]">
+        <span className="text-[26px] font-extrabold text-[#68BBC3]">
+          NT$1,960
+        </span>{" "}
+        / 每人
+      </p>
+
+      <label className="mt-6 block">
+        <span className="mb-2 block text-xs font-bold text-[#656D72]">
+          選擇日期
+        </span>
+        <input
+          type="date"
+          defaultValue="2026-07-18"
+          className="h-11 w-full rounded-md border border-[#DCE2E4] px-3 text-sm text-[#4F575C] outline-none focus:border-[#68BBC3] focus:ring-2 focus:ring-[#68BBC3]/20"
+        />
+      </label>
+
+      <label className="mt-4 block">
+        <span className="mb-2 block text-xs font-bold text-[#656D72]">
+          場次
+        </span>
+        <select className="h-11 w-full rounded-md border border-[#DCE2E4] bg-white px-3 text-sm text-[#4F575C] outline-none focus:border-[#68BBC3]">
+          <option>17:00 - 20:30</option>
+          <option>17:30 - 21:00</option>
+        </select>
+      </label>
+
+      <div className="mt-4">
+        <p className="text-[14px] font-bold text-[#656D72]">參加人數</p>
+        <Stepper value={adults} onChange={setAdults} label="成人" />
+        <Stepper value={children} onChange={setChildren} label="孩童" />
+      </div>
+
+      <div className="my-5 flex items-center justify-between border-t border-[#E8ECEE] pt-5">
+        <span className="font-bold text-[#545C61]">合計</span>
+        <strong className="text-[20px] text-[#30363A]">
+          NT$ {total.toLocaleString("zh-TW")}
+        </strong>
+      </div>
+
+      <button
+        type="button"
+        className="h-12 w-full rounded-md bg-[#68BBC3] text-[16px] font-extrabold text-white transition-colors hover:bg-[#55AAB2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#68BBC3]"
+      >
+        選擇方案
+      </button>
+
+      <p className="mt-4 text-center text-[12px] text-[#8B9297]">
+        預訂前不會向您收費
+      </p>
+
+      <ul className="mt-5 space-y-2 border-t border-[#E8ECEE] pt-5 text-[12px] font-medium text-[#6F777C]">
+        <li>◉ 48 小時前免費取消</li>
+        <li>◉ 小團體驗，最多 8 人成行</li>
+        <li>◉ meet locals 體驗品質保障</li>
+      </ul>
+    </aside>
+  );
+}
