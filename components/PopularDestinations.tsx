@@ -2,18 +2,18 @@ import Image from "next/image";
 
 // components/PopularDestinations.js
 const destinations = [
-  { name: "日本", image: "/images/carousel1.jpeg" },
-  { name: "法國", image: "/images/carousel1.jpeg" },
-  { name: "法國", image: "/images/carousel1.jpeg" },
-  { name: "法國", image: "/images/carousel1.jpeg" },
-  { name: "法國", image: "/images/carousel1.jpeg" },
-  { name: "法國", image: "/images/carousel1.jpeg" },
+  { name: "倫敦", image: "/images/carousel1.jpeg" },
+  { name: "巴黎", image: "/images/carousel1.jpeg" },
+  { name: "慕尼黑", image: "/images/carousel1.jpeg" },
+  { name: "阿姆斯特丹", image: "/images/carousel1.jpeg" },
+  { name: "羅馬", image: "/images/carousel1.jpeg" },
+  { name: "巴賽隆納", image: "/images/carousel1.jpeg" },
 
   // ... 其他資料
 ];
 export default function PopularDestinations() {
   return (
-    <section className="mt-10 px-4 py-12">
+    <section className="mt-10 py-12">
       <div className="mb-10 text-center">
         <h2 className="inline-block rounded-[16px] bg-[#45cad5] px-8 py-2 text-xl font-bold text-white">
           熱門地區
@@ -22,9 +22,9 @@ export default function PopularDestinations() {
       </div>
 
       {/* 手機版滑動區 */}
-      <div className="scrollbar-hide overflow-x-auto md:hidden">
+      <div className="scrollbar-none overflow-x-auto backdrop-blur md:hidden">
         {/* flex + w-max 是實現滑動的核心 */}
-        <div className="flex w-max gap-4 px-4 pb-4">
+        <div className="flex w-max gap-4 pb-4">
           {destinations.map((dest, index) => (
             <div
               key={index}
