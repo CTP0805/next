@@ -48,6 +48,7 @@ export default function Navbar() {
             fill
             className="h-auto w-auto"
             priority
+            sizes="(max-width: 768px) 20px, 40px"
           />
         </Link>
       </div>
@@ -105,14 +106,14 @@ export default function Navbar() {
             <h3 className="mb-2 text-2xl font-bold text-gray-700">
               購物車暫無商品{" "}
             </h3>
-            <p className="mb-8 cursor-pointer text-[12px] text-teal-500">
+            <p className="mb-8 cursor-pointer text-[12px] text-[#45cad5]">
               您的購物車目前是空的，快去尋找下一 個冒險目的地吧！{" "}
             </p>
-            <button className="bg-[#45cad5] ">進入購物車</button>
+            <button className="bg-[#45cad5]">進入購物車</button>
           </div>
         </div>
         <div className="px-2">
-          <Link href="/auth/login" className="hover:text-gray-300">
+          <Link href="/auth/login" className="hover:text-a">
             登入
           </Link>
         </div>
