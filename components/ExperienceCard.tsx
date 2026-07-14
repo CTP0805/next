@@ -128,7 +128,14 @@ export default function Page() {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-12">
-      <h2 className="mb-8 text-center text-3xl font-bold">超夯在地體驗</h2>
+      <div className="mb-10 text-center">
+        <h2 className="inline-block w-[240px] rounded-[16px] bg-[#45cad5] px-6 py-2 text-xl font-bold text-white">
+          超夯在地體驗
+        </h2>
+        <p className="mt-4 text-gray-500">
+          探險者們最推薦的深度體驗，這週就出發！
+        </p>
+      </div>{" "}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {experiences.map((exp, i) => (
           <ExperienceCard key={i} {...exp} />
