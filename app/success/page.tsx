@@ -1,6 +1,14 @@
 "use client";
 
+import { useEffect } from "react";
+import { clearSelectedCoupon } from "@/app/member/coupon/utils";
+
 export default function SuccessPage() {
+  // 訂單資料送出／付款完成後，取消優惠券選用狀態
+  useEffect(() => {
+    clearSelectedCoupon();
+  }, []);
+
   return (
     <>
       {/* 最外層淺灰底容器 */}

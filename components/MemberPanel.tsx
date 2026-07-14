@@ -64,7 +64,7 @@ export default function MemberPanel() {
   const pathname = usePathname();
 
   return (
-      <aside className="w-[340px] overflow-hidden rounded-[12px] border border-zinc-200 bg-white shadow-xl">
+      <aside className="w-full max-w-full overflow-hidden rounded-[12px] border border-zinc-200 bg-white shadow-xl lg:w-[340px]">
         {/* 上方會員頭像區 */}
         <div className="flex flex-col items-center px-6 pt-10 pb-6">
           <div className="relative">

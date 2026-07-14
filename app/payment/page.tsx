@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { clearSelectedCoupon } from "@/app/member/coupon/utils";
+import { getApiServer } from "@/config/api-path";
 
 export default function PaymentPage() {
 
@@ -18,8 +20,12 @@ export default function PaymentPage() {
     const amount = 923; // 畫面上的總計金額
     const items = "濟州島9.81 Park門票"; // 右欄的商品名稱
 
-    // 直接導向後端 Express 的 Port 3001 的 /ecpay 路由
-    window.location.href = `http://localhost:3001/ecpay?amount=${amount}&items=${encodeURIComponent(items)}&method=${paymentMethod}`;
+    // 資料送出前清除優惠券選用狀態，避免返回優惠頁仍顯示「已選用」
+    clearSelectedCoupon();
+
+    // 跟目前連線 hostname 走同機後端 :3001（支援 192.168.x.x）
+    const api = getApiServer();
+    window.location.href = `${api}/ecpay?amount=${amount}&items=${encodeURIComponent(items)}&method=${paymentMethod}`;
   };
 
   return (

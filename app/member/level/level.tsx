@@ -43,7 +43,7 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
   return (
     <div className="w-full min-w-0">
       {/* ELITE STATUS 卡片 */}
-      <div className="relative mb-8 rounded-2xl bg-gradient-to-r from-teal-400 via-cyan-500 to-teal-500 p-6 text-white sm:p-8">
+      <div className="relative mb-8 rounded-[12px] bg-gradient-to-r from-teal-400 via-cyan-500 to-teal-500 p-6 text-white sm:p-8">
         <div className="flex items-start justify-between">
           <div>
             <div className="mb-1 flex items-center gap-2">
@@ -55,10 +55,15 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
             <h2 className="text-4xl font-bold tracking-tight">黃金會員</h2>
           </div>
 
-          {/* 會員詳情按鈕 */}
+          {/* 會員詳情按鈕：type=button + 足夠觸控區，避免被表單/外層攔截 */}
           <button
-            onClick={onOpenDetail}
-            className="flex items-center gap-1.5 rounded-full bg-white/20 px-5 py-2 text-sm transition-all hover:bg-white/30 active:bg-white/40"
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onOpenDetail();
+            }}
+            className="relative z-10 flex min-h-11 shrink-0 items-center gap-1.5 rounded-[12px] bg-white/20 px-4 py-2 text-sm transition-all hover:bg-white/30 active:bg-white/40 sm:px-5"
           >
             會員詳情 <span className="text-lg leading-none">→</span>
           </button>
@@ -72,9 +77,9 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
               下一級：<span className="font-semibold">白金會員</span>
             </span>
           </div>
-          <div className="mb-3 h-2.5 overflow-hidden rounded-full bg-white/30">
+          <div className="mb-3 h-2.5 overflow-hidden rounded-[12px] bg-white/30">
             <div
-              className="h-full rounded-full bg-white transition-all"
+              className="h-full rounded-[12px] bg-white transition-all"
               style={{ width: "65%" }}
             />
           </div>
@@ -89,8 +94,8 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
       <div className="mb-8">
         <h3 className="mb-5 text-xl font-bold text-gray-900">黃金會員權益</h3>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-gray-200 p-5 transition-all hover:shadow-md">
-            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-teal-100">
+          <div className="rounded-[12px] border border-gray-200 p-5 transition-all hover:shadow-md">
+            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-[12px] bg-teal-100">
               <Gift className="h-5 w-5 text-teal-600" />
             </div>
             <h4 className="mb-1 font-semibold">黃金專屬優惠</h4>
@@ -99,8 +104,8 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 p-5 transition-all hover:shadow-md">
-            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
+          <div className="rounded-[12px] border border-gray-200 p-5 transition-all hover:shadow-md">
+            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-[12px] bg-amber-100">
               <Percent className="h-5 w-5 text-amber-600" />
             </div>
             <h4 className="mb-1 font-semibold">會員專屬優惠券</h4>
@@ -109,8 +114,8 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 p-5 transition-all hover:shadow-md">
-            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100">
+          <div className="rounded-[12px] border border-gray-200 p-5 transition-all hover:shadow-md">
+            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-[12px] bg-purple-100">
               <Tag className="h-5 w-5 text-purple-600" />
             </div>
             <h4 className="mb-1 font-semibold">專屬會員折扣</h4>
@@ -130,11 +135,12 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
           {faqs.map((faq, index) => (
             <div
               key={index}
-              className="overflow-hidden rounded-2xl border border-gray-200"
+              className="overflow-hidden rounded-[12px] border border-gray-200"
             >
               <button
+                type="button"
                 onClick={() => toggleFAQ(index)}
-                className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-gray-50"
+                className="flex min-h-12 w-full items-center justify-between px-4 py-4 text-left transition-colors hover:bg-gray-50 sm:px-6"
               >
                 <span className="pr-4 font-medium text-gray-800">
                   {faq.question}
