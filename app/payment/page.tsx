@@ -5,13 +5,14 @@ import { clearSelectedCoupon } from "@/app/member/coupon/utils";
 import { getApiServer } from "@/config/api-path";
 
 export default function PaymentPage() {
-
   // 管理選中的付款方式
-  const [paymentMethod, setPaymentMethod] = useState("credit-card");
+  const [paymentMethod, setPaymentMethod] = useState<"ecpay" | "linepay">(
+    "ecpay",
+  );
   // 管理是否同意條款 (這才是真正的 checkbox)
   const [isAgreed, setIsAgreed] = useState(false);
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (!isAgreed) {
       alert("請先勾選同意服務條款與隱私權");
       return;
@@ -20,12 +21,32 @@ export default function PaymentPage() {
     const amount = 923; // 畫面上的總計金額
     const items = "濟州島9.81 Park門票"; // 右欄的商品名稱
 
-    // 資料送出前清除優惠券選用狀態，避免返回優惠頁仍顯示「已選用」
-    clearSelectedCoupon();
+    // 🌟 狀況 A：如果使用者選 LINE Pay
+    if (paymentMethod === "linepay") {
+      try {
+        // 先用 fetch 拿到 LINE Pay 的跳轉網址
+        const response = await fetch(
+          `http://localhost:3001/linepay/reserve?amount=${amount}&items=${encodeURIComponent(items)}`,
+        );
+        const result = await response.json();
 
-    // 跟目前連線 hostname 走同機後端 :3001（支援 192.168.x.x）
-    const api = getApiServer();
-    window.location.href = `${api}/ecpay?amount=${amount}&items=${encodeURIComponent(items)}&method=${paymentMethod}`;
+        if (result.success && result.paymentUrl) {
+          // 拿到網址，前端直接轉跳到 LINE Pay 付款畫面！
+          window.location.href = result.paymentUrl;
+        } else {
+          alert("啟動 LINE Pay 失敗：" + result.message);
+        }
+      } catch (error) {
+        alert("連線後端 LINE Pay 失敗");
+      }
+      return; // 結束執行
+    }
+
+    // 🌟 狀況 B：如果使用者選信用卡（維持你最愛的 4 行粗暴網址轉跳）
+    if (paymentMethod === "ecpay") {
+      // 直接導向後端 Express 的 Port 3001 的 /ecpay 路由
+      window.location.href = `http://localhost:3001/ecpay?amount=${amount}&items=${encodeURIComponent(items)}&method=${paymentMethod}`;
+    }
   };
 
   return (
@@ -37,9 +58,9 @@ export default function PaymentPage() {
           {/* ==================== 1. 頂部步驟進度條 (DaisyUI Steps) ==================== */}
           <div className="mb-10 flex w-full justify-center">
             <ul className="steps grid w-full max-w-7xl grid-cols-3 text-sm">
-              <li className="step step-accent">選擇方案</li>
               <li className="step step-accent">填寫資料</li>
-              <li className="step step-accent">完成付款</li>
+              <li className="step step-accent">選擇付款</li>
+              <li className="step">完成付款</li>
             </ul>
           </div>
 
@@ -51,30 +72,30 @@ export default function PaymentPage() {
               <div className="rounded-lg border border-gray-100 bg-white p-6 shadow-sm">
                 <div className="flex flex-col gap-4">
                   {/* 選項 1：信用卡/記帳卡 */}
-                  <label className="flex cursor-pointer items-center justify-between  p-4 transition text-gray-800 rounded-xl border border-transparent hover:border-black hover:bg-slate-50/50 ">
+                  <label className="flex cursor-pointer items-center justify-between rounded-xl border border-transparent p-4 text-gray-800 transition hover:border-black hover:bg-slate-50/50">
                     <div className="flex items-center gap-3">
                       {/* 修正：type 改為 radio */}
                       <input
                         type="radio"
                         name="payment-method"
                         className="radio radio-error radio-sm"
-                        checked={paymentMethod === "credit-card"}
-                        onChange={() => setPaymentMethod("credit-card")}
+                        checked={paymentMethod === "ecpay"}
+                        onChange={() => setPaymentMethod("ecpay")}
                       />
                       <span className="text-sm font-medium">信用卡/記帳卡</span>
                     </div>
                   </label>
 
                   {/* 選項 2：LINE Pay */}
-                  <label className="flex cursor-pointer items-center justify-between  p-4 transition text-gray-800 rounded-xl border border-transparent hover:border-black hover:bg-slate-50/50">
+                  <label className="flex cursor-pointer items-center justify-between rounded-xl border border-transparent p-4 text-gray-800 transition hover:border-black hover:bg-slate-50/50">
                     <div className="flex items-center gap-3">
                       {/* 修正：type 改為 radio */}
                       <input
                         type="radio"
                         name="payment-method"
                         className="radio radio-error radio-sm"
-                        checked={paymentMethod === "line-pay"}
-                        onChange={() => setPaymentMethod("line-pay")}
+                        checked={paymentMethod === "linepay"}
+                        onChange={() => setPaymentMethod("linepay")}
                       />
                       <span className="text-sm font-medium">LINE Pay</span>
                     </div>
@@ -88,7 +109,7 @@ export default function PaymentPage() {
               {/* 區塊 B：同意條款與確認付款大方塊 */}
               <div className="flex flex-col items-center justify-between gap-6 rounded-lg border border-gray-100 bg-white p-8 shadow-sm md:flex-row">
                 {/* 左側：隱私權條款勾選說明 */}
-                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-600">
                   {/* 修正：條款同意應該是 checkbox 樣式，這裡改回 checkbox 確保勾選視覺 */}
                   <input
                     type="checkbox"
@@ -157,7 +178,8 @@ export default function PaymentPage() {
 
               <div className="mt-6 rounded-lg border border-cyan-100 bg-cyan-50/60 p-3 text-xs text-cyan-600">
                 <p>
-                  你可獲得 <span className="font-bold text-orange-500">3</span> 大傻幣
+                  你可獲得 <span className="font-bold text-orange-500">3</span>{" "}
+                  大傻幣
                 </p>
               </div>
             </div>

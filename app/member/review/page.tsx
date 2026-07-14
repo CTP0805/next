@@ -4,7 +4,9 @@ export default function ReviewPage() {
   return (
     <div className="w-full text-gray-800">
       {/* 頁面大標題 */}
-      <h3 className="mb-6 pb-2 text-xl font-bold text-gray-700">我的評價</h3>
+      <h3 className="mb-6 hidden pb-2 text-xl font-bold text-gray-700 md:flex">
+        我的評價
+      </h3>
       {/* ===== 上方未評論/已評論分頁標籤(DaisyUI) =====*/}
       <div className="tabs tabs-boxed mb-6 max-w-md bg-gray-100/80 p-1">
         <button className="tab tab-active flex-1 text-sm font-medium">
@@ -46,7 +48,7 @@ export default function ReviewPage() {
           <span className="rounded bg-gray-200 px-2 py-0.5 text-[14px] font-medium text-gray-600">
             已送達
           </span>
-        </div> 
+        </div>
 
         {/* 商品評分(點擊星星評分) */}
         <div className="flex flex-col gap-2">

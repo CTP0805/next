@@ -1,4 +1,4 @@
-import FavoriteCard from "@/app/member/_components/FavoriteCard";
+import FavoriteCard from "@/components/FavoriteCard";
 
 type FavoriteItem = {
   id: number;
@@ -96,83 +96,92 @@ const favoriteItems: FavoriteItem[] = [
 
 export default function FavoritesPage() {
   return (
-    <div className="min-h-screen bg-[#F7F7F7] text-[#292D32]">
-      <header
-        aria-label="Navbar 元件預留區"
-        className="h-20 w-full bg-[#68BBC3]"
-      />
+    <div className="text-[#292D32]">
+      {/* 
+        💡 修正 1：移除 min-h-screen 和過大的 pt-16。
+        把原本的 mx-auto grid 簡化。手機版不需要多餘的 padding 塞在 layout 內。
+      */}
+      <div className="w-full">
+        {/* 
+          💡 修正 2：
+          - 電腦版：維持原本的卡片包裝框。
+          - 手機版：max-md:shadow-none max-md:rounded-none，拔掉重複的陰影跟圓角，
+                   直接融入 layout 的大白底背景中！
+        */}
 
-      <main className="mx-auto grid w-full max-w-[1280px] grid-cols-[280px_minmax(0,1fr)] gap-6 px-6 pb-28 pt-16 max-lg:grid-cols-1 max-sm:px-4 max-sm:pt-8">
-        <aside
-          aria-label="會員中心側欄元件預留區"
-          className="min-h-[640px] rounded-lg bg-white shadow-[0_5px_18px_rgba(30,48,52,0.09)] max-lg:hidden"
-        />
+        {/* 💡 修正 3：標題「我的心願清單」，手機版高度太空，微調內邊距 */}
 
-        <section className="overflow-hidden rounded-lg bg-white shadow-[0_5px_18px_rgba(30,48,52,0.09)]">
-          <header className="border-b border-[#ECEFF0] px-8 py-6 max-sm:px-5">
-            <h1 className="text-[28px] font-extrabold leading-tight">
-              我的心願清單
-            </h1>
-          </header>
+        <div className="px-8 max-sm:px-0">
+          {/* 
+              💡 修正 4：
+              - 加上 items-center，強迫「目前有12個體驗」跟「下拉選單」不論在哪種螢幕都垂直完美置中！
+              - 攤平結構：把之前的 label 套娃改成乾淨的平級結構。
+            */}
+          <div className="flex min-h-[92px] items-center justify-between gap-4 border-b border-[#ECEFF0] max-md:hidden max-sm:min-h-0 max-sm:py-4">
+            <p className="text-[17px] font-bold text-[#51585E] max-sm:text-[15px]">
+              目前有{" "}
+              <span className="text-[22px] font-extrabold text-[#68BBC3] max-sm:text-lg">
+                12
+              </span>{" "}
+              個體驗等你去實現
+            </p>
 
-          <div className="px-8 max-sm:px-5">
-            <div className="flex min-h-[92px] items-center justify-between gap-4 border-b border-[#ECEFF0] max-sm:items-start max-sm:py-5">
-              <p className="text-[17px] font-bold text-[#51585E]">
-                目前有{" "}
-                <span className="text-[22px] font-extrabold text-[#68BBC3]">
-                  12
-                </span>{" "}
-                個體驗等你去實現
-              </p>
-
-              <label className="flex shrink-0 items-center gap-3 text-sm font-medium text-[#8A9196]">
-                <span className="max-sm:hidden whitespace-nowrap">
-                  排序方式
-                </span>
-                <select
-                  aria-label="排序方式"
-                  defaultValue="latest"
-                  className="select select-bordered h-10 min-h-10 rounded-md border border-[#E1E5E7] bg-white pl-4 pr-10 text-sm font-bold text-[#454B50] outline-none hover:border-[#68BBC3]"
-                >
-                  <option value="latest">最新</option>
-                  <option value="rating">評價最高</option>
-                  <option value="price-low">價格低到高</option>
-                </select>
-              </label>
-            </div>
-
-            <div className="flex flex-col mt-6">
-              {favoriteItems.map((item) => (
-                <FavoriteCard key={item.id} item={item} />
-              ))}
-            </div>
-
-            <nav
-              aria-label="心願清單分頁"
-              className="flex items-center justify-center gap-2 py-10"
-            >
-              <button
-                type="button"
-                aria-current="page"
-                className="grid size-9 place-items-center rounded-md bg-[#68BBC3] text-sm font-extrabold text-white"
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="text-sm font-medium whitespace-nowrap text-[#8A9196] max-sm:hidden">
+                排序方式
+              </span>
+              <select
+                aria-label="排序方式"
+                defaultValue="latest"
+                className="select select-bordered h-10 min-h-10 rounded-md border border-[#E1E5E7] bg-white pr-10 pl-4 text-sm font-bold text-[#454B50] outline-none hover:border-[#68BBC3]"
               >
-                1
-              </button>
-              <button
-                type="button"
-                className="grid size-9 place-items-center rounded-md border border-[#E1E5E7] bg-white text-sm font-bold text-[#5B6268] hover:border-[#68BBC3]"
-              >
-                2
-              </button>
-            </nav>
+                <option value="latest">最新</option>
+                <option value="rating">評價最高</option>
+                <option value="price-low">價格低到高</option>
+              </select>
+            </div>
           </div>
-        </section>
-      </main>
 
-      <footer
-        aria-label="Footer 元件預留區"
-        className="h-[360px] w-full bg-[#D9ECEE]"
-      />
+          {/* 卡片列表 */}
+          <div className="mt-6 flex flex-col gap-4 max-sm:mt-4">
+            {favoriteItems.map((item) => (
+              <FavoriteCard key={item.id} item={item} />
+            ))}
+          </div>
+
+          {/* 
+              💡 修正 5：複製剛才最成功的「手機版到底提示」！
+              - 手機版：顯示溫馨橫線提示。
+              - 電腦版：維持原樣 1, 2 分頁。
+            */}
+          <nav
+            aria-label="心願清單分頁"
+            className="flex items-center justify-center gap-2 py-10 max-sm:py-6"
+          >
+            {/* 📱 手機版專屬：溫馨的到底提示 */}
+            <div className="hidden flex-col items-center gap-2 py-2 max-md:flex">
+              <p className="text-sm font-medium tracking-wide text-[#8A9196]">
+                到底了！暫時沒有其他體驗囉
+              </p>
+            </div>
+
+            {/* 💻 電腦版分頁：加上 max-md:hidden 在手機版藏起來 */}
+            <button
+              type="button"
+              aria-current="page"
+              className="grid size-9 place-items-center rounded-md bg-[#68BBC3] text-sm font-extrabold text-white max-md:hidden"
+            >
+              1
+            </button>
+            <button
+              type="button"
+              className="grid size-9 place-items-center rounded-md border border-[#E1E5E7] bg-white text-sm font-bold text-[#5B6268] hover:border-[#68BBC3] max-md:hidden"
+            >
+              2
+            </button>
+          </nav>
+        </div>
+      </div>
     </div>
   );
 }

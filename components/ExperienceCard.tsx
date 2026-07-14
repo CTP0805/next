@@ -66,7 +66,7 @@ export default function Page() {
       price: 2800,
       rating: 4.8,
       reviewCount: 190,
-      image: "/images/carousel1.jpg",
+      image: "/images/carousel1.jpeg",
     },
     {
       title: "雲霧山林...",
@@ -74,7 +74,7 @@ export default function Page() {
       price: 2800,
       rating: 4.8,
       reviewCount: 190,
-      image: "/images/carousel1.jpg",
+      image: "/images/carousel1.jpeg",
     },
     {
       title: "雲霧山林...",
@@ -82,7 +82,7 @@ export default function Page() {
       price: 2800,
       rating: 4.8,
       reviewCount: 190,
-      image: "/images/carousel1.jpg",
+      image: "/images/carousel1.jpeg",
     },
     {
       title: "雲霧山林...",
@@ -90,7 +90,7 @@ export default function Page() {
       price: 2800,
       rating: 4.8,
       reviewCount: 190,
-      image: "/images/carousel1.jpg",
+      image: "/images/carousel1.jpeg",
     },
     {
       title: "雲霧山林...",
@@ -98,7 +98,7 @@ export default function Page() {
       price: 2800,
       rating: 4.8,
       reviewCount: 190,
-      image: "/images/carousel1.jpg",
+      image: "/images/carousel1.jpeg",
     },
     {
       title: "雲霧山林...",
@@ -106,7 +106,7 @@ export default function Page() {
       price: 2800,
       rating: 4.8,
       reviewCount: 190,
-      image: "/images/carousel1.jpg",
+      image: "/images/carousel1.jpeg",
     },
     {
       title: "雲霧山林...",
@@ -114,7 +114,7 @@ export default function Page() {
       price: 2800,
       rating: 4.8,
       reviewCount: 190,
-      image: "/images/carousel1.jpg",
+      image: "/images/carousel1.jpeg",
     },
     {
       title: "雲霧山林...",
@@ -122,7 +122,7 @@ export default function Page() {
       price: 2800,
       rating: 4.8,
       reviewCount: 190,
-      image: "/images/carousel1.jpg",
+      image: "/images/carousel1.jpeg",
     },
   ];
 

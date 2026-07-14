@@ -1,4 +1,5 @@
 "use client";
+import Link from 'next/link';
 
 import { useEffect } from "react";
 import { clearSelectedCoupon } from "@/app/member/coupon/utils";
@@ -15,11 +16,11 @@ export default function SuccessPage() {
       <div className="min-h-[calc(100vh-160px)] w-full bg-slate-50 py-10 text-gray-800">
         {/* 核心主容器：最大寬度 1280px，mx-auto 負責在大螢幕下置中 */}
         <div className="mx-auto w-full max-w-7xl px-4">
-          {/* 頂部步驟進度條 */}
-          <div className="mb-12 flex w-full justify-center">
-            <ul className="steps test-sm grid w-full max-w-7xl grid-cols-3">
-              <li className="step step-accent">選擇方案</li>
+          {/* ==================== 1. 頂部步驟進度條 (DaisyUI Steps) ==================== */}
+          <div className="w-full flex justify-center mb-10">
+            <ul className="steps id-steps w-full max-w-7xl text-sm grid grid-cols-3">
               <li className="step step-accent">填寫資料</li>
+              <li className="step step-accent">選擇付款</li>
               <li className="step step-accent">完成付款</li>
             </ul>
           </div>
@@ -101,9 +102,11 @@ export default function SuccessPage() {
 
             {/* 查看訂單按鈕 */}
             <div className="mt-4">
+            <Link href="/member/order">
               <button className="btn btn-outline rounded-xl border-gray-400 px-8 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-800">
                 查看訂單
               </button>
+              </Link>
             </div>
           </div>
         </div>

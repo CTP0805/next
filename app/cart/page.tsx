@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 //======定義前端假資料=============
 const initialCartItems = [
@@ -37,68 +38,80 @@ export default function CartPage() {
       {/* ======= 三元運算 判斷購物車有無商品====== */}
       {cartItems.length > 0 ? (
         /* 購物車有商品介面 */
-        <div className="min-h-[calc(100vh-160px)] w-full bg-slate-300 py-10">
+        <div className="min-h-[calc(100vh-160px)] w-full py-10">
           {/* 限制最大寬度1280px */}
           <div className="mx-auto w-full max-w-7xl bg-white px-4">
             {/* 上方購物區 */}
             <div className="flex flex-col items-start gap-8 lg:flex-row">
               {/* 左側欄位 */}
               <div className="w-full rounded-lg bg-white p-6 shadow-sm lg:flex-[2]">
-                <div className="flex items-center justify-between">
+                <div className="flex w-full items-center justify-between">
                   <label className="flex cursor-pointer items-center gap-2">
                     <input
                       type="checkbox"
-                      className="check checkbox-primary checkbox-sm"
+                      className="check checkbox-primary h-6 w-6 rounded-md"
                     />
-                    <span>全選</span>
+                    <span className="whitespace-nowrap text-gray-900">
+                      全選
+                    </span>
                   </label>
-                  <button className="btn btn-outline btn-sm">
-                    刪除選中活動
-                  </button>
+                  <button className="btn btn-outline">刪除選中活動</button>
                 </div>
                 {/* 🚀 關鍵改動：使用 map 方法去循環 initialCartItems 假資料 */}
                 {cartItems.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-4 border-b py-4 last:border-0"
+                    className="flex flex-col justify-between gap-4 border-b py-6 last:border-0 md:flex-row md:items-center"
                   >
-                    <input
-                      type="checkbox"
-                      className="checkbox checkbox-primary checkbox-sm"
-                    />
+                    <div className="flex flex-1 items-start gap-4">
+                      <input
+                        type="checkbox"
+                        className="checkbox checkbox-primary checkbox-sm mt-1 md:mt-0 md:self-center"
+                      />
 
-                    {/* 這裡改成讀取真正的 item.image */}
-                    <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-200 text-xs text-gray-400">
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.title}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        "商品圖片"
-                      )}
+                      {/* 這裡改成讀取真正的 item.image */}
+                      <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-200 text-xs text-gray-400">
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.title}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          "商品圖片"
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold break-words text-gray-800 md:text-base">
+                          {item.title}
+                        </p>
+                        <p className="mt-1 text-xs text-gray-400 md:text-sm">
+                          {item.date}
+                        </p>
+                        <span className="badge badge-ghost badge-sm md:badge-md mt-2">
+                          {item.spec}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="flex-1">
-                      <h4 className="text-sm font-bold text-gray-800">
-                        {item.title}
-                      </h4>
-                      <p className="mt-1 text-xs text-gray-400">{item.date}</p>
-                      <span className="badge badge-ghost badge-sm mt-2">
-                        {item.spec}
-                      </span>
-                    </div>
+                    {/* 右半部：包含 數量按鈕 + 小計金額 */}
+                    {/* 手機版會自動掉到下方，透過 w-full md:w-auto 撐開並對齊 */}
+                    <div className="flex w-full items-center justify-between gap-6 border-t border-gray-100 pt-3 md:w-auto md:justify-end md:border-0 md:pt-0">
+                      {/* 數量按鈕 */}
+                      <div className="flex items-center gap-2">
+                        <button className="btn btn-sm btn-outline">-</button>
+                        <span className="px-2 text-sm font-medium">
+                          {item.quantity}
+                        </span>
+                        <button className="btn btn-sm btn-outline">+</button>
+                      </div>
 
-                    {/* 數量按鈕 */}
-                    <div className="flex items-center gap-2">
-                      <button className="btn btn-xs btn-outline">-</button>
-                      <span className="px-2 font-medium">{item.quantity}</span>
-                      <button className="btn btn-xs btn-outline">+</button>
-                    </div>
-
-                    <div className="min-w-[80px] text-right font-bold text-gray-800">
-                      {(item.price * item.quantity).toLocaleString()}
+                      {/* 商品總額 */}
+                      <div className="min-w-[80px] text-right text-base font-bold text-gray-800 md:text-lg">
+                        NT$
+                        {(item.price * item.quantity).toLocaleString()}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -112,9 +125,11 @@ export default function CartPage() {
                 <div className="mb-1 text-xl font-medium text-gray-700">
                   NT$ {totalAmount.toLocaleString()}
                 </div>
-                <button className="btn w-full border-none bg-[#45cad5] text-white hover:bg-[#36b3be]">
-                  結帳
-                </button>
+                <Link href="/checkout/">
+                  <button className="btn w-full border-none bg-[#45cad5] text-white hover:bg-[#36b3be]">
+                    結帳
+                  </button>
+                </Link>
                 <p className="mt-2 text-center text-xs text-cyan-500">
                   你可獲得 10 積分
                 </p>

@@ -1,18 +1,51 @@
+"use client";
+
 import MemberPanel from "@/components/MemberPanel";
+import MemberMobileHeader from "@/components/MemberMobileHeader";
+import { usePathname } from "next/navigation";
 
 export default function MemberLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+
+  // /member 是手機版選單首頁
+  const isMemberHome = pathname === "/member";
+
   return (
-    <div className="mx-auto flex w-full max-w-[1280px] flex-col bg-white lg:flex-row">
-      {/* 側欄：手機全寬、桌機固定寬，避免外部窄螢幕擠爆版面 */}
-      <aside className="w-full shrink-0 bg-zinc-100 p-4 sm:p-6 lg:w-auto">
-        <MemberPanel />
-      </aside>
-      <div className="min-h-screen min-w-0 flex-1 bg-zinc-50 p-4 sm:p-6">
-        {children}
+    <div className="min-h-screen bg-zinc-100 md:px-6 md:py-6">
+      <div className="mx-auto flex w-full max-w-[1280px] justify-center gap-6 md:items-start">
+        {/* 
+          手機版：
+          /member 顯示滿版選單
+          /member/profile 隱藏選單
+
+          桌機版：
+          永遠顯示左側選單
+        */}
+        <aside
+          className={` ${isMemberHome ? "block" : "hidden"} w-full md:block md:w-auto md:shrink-0`}
+        >
+          <MemberPanel />
+        </aside>
+
+        {/* 
+          手機版：
+          /member 隱藏右側內容
+          /member/profile 顯示內容
+
+          桌機版：
+          永遠顯示右側內容
+        */}
+        <section
+          className={` ${isMemberHome ? "hidden" : "block"} min-h-screen w-full bg-white px-4 py-4 md:block md:flex-1 md:overflow-hidden md:rounded-[12px] md:border md:border-zinc-200 md:px-16 md:py-10 md:shadow-xl`}
+        >
+          {!isMemberHome && <MemberMobileHeader />}
+
+          {children}
+        </section>
       </div>
     </div>
   );

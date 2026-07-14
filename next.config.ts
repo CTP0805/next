@@ -14,13 +14,10 @@ const envOrigins =
 
 const nextConfig: NextConfig = {
   // 綁定 0.0.0.0 時，仍需明確允許來源 hostname
-  allowedDevOrigins: [
-    "localhost",
-    "127.0.0.1",
-    "192.168.33.85",
-    ...envOrigins,
-  ],
+  allowedDevOrigins: ["localhost", "127.0.0.1", "192.168.33.85", ...envOrigins],
 
+  // ⭕️ 補上這段：徹底關閉左下角煩人的「N」開發工具貼片
+  devIndicators: false,
   images: {
     // 1. 安全設定（原本的設定）
     dangerouslyAllowSVG: true,

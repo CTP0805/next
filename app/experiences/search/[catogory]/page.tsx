@@ -1,5 +1,10 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import FilterPanel from "@/app/experiences/_components/FilterPanel";
 import ExperienceCard from "@/app/experiences/_components/ExperienceCard";
+import Link from "next/link";
+import { HiAdjustments, HiChevronUp } from "react-icons/hi";
 
 type Experience = {
   id: number;
@@ -123,33 +128,76 @@ const experiences: Experience[] = [
 ];
 
 export default function ExperienceCategoryPage() {
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  // ⭕️ 1. 建立控制「回到頂端」按鈕是否顯示的狀態
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // ⭕️ 2. 監聽網頁滾動事件
+  useEffect(() => {
+    const handleScroll = () => {
+      // 當使用者下滑超過 400px 時顯示按鈕，否則隱藏
+      if (window.scrollY > 400) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // ⭕️ 3. 點擊回到頂端的點擊事件
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth", // 讓它平滑地滾動上去，更有質感
+    });
+  };
   return (
-    <div className="min-h-screen bg-white text-[#292D32]">
-     
-      <main className="mx-auto w-full max-w-[1280px] px-6 pb-32 pt-10 max-sm:px-4">
-        <nav aria-label="麵包屑" className="text-sm font-medium text-[#747B81]">
-          <span className="text-[#68BBC3]">首頁</span>
+    <div className="min-h-screen bg-white text-[#292D32] max-sm:px-3">
+      <main className="mx-auto w-full max-w-[1280px] px-6 pt-10 pb-32 max-md:pt-4 max-sm:px-4">
+        <nav
+          aria-label="麵包屑"
+          className="text-sm font-medium text-[#747B81] max-md:hidden"
+        >
+          <Link href="/">
+            <span className="text-[#68BBC3]">首頁</span>
+          </Link>
           <span> › </span>
           <span>巴黎</span>
         </nav>
 
-        <h1 className="mt-6 text-[30px] font-extrabold leading-tight text-[#292E33]">
+        <h2 className="mt-6 leading-tight font-extrabold text-[#292E33] max-md:hidden">
           與 <span className="text-[#68BBC3]">巴黎</span> 相關的體驗
-        </h1>
-        <div className="mt-9 grid grid-cols-[280px_minmax(0,1fr)] items-start gap-8 max-lg:grid-cols-1">
-          <div className="max-lg:hidden">
+        </h2>
+        <div className="mt-9 grid grid-cols-[280px_minmax(0,1fr)] items-start gap-8 max-lg:grid-cols-1 max-md:mt-2">
+          <div className="sticky top-28 h-fit max-lg:hidden">
             <FilterPanel />
           </div>
           <section aria-label="巴黎體驗列表" className="min-w-0">
             <div className="mb-6 flex items-center justify-between gap-4">
-              <p className="text-[17px] font-bold text-[#596066]">
-                <span className="mr-2 text-[24px] font-extrabold text-[#68BBC3]">
+              <p className="text-[16px] font-bold whitespace-nowrap text-[#596066] sm:text-[17px]">
+                <span className="mr-1 text-[20px] font-extrabold text-[#68BBC3] sm:text-[24px]">
                   124
                 </span>
                 項體驗可預訂
               </p>
-              <label className="flex items-center gap-3 text-sm font-medium text-[#777E84]">
-                <span className="max-sm:hidden">排序方式</span>
+
+              <div className="flex items-center gap-2">
+                {/* 💡 修正 2：手機版專屬「篩選按鈕」。只在 lg 以下顯示，點擊開啟彈窗 */}
+                <button
+                  type="button"
+                  onClick={() => setIsFilterOpen(true)}
+                  className="flex h-10 shrink-0 items-center gap-1.5 rounded-md border border-[#DDE2E4] px-3 text-sm font-bold text-[#4D545A] hover:border-[#68BBC3] lg:hidden"
+                >
+                  <HiAdjustments className="size-4 text-[#68BBC3]" />
+                  <span>篩選</span>
+                </button>
+
+                <span className="text-sm font-medium text-[#777E84] max-sm:hidden">
+                  排序方式
+                </span>
                 <select
                   defaultValue="popular"
                   aria-label="排序方式"
@@ -159,7 +207,7 @@ export default function ExperienceCategoryPage() {
                   <option value="rating">評價最高</option>
                   <option value="price-low">價格低到高</option>
                 </select>
-              </label>
+              </div>
             </div>
 
             <div className="grid grid-cols-4 gap-x-6 gap-y-14 max-md:grid-cols-2 max-sm:grid-cols-1">
@@ -171,6 +219,12 @@ export default function ExperienceCategoryPage() {
               aria-label="商品列表分頁"
               className="mt-20 flex items-center justify-center gap-2"
             >
+              {/* 📱 手機版專屬（小於 768px）：溫馨的到底提示 */}
+              <div className="hidden flex-col items-center gap-2 py-4 max-md:flex">
+                <p className="text-sm font-medium tracking-wide text-[#8A9196]">
+                  到底了！暫時沒有其他體驗囉
+                </p>
+              </div>
               {["‹", "1", "2", "3", "4", "›"].map((page) => (
                 <button
                   key={page}
@@ -183,11 +237,11 @@ export default function ExperienceCategoryPage() {
                         ? "下一頁"
                         : `第 ${page} 頁`
                   }
-                  className={
+                  className={`${
                     page === "1"
                       ? "grid size-10 place-items-center rounded-md bg-[#68BBC3] text-sm font-extrabold text-white"
                       : "grid size-10 place-items-center rounded-md border border-[#E0E4E6] bg-white text-sm font-bold text-[#6E757B] transition-colors hover:border-[#68BBC3] hover:text-[#489DA5]"
-                  }
+                  } max-md:hidden`}
                 >
                   {page}
                 </button>
@@ -196,6 +250,52 @@ export default function ExperienceCategoryPage() {
           </section>
         </div>
       </main>
+      {/* 📱 手機版專屬：右下角圓形回到頂端按鈕 */}
+      {/* md:hidden：確保只在手機/平板版出現 */}
+      <button
+        type="button"
+        onClick={scrollToTop}
+        className={`fixed right-5 bottom-6 z-40 grid size-12 place-items-center rounded-full border border-[#ECEFF0] bg-white text-[#68BBC3] shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-all duration-300 active:scale-95 md:hidden ${
+          showScrollTop
+            ? "pointer-events-auto translate-y-0 opacity-100"
+            : "pointer-events-none translate-y-4 opacity-0"
+        }`}
+        aria-label="回到最頂端"
+      >
+        <HiChevronUp className="size-6 stroke-[1.5]" />
+      </button>
+      {/* 💡 修正 4：手機版全螢幕「滿版篩選抽屜」
+          當 isFilterOpen 為 true 時，會從下方/右方跳出，直接重用組員寫的 FilterPanel！
+      */}
+      {isFilterOpen && (
+        <div className="fixed inset-0 z-50 flex h-[100dvh] flex-col bg-white lg:hidden">
+          {/* 彈窗頂部列 */}
+          <div className="flex items-center justify-between border-b border-[#ECEFF0] px-6 py-4">
+            <h3 className="text-lg font-extrabold text-[#292E33]">篩選條件</h3>
+            <button
+              type="button"
+              onClick={() => setIsFilterOpen(false)}
+              className="text-2xl font-bold text-gray-400 hover:text-black"
+            >
+              ×
+            </button>
+          </div>
+          {/* 彈窗內容：直接把原本的 FilterPanel 塞進來，加上滾動條 */}
+          <div className="flex-1 overflow-y-auto p-6">
+            <FilterPanel />
+          </div>
+          {/* 彈窗底部：確認按鈕 */}
+          <div className="border-t border-[#ECEFF0] p-6">
+            <button
+              type="button"
+              onClick={() => setIsFilterOpen(false)}
+              className="h-12 w-full rounded-xl bg-[#68BBC3] font-bold text-white shadow-lg"
+            >
+              查看結果
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -64,58 +64,54 @@ export default function MemberPanel() {
   const pathname = usePathname();
 
   return (
-      <aside className="w-full max-w-full overflow-hidden rounded-[12px] border border-zinc-200 bg-white shadow-xl lg:w-[340px]">
-        {/* 上方會員頭像區 */}
-        <div className="flex flex-col items-center px-6 pt-10 pb-6">
-          <div className="relative">
-            <img
-              src="/images/avatar-test.png"
-              alt="會員頭像"
-              className="h-[105px] w-[105px] rounded-full object-cover"
-            />
+    <aside className="min-h-screen w-full overflow-hidden bg-white md:min-h-0 md:w-[340px] md:rounded-xl md:border md:border-zinc-200 md:shadow-xl">
+      {/* 會員頭像區 */}
+      <div className="flex flex-col items-center px-6 pt-10 pb-8">
+        <div className="relative">
+          <img
+            src="/images/avatar-test.png"
+            alt="會員頭像"
+            className="h-[105px] w-[105px] rounded-full object-cover"
+          />
 
-            <button
-              type="button"
-              aria-label="更換頭像"
-              className="absolute right-0 bottom-0 flex h-8 w-8 items-center justify-center rounded-full bg-white text-black shadow-md transition hover:scale-105 hover:cursor-pointer hover:bg-zinc-100"
-            >
-              <FaCamera className="text-sm" />
-            </button>
-          </div>
-
-          <h2 className="mt-3 text-[30px] leading-none font-bold text-black">
-            王大明
-          </h2>
+          <button
+            type="button"
+            aria-label="更換會員頭像"
+            className="absolute right-0 bottom-0 flex h-8 w-8 items-center justify-center rounded-full bg-white text-black shadow-md transition hover:scale-105 hover:bg-zinc-100"
+          >
+            <FaCamera className="text-sm" />
+          </button>
         </div>
 
-        <div className="h-px bg-zinc-200" />
+        <h3 className="mt-4 text-black">王大明</h3>
+      </div>
 
-        <nav>
-          {memberLists.map((item) => {
-            // 判斷目前網址是不是這個選單的網址
-            // pathname === item.href：完全一樣，例如 /member/profile
-            // pathname.startsWith(`${item.href}/`)：子頁面也算 active，例如 /member/profile/edit
-            const isActive =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
+      <div className="h-px bg-zinc-200" />
 
-            return (
-              <Link
-                key={item.label}
-                href={item.href}
-                aria-current={isActive ? "page" : undefined}
-                className={`flex h-[60px] items-center gap-3 border-b border-zinc-200 px-7 text-[17px] transition hover:bg-zinc-50 ${
-                  isActive ? "text-[#68BBC3]" : "text-zinc-400"
-                }`}
-              >
-                <span className="flex w-5 items-center justify-center text-xl">
-                  {item.icon}
-                </span>
+      {/* 會員功能選單 */}
+      <nav>
+        {memberLists.map((item) => {
+          // 判斷目前網址是不是這個選單
+          // 例如 pathname 是 /member/profile，就讓「會員資料」變 active
+          const isActive =
+            pathname === item.href || pathname.startsWith(`${item.href}/`);
 
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-      </aside>
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={isActive ? "page" : undefined}
+              className={`flex h-[64px] items-center gap-4 border-b border-zinc-200 px-8 text-[18px] transition hover:bg-zinc-50 ${isActive ? "text-[#68BBC3]" : "text-[#ACACAC]"} `}
+            >
+              <span className="flex w-6 items-center justify-center text-xl">
+                {item.icon}
+              </span>
+
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+    </aside>
   );
 }

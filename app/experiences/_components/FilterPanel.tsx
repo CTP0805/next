@@ -17,14 +17,16 @@ export default function FilterPanel() {
 
   return (
     <aside className="h-fit overflow-hidden rounded-lg border border-[#E3E7E9] bg-white">
-      <div className="border-b border-[#E7EAEC] bg-[#F7F8F8] px-5 py-5">
-        <h2 className="text-[18px] font-extrabold text-[#30353A]">條件篩選</h2>
-        <p className="mt-1 text-xs text-[#969CA1]">快速找到有溫度的巴黎體驗</p>
+      <div className="border-b border-[#E7EAEC] bg-[#F7F8F8] px-5 py-3.5">
+        <h5 className="font-extrabold text-[#30353A]">條件篩選</h5>
+        <p className="p-text-14 mt-1 text-[#969CA1]">
+          快速找到有溫度的巴黎體驗
+        </p>
       </div>
 
-      <div className="space-y-8 px-5 py-6">
+      <div className="space-y-5 px-5 py-5">
         <fieldset>
-          <legend className="mb-4 text-[16px] font-extrabold text-[#34393E]">
+          <legend className="mb-2.5 text-[16px] font-extrabold text-[#34393E]">
             體驗類型
           </legend>
           <div className="space-y-3">
@@ -39,7 +41,7 @@ export default function FilterPanel() {
                   className="checkbox border-[#DDE2E4] bg-white checked:border-[#68BBC3] checked:bg-[#68BBC3] checked:text-white"
                 />
                 <span className="flex-1">{label}</span>
-                <span className="text-xs text-[#9AA0A5]">{count}</span>
+                <span className="text-sm text-[#9AA0A5]">{count}</span>
               </label>
             ))}
           </div>
@@ -67,7 +69,7 @@ export default function FilterPanel() {
             價格範圍
           </legend>
 
-          <p className="mb-4 text-sm font-medium text-[#8B9297]">
+          <p className="p-text-14 mb-4 font-medium text-[#8B9297]">
             NT${minPrice.toLocaleString("zh-TW")} - NT$
             {maxPrice.toLocaleString("zh-TW")}
           </p>
@@ -78,7 +80,7 @@ export default function FilterPanel() {
 
             {/* 💡 藍綠色進度條：公式直接寫在 style 裡面了！ */}
             <div
-              className="absolute top-1/2 h-1.5 rounded-full bg-[#68BBC3] -translate-y-1/2"
+              className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-[#68BBC3]"
               style={{
                 left: `${(minPrice / totalMaxLimit) * 100}%`,
                 right: `${100 - (maxPrice / totalMaxLimit) * 100}%`,
@@ -94,7 +96,7 @@ export default function FilterPanel() {
               onChange={(e) =>
                 setMinPrice(Math.min(Number(e.target.value), maxPrice))
               }
-              className="pointer-events-none absolute top-1/2 w-full -translate-y-1/2 appearance-none bg-transparent h-1.5 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-[#DCE2E4] [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-sm"
+              className="pointer-events-none absolute top-1/2 h-1.5 w-full -translate-y-1/2 appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-[#DCE2E4] [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-sm"
             />
 
             {/* 右滑塊 (最高價) */}
@@ -106,7 +108,7 @@ export default function FilterPanel() {
               onChange={(e) =>
                 setMaxPrice(Math.max(Number(e.target.value), minPrice))
               }
-              className="pointer-events-none absolute top-1/2 w-full -translate-y-1/2 appearance-none bg-transparent h-1.5 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-[#DCE2E4] [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-sm"
+              className="pointer-events-none absolute top-1/2 h-1.5 w-full -translate-y-1/2 appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-[#DCE2E4] [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-sm"
             />
           </div>
         </fieldset>
