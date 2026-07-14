@@ -20,10 +20,7 @@ import { pinyin } from "pinyin-pro";
  */
 
 export type BlogPostStatus =
-  | "draft"
-  | "pending_review"
-  | "published"
-  | "rejected";
+  "draft" | "pending_review" | "published" | "rejected";
 
 export const BLOG_STATUS_LABEL: Record<BlogPostStatus, string> = {
   draft: "草稿",
@@ -53,6 +50,8 @@ export interface BlogPost {
   published_at: string | null;
   updated_at: string;
   status: BlogPostStatus;
+  /** 已上架文章的待審查修訂版本，會指向原文章 ID。 */
+  review_of_id?: number | null;
   /**
    * 列表地區篩選（前端用；正式 DB 若無此欄可之後移除）
    */

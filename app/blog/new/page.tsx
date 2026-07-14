@@ -13,7 +13,10 @@ export default function BlogNewPage() {
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
             <nav className="text-sm text-gray-500" aria-label="麵包屑">
-              <Link href="/blog" className="font-medium text-teal-600 hover:underline">
+              <Link
+                href="/blog"
+                className="font-medium text-teal-600 hover:underline"
+              >
                 部落格
               </Link>
               <span className="mx-2 text-gray-300">/</span>
@@ -38,7 +41,11 @@ export default function BlogNewPage() {
           <BlogPostForm
             mode="create"
             onSuccess={(post) => {
-              router.push(`/blog/${post.slug}`);
+              router.push(
+                post.status === "published"
+                  ? `/blog/${post.slug}`
+                  : "/blog/manage",
+              );
               router.refresh();
             }}
           />

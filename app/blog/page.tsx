@@ -343,7 +343,7 @@ export default function BlogListPage() {
                       className="group flex gap-3 border-b border-gray-50 pb-5 last:border-0 last:pb-0"
                     >
                       <div
-                        className="w-10 shrink-0 text-2xl font-bold tabular-nums text-teal-100 transition group-hover:text-teal-300"
+                        className="w-10 shrink-0 text-2xl font-bold text-teal-100 tabular-nums transition group-hover:text-teal-300"
                         aria-hidden
                       >
                         {String(idx + 1).padStart(2, "0")}
@@ -360,7 +360,7 @@ export default function BlogListPage() {
                             {BLOG_CATEGORY_MAP[post.category_id] || "其他"}
                           </span>
                         </div>
-                        <h4 className="line-clamp-2 text-base font-medium leading-snug text-gray-900 transition-colors group-hover:text-teal-600">
+                        <h4 className="line-clamp-2 text-base leading-snug font-medium text-gray-900 transition-colors group-hover:text-teal-600">
                           {post.title}
                         </h4>
                       </div>

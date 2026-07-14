@@ -7,22 +7,18 @@ import type { BlogPost, BlogPostInput, BlogPostStatus } from "../_lib/types";
 import {
   BLOG_CATEGORY_MAP,
   BLOG_REGIONS,
-  BLOG_STATUS_LABEL,
   BLOG_TITLE_MAX,
   slugifyTitle,
 } from "../_lib/types";
 
-const CKEditorWrapper = dynamic(
-  () => import("@/components/CKEditorWrapper"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex h-48 items-center justify-center rounded-[12px] border border-gray-200 bg-gray-50 text-sm text-gray-400">
-        編輯器載入中…
-      </div>
-    ),
-  },
-);
+const CKEditorWrapper = dynamic(() => import("@/components/CKEditorWrapper"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-48 items-center justify-center rounded-[12px] border border-gray-200 bg-gray-50 text-sm text-gray-400">
+      載入編輯器中…
+    </div>
+  ),
+});
 
 interface BlogPostFormProps {
   mode: "create" | "edit";
@@ -30,38 +26,26 @@ interface BlogPostFormProps {
   onSuccess?: (post: BlogPost) => void;
 }
 
-const STATUS_OPTIONS: BlogPostStatus[] = [
-  "draft",
-  "pending_review",
-  "published",
-  "rejected",
-];
-
 const fieldClass =
   "h-12 w-full rounded-[12px] border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#45cad5] focus:ring-2 focus:ring-[#45cad5]/20";
 
 const labelClass = "mb-1.5 block text-sm font-medium text-gray-700";
 
+//這裡是部落格文章表單元件，提供建立與編輯文章的功能。使用者可以輸入標題、摘要、內文，選擇分類與地區，並上傳或設定封面圖。表單會驗證必填欄位，並在送出時呼叫 API 儲存文章。
 export default function BlogPostForm({
   mode,
   initial,
   onSuccess,
 }: BlogPostFormProps) {
   const [title, setTitle] = useState(initial?.title ?? "");
-  const [slug, setSlug] = useState(initial?.slug ?? "");
-  const [slugTouched, setSlugTouched] = useState(Boolean(initial?.slug));
   const [excerpt, setExcerpt] = useState(initial?.excerpt ?? "");
-  const [coverImage, setCoverImage] = useState(initial?.cover_image ?? "");
   const [contentImage, setContentImage] = useState(
-    initial?.content_image ?? "",
+    initial?.content_image ?? initial?.cover_image ?? "",
   );
   const [region, setRegion] = useState(initial?.region ?? BLOG_REGIONS[0]);
   const [categoryId, setCategoryId] = useState(initial?.category_id ?? 1);
   const [authorId, setAuthorId] = useState(initial?.author_id ?? 1);
   const [content, setContent] = useState(initial?.content ?? "");
-  const [status, setStatus] = useState<BlogPostStatus>(
-    initial?.status ?? "draft",
-  );
   const [submitting, setSubmitting] = useState(false);
 
   const categoryOptions = useMemo(
@@ -73,22 +57,23 @@ export default function BlogPostForm({
     [],
   );
 
-  function handleTitleChange(value: string) {
-    const next = value.slice(0, BLOG_TITLE_MAX);
-    setTitle(next);
-    if (!slugTouched) {
-      setSlug(slugifyTitle(next));
-    }
+  /** 將使用者選取的檔案轉為 Base64，交由儲存 API 寫入 public/posts。 */
+  function handleImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const image = event.target.files?.[0];
+    if (!image) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") setContentImage(reader.result);
+    };
+    reader.readAsDataURL(image);
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  /** 草稿與送審共用驗證與送出流程，按鈕決定文章狀態。 */
+  //這裡是部落格文章表單元件，提供建立與編輯文章的功能。使用者可以輸入標題、摘要、內文，選擇分類與地區，並上傳或設定封面圖。表單會驗證必填欄位，並在送出時呼叫 API 儲存文章。
+  async function handleSubmit(status: BlogPostStatus) {
     if (!title.trim()) {
-      toast.error("請填寫標題");
-      return;
-    }
-    if (title.trim().length > BLOG_TITLE_MAX) {
-      toast.error(`標題最多 ${BLOG_TITLE_MAX} 字`);
+      toast.error("請填寫文章標題");
       return;
     }
     if (!content.trim()) {
@@ -98,10 +83,11 @@ export default function BlogPostForm({
 
     const payload: BlogPostInput = {
       title: title.trim(),
-      slug: slug.trim() || slugifyTitle(title),
+      slug: slugifyTitle(title),
       content,
       excerpt: excerpt.trim() || null,
-      cover_image: coverImage.trim() || null,
+      // 封面圖直接沿用內文頂圖，列表會以 object-cover 顯示成縮圖。
+      cover_image: contentImage.trim() || null,
       content_image: contentImage.trim() || null,
       region: region || null,
       category_id: categoryId,
@@ -111,10 +97,8 @@ export default function BlogPostForm({
 
     setSubmitting(true);
     try {
-      const url =
-        mode === "create" ? "/api/blog" : `/api/blog/${initial?.id}`;
+      const url = mode === "create" ? "/api/blog" : `/api/blog/${initial?.id}`;
       const method = mode === "create" ? "POST" : "PUT";
-
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
@@ -126,86 +110,71 @@ export default function BlogPostForm({
       };
 
       if (!res.ok || !data.post) {
-        toast.error(data.message || "儲存失敗");
+        toast.error(data.message || "文章儲存失敗");
         return;
       }
 
-      toast.success(data.message || "已儲存");
+      toast.success(data.message || "文章已儲存");
       onSuccess?.(data.post);
     } catch {
-      toast.error("網路錯誤，請稍後再試");
+      toast.error("網路連線失敗，請稍後再試");
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        void handleSubmit("draft");
+      }}
+      className="space-y-6"
+    >
       <Toaster position="top-center" />
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <div>
-          <label htmlFor="blog-title" className={labelClass}>
-            標題 <span className="text-red-500">*</span>
-            <span className="ml-1 font-normal text-gray-400">
-              （最多 {BLOG_TITLE_MAX} 字）
-            </span>
-          </label>
-          <input
-            id="blog-title"
-            type="text"
-            className={fieldClass}
-            value={title}
-            onChange={(e) => handleTitleChange(e.target.value)}
-            placeholder="輸入文章標題"
-            maxLength={BLOG_TITLE_MAX}
-            required
-          />
-          <p className="mt-1 text-right text-xs text-gray-400">
-            {title.length}/{BLOG_TITLE_MAX}
-          </p>
-        </div>
+      {mode === "edit" && initial?.status === "published" ? (
+        <p className="rounded-[12px] bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          此文章已上架；儲存草稿或送出審查都會另存版本，公開頁將持續顯示目前版本。
+        </p>
+      ) : null}
 
-        <div>
-          <label htmlFor="blog-slug" className={labelClass}>
-            網址別名 <span className="text-red-500">*</span>
-          </label>
-          <input
-            id="blog-slug"
-            type="text"
-            className={`${fieldClass} font-mono text-sm`}
-            value={slug}
-            onChange={(e) => {
-              setSlugTouched(true);
-              setSlug(e.target.value);
-            }}
-            placeholder="my-first-post"
-            required
-          />
-          <p className="mt-1 text-xs text-gray-400">
-            用於網址 /blog/別名；中文標題會自動轉成羅馬拼音
-          </p>
-        </div>
+      {/* 標題會自動產生別名，使用者不可直接編輯。 */}
+      <div>
+        <label htmlFor="blog-title" className={labelClass}>
+          文章標題 <span className="text-red-500">*</span>
+        </label>
+        <input
+          id="blog-title"
+          type="text"
+          className={fieldClass}
+          value={title}
+          onChange={(event) =>
+            setTitle(event.target.value.slice(0, BLOG_TITLE_MAX))
+          }
+          maxLength={BLOG_TITLE_MAX}
+          required
+        />
+        <p className="mt-1 text-xs text-gray-400">
+          別名將依文章標題自動建立：{slugifyTitle(title)}
+        </p>
       </div>
 
       <div>
         <label htmlFor="blog-excerpt" className={labelClass}>
           摘要
-          <span className="ml-1 font-normal text-gray-400">
-            （列表預覽，可空）
-          </span>
         </label>
         <textarea
           id="blog-excerpt"
-          className="min-h-24 w-full resize-y rounded-[12px] border border-gray-200 bg-white px-4 py-3 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#45cad5] focus:ring-2 focus:ring-[#45cad5]/20"
+          className="min-h-24 w-full resize-y rounded-[12px] border border-gray-200 bg-white px-4 py-3 text-base text-gray-900 transition outline-none placeholder:text-gray-400 focus:border-[#45cad5] focus:ring-2 focus:ring-[#45cad5]/20"
           value={excerpt}
-          onChange={(e) => setExcerpt(e.target.value)}
-          placeholder="用一兩句話介紹這篇文章"
+          onChange={(event) => setExcerpt(event.target.value)}
           maxLength={200}
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      {/* 分類與地區選項從 JSON 對照資料以 map 產生。 */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
         <div>
           <label htmlFor="blog-author" className={labelClass}>
             作者 ID
@@ -216,10 +185,9 @@ export default function BlogPostForm({
             min={1}
             className={fieldClass}
             value={authorId}
-            onChange={(e) => setAuthorId(Number(e.target.value) || 1)}
+            onChange={(event) => setAuthorId(Number(event.target.value) || 1)}
           />
         </div>
-
         <div>
           <label htmlFor="blog-category" className={labelClass}>
             分類
@@ -228,34 +196,15 @@ export default function BlogPostForm({
             id="blog-category"
             className={fieldClass}
             value={categoryId}
-            onChange={(e) => setCategoryId(Number(e.target.value))}
+            onChange={(event) => setCategoryId(Number(event.target.value))}
           >
-            {categoryOptions.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.label}
+            {categoryOptions.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.label}
               </option>
             ))}
           </select>
         </div>
-
-        <div>
-          <label htmlFor="blog-status" className={labelClass}>
-            狀態
-          </label>
-          <select
-            id="blog-status"
-            className={fieldClass}
-            value={status}
-            onChange={(e) => setStatus(e.target.value as BlogPostStatus)}
-          >
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>
-                {BLOG_STATUS_LABEL[s]}
-              </option>
-            ))}
-          </select>
-        </div>
-
         <div>
           <label htmlFor="blog-region" className={labelClass}>
             地區
@@ -264,74 +213,67 @@ export default function BlogPostForm({
             id="blog-region"
             className={fieldClass}
             value={region ?? ""}
-            onChange={(e) => setRegion(e.target.value)}
+            onChange={(event) => setRegion(event.target.value)}
           >
-            {BLOG_REGIONS.map((r) => (
-              <option key={r} value={r}>
-                {r}
+            {BLOG_REGIONS.map((item) => (
+              <option key={item} value={item}>
+                {item}
               </option>
             ))}
           </select>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      {/* 頂圖可由上傳或網址設定；封面圖會自動使用同一張頂圖。 */}
+      <div className="space-y-3 rounded-[12px] border border-gray-200 p-4">
         <div>
-          <label htmlFor="blog-cover" className={labelClass}>
-            封面圖片路徑
-            <span className="ml-1 font-normal text-gray-400">（可空）</span>
-          </label>
-          <input
-            id="blog-cover"
-            type="text"
-            className={fieldClass}
-            value={coverImage}
-            onChange={(e) => setCoverImage(e.target.value)}
-            placeholder="/images/carousel1.jpg"
-          />
+          <p className={labelClass}>內文頂圖／封面縮圖</p>
+          <p className="text-xs text-gray-400">
+            上傳後會在儲存文章時寫入 public/posts；封面會沿用這張圖片。
+          </p>
         </div>
-
-        <div>
-          <label htmlFor="blog-content-image" className={labelClass}>
-            內文頂圖路徑
-            <span className="ml-1 font-normal text-gray-400">（可空）</span>
-          </label>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/gif,image/webp,image/avif"
+            onChange={handleImageUpload}
+            className="block w-full text-sm text-gray-600 file:mr-4 file:rounded-[12px] file:border-0 file:bg-teal-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-teal-700"
+          />
           <input
             id="blog-content-image"
-            type="text"
+            type="url"
             className={fieldClass}
             value={contentImage}
-            onChange={(e) => setContentImage(e.target.value)}
-            placeholder="/Banner大圖/巴黎/以這張為主.jpg"
+            onChange={(event) => setContentImage(event.target.value)}
+            placeholder="https://example.com/cover.jpg"
           />
         </div>
       </div>
 
+      {/* 頁首的預覽文章連結會開啟完整文章頁預覽模式。 */}
       <div>
         <label className={labelClass}>
           文章內容 <span className="text-red-500">*</span>
         </label>
-        <CKEditorWrapper
-          data={content}
-          onChange={setContent}
-          placeholder="撰寫文章內容：支援標題、清單、圖片、表格…"
-        />
+        <CKEditorWrapper data={content} onChange={setContent} />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-6">
-        <p className="text-xs text-gray-400">
-          狀態設為「已上架」時會記錄上架時間
-        </p>
+      {/* 儲存僅建立草稿；送出才會進入待審查佇列。 */}
+      <div className="flex flex-wrap items-center justify-end gap-3 border-t border-gray-100 pt-6">
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-[12px] bg-[#45cad5] px-8 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#36b3be] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none"
+          className="rounded-[12px] border border-gray-300 bg-white px-6 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {submitting
-            ? "儲存中…"
-            : mode === "create"
-              ? "發布文章"
-              : "更新文章"}
+          儲存草稿
+        </button>
+        <button
+          type="button"
+          disabled={submitting}
+          onClick={() => void handleSubmit("pending_review")}
+          className="rounded-[12px] bg-[#45cad5] px-6 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#36b3be] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none"
+        >
+          送出審查
         </button>
       </div>
     </form>

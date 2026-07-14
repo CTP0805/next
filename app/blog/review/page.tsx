@@ -5,10 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import toast, { Toaster } from "react-hot-toast";
 import type { BlogPost, BlogPostStatus } from "../_lib/types";
-import {
-  BLOG_CATEGORY_MAP,
-  BLOG_STATUS_LABEL,
-} from "../_lib/types";
+import { BLOG_CATEGORY_MAP, BLOG_STATUS_LABEL } from "../_lib/types";
 
 const PLACEHOLDER = "/images/carousel1.jpg";
 
@@ -109,8 +106,11 @@ export default function BlogReviewPage() {
         return;
       }
 
+      // 修訂版核准後已由 API 覆蓋原文並刪除副本，清單也同步移除它。
       setPosts((prev) =>
-        prev.map((p) => (p.id === data.post!.id ? data.post! : p)),
+        status === "published" && post.review_of_id
+          ? prev.filter((item) => item.id !== post.id)
+          : prev.map((item) => (item.id === data.post.id ? data.post : item)),
       );
 
       if (status === "published") {
@@ -283,9 +283,7 @@ export default function BlogReviewPage() {
                           <button
                             type="button"
                             disabled={busy}
-                            onClick={() =>
-                              void updateStatus(post, "published")
-                            }
+                            onClick={() => void updateStatus(post, "published")}
                             className="rounded-[12px] bg-teal-600 px-3.5 py-1.5 text-xs font-semibold text-white transition hover:bg-teal-700 disabled:opacity-60"
                           >
                             {busy ? "處理中…" : "通過上架"}

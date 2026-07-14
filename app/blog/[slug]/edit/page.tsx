@@ -51,7 +51,10 @@ export default function BlogEditPage() {
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
             <nav className="text-sm text-gray-500" aria-label="麵包屑">
-              <Link href="/blog" className="font-medium text-teal-600 hover:underline">
+              <Link
+                href="/blog"
+                className="font-medium text-teal-600 hover:underline"
+              >
                 部落格
               </Link>
               <span className="mx-2 text-gray-300">/</span>
@@ -78,7 +81,7 @@ export default function BlogEditPage() {
           <div className="flex flex-wrap gap-2">
             {slug ? (
               <Link
-                href={`/blog/${slug}`}
+                href={`/blog/${slug}?preview=1`}
                 className="rounded-[12px] border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition hover:border-gray-300 hover:bg-gray-50"
               >
                 預覽文章
@@ -117,7 +120,11 @@ export default function BlogEditPage() {
               mode="edit"
               initial={post}
               onSuccess={(updated) => {
-                router.push(`/blog/${updated.slug}`);
+                router.push(
+                  updated.status === "published"
+                    ? `/blog/${updated.slug}`
+                    : "/blog/manage",
+                );
                 router.refresh();
               }}
             />

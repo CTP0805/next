@@ -10,11 +10,18 @@ const PLACEHOLDER = "/images/carousel1.jpg";
 
 export default async function BlogDetail({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ preview?: string }>;
 }) {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
+  const { preview } = await searchParams;
+  const isPreview = preview === "1";
+  const allPosts = await getAllPosts();
+  const post = isPreview
+    ? (allPosts.find((item) => item.slug === slug) ?? null)
+    : await getPostBySlug(slug);
 
   if (!post) {
     return (
@@ -38,7 +45,6 @@ export default async function BlogDetail({
     );
   }
 
-  const allPosts = await getAllPosts();
   const recommendations = allPosts
     .filter(
       (p) =>
@@ -58,6 +64,54 @@ export default async function BlogDetail({
       })
     : null;
 
+  // 預覽模式只保留文章主要閱讀範圍，不顯示留言與推薦內容。
+  if (isPreview) {
+    return (
+      <main className="min-h-screen bg-gray-50 px-4 py-8 sm:px-6 sm:py-12">
+        <article className="mx-auto max-w-3xl overflow-hidden rounded-[12px] border border-gray-100 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3 text-sm sm:px-8">
+            <span className="font-medium text-amber-700">預覽模式</span>
+            <Link
+              href={`/blog/${slug}/edit`}
+              className="text-teal-700 hover:underline"
+            >
+              回到編輯
+            </Link>
+          </div>
+          <div className="relative aspect-[16/9] w-full bg-gray-100">
+            <Image
+              src={cover}
+              alt={post.title}
+              fill
+              className="object-cover object-center"
+              sizes="(max-width: 768px) 100vw, 768px"
+              priority
+            />
+          </div>
+          <div className="px-5 py-8 sm:px-8 sm:py-10">
+            <h1 className="mb-5 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              {post.title}
+            </h1>
+            {contentTopImage ? (
+              <div className="relative mb-8 aspect-[21/9] w-full overflow-hidden rounded-[12px] bg-gray-100">
+                <Image
+                  src={contentTopImage}
+                  alt=""
+                  fill
+                  className="object-cover object-center"
+                  sizes="(max-width: 768px) 100vw, 768px"
+                />
+              </div>
+            ) : null}
+            <div className="prose prose-lg prose-headings:font-bold prose-a:text-teal-600 max-w-none text-gray-800">
+              <RichTextContent content={post.content} />
+            </div>
+          </div>
+        </article>
+      </main>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
@@ -66,7 +120,10 @@ export default async function BlogDetail({
           aria-label="麵包屑"
           className="mb-6 flex flex-wrap items-center gap-2 text-sm text-gray-500"
         >
-          <Link href="/blog" className="font-medium text-teal-600 hover:underline">
+          <Link
+            href="/blog"
+            className="font-medium text-teal-600 hover:underline"
+          >
             部落格
           </Link>
           {post.region ? (
@@ -207,7 +264,7 @@ export default async function BlogDetail({
                           {BLOG_CATEGORY_MAP[rec.category_id] || "其他"}
                         </span>
                       </div>
-                      <h3 className="line-clamp-2 text-base font-semibold leading-snug text-gray-900 transition-colors group-hover:text-teal-600">
+                      <h3 className="line-clamp-2 text-base leading-snug font-semibold text-gray-900 transition-colors group-hover:text-teal-600">
                         {rec.title}
                       </h3>
                       {rec.excerpt ? (
