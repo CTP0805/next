@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 //==========訂單假資料==============//
 const initialOrders = [
@@ -102,8 +103,14 @@ export default function OrderPage() {
 
                 {/* 查看憑證按鈕 (DaisyUI btn-outline) */}
                 <div className="mt-3">
-                  <button className="btn btn-sm btn-outline rounded-lg border-gray-300 px-4 font-medium text-gray-700 hover:bg-gray-50">
+                  <button className="btn btn-sm btn-outline mr-2 rounded-lg border-gray-300 px-4 font-medium text-gray-700 hover:bg-gray-50">
                     訂單憑證
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-sm h-8 min-h-0 border-red-200 bg-white px-3 text-xs text-red-500 hover:border-red-300 hover:bg-red-50"
+                  >
+                    取消
                   </button>
                 </div>
               </div>
@@ -124,9 +131,11 @@ export default function OrderPage() {
                 </div>
 
                 {/* 立即評價連結按鈕 */}
-                <button className="cursor-pointer text-xs font-medium text-gray-400 underline underline-offset-4 transition hover:text-cyan-500">
-                  立即評價
-                </button>
+                <Link href="/member/review">
+                  <button className="cursor-pointer text-xs font-medium text-gray-400 underline underline-offset-4 transition hover:text-cyan-500">
+                    立即評價
+                  </button>
+                </Link>
               </div>
             </div>
           ))}

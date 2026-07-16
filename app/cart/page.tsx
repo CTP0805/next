@@ -1,42 +1,53 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { useCart } from "@/contexts/cart";
+import { useEffect, useState } from "react";
 
-//======定義前端假資料=============
-const initialCartItems = [
-  {
-    id: 1,
-    title: "澳洲島嶼海之旅(含午餐)",
-    date: "2026年5月20日",
-    spec: "成人",
-    price: 8000,
-    quantity: 1,
-    image: "/images/experiences/bastille-market.jpg",
-  },
-  {
-    id: 2,
-    title: "濟州島9.81 Park門票",
-    date: "2026年7月1日",
-    spec: "2人賽車套票",
-    price: 1131,
-    quantity: 2,
-    image: "/images/experiences/montmartre-art.jpg",
-  },
-];
+interface CartItem {
+  cartId?: number;
+  experienceId: number;
+  sessionId: number;
+  name: string;
+  price: number;
+  quantity: number; //購物車項目數量屬性
+  sessionName?: string; // 可讀的場次資訊 (例如：2026-08-01 14:00)
+  spec?: string;
+  image?: string;
+}
+
+//定義從後端拿到的推薦商品型別
+interface RecommendProduct {
+  id: number;
+  title: string;
+  city: string;
+  primaryImage: string | null;
+  minPrice: string | number | null;
+}
+
 export default function CartPage() {
-  //===== 使用useState 管理購物車內容 ======//
-  const [cartItems, setCartItems] = useState(initialCartItems);
-  //計算總金額公式
-  const totalAmount = cartItems.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0,
-  );
-
+  // 從自訂的 useCart 鉤子中解構出狀態與方法
+  const { items, totalQty, totalAmount, onIncrease, onDecrease, onRemove } =
+    useCart();
+  //宣告用來存推薦商品的state
+  const [recommendProducts, setRecommendProducts] = useState<
+    RecommendProduct[]
+  >([]);
+  // 🚀 3. 在 useEffect 中向你的 Express 後端拉取商品資料
+  useEffect(() => {
+    fetch("http://localhost:3001/api/cart/experience")
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData.success) {
+          setRecommendProducts(resData.data);
+        }
+      })
+      .catch((err) => console.error("無法取得推薦商品:", err));
+  }, []);
   return (
     <>
       {/* ======= 三元運算 判斷購物車有無商品====== */}
-      {cartItems.length > 0 ? (
+      {items.length > 0 ? (
         /* 購物車有商品介面 */
         <div className="min-h-[calc(100vh-160px)] w-full py-10">
           {/* 限制最大寬度1280px */}
@@ -57,10 +68,11 @@ export default function CartPage() {
                   </label>
                   <button className="btn btn-outline">刪除選中活動</button>
                 </div>
-                {/* 🚀 關鍵改動：使用 map 方法去循環 initialCartItems 假資料 */}
-                {cartItems.map((item) => (
+
+                {/* 🚀 循環讀取來自 Context 的 items */}
+                {items.map((item) => (
                   <div
-                    key={item.id}
+                    key={`${item.experienceId}-${item.sessionId}`} // 唯一 Key 必須組合商品與場次
                     className="flex flex-col justify-between gap-4 border-b py-6 last:border-0 md:flex-row md:items-center"
                   >
                     <div className="flex flex-1 items-start gap-4">
@@ -74,7 +86,7 @@ export default function CartPage() {
                         {item.image ? (
                           <img
                             src={item.image}
-                            alt={item.title}
+                            alt={item.name}
                             className="h-full w-full object-cover"
                           />
                         ) : (
@@ -84,14 +96,16 @@ export default function CartPage() {
 
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-bold break-words text-gray-800 md:text-base">
-                          {item.title}
+                          {item.name}
                         </p>
                         <p className="mt-1 text-xs text-gray-400 md:text-sm">
-                          {item.date}
+                          {item.sessionName}
                         </p>
-                        <span className="badge badge-ghost badge-sm md:badge-md mt-2">
-                          {item.spec}
-                        </span>
+                        {item.spec && (
+                          <span className="badge badge-ghost badge-sm md:badge-md mt-2">
+                            {item.spec}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -99,18 +113,61 @@ export default function CartPage() {
                     {/* 手機版會自動掉到下方，透過 w-full md:w-auto 撐開並對齊 */}
                     <div className="flex w-full items-center justify-between gap-6 border-t border-gray-100 pt-3 md:w-auto md:justify-end md:border-0 md:pt-0">
                       {/* 數量按鈕 */}
+                      {/* ➖ 減少按鈕：支援防呆體驗確認 */}
                       <div className="flex items-center gap-2">
-                        <button className="btn btn-sm btn-outline">-</button>
+                        <button
+                          className="btn btn-sm btn-outline"
+                          onClick={() => {
+                            if (item.quantity === 1) {
+                              if (confirm("你確定要移除這個商品嗎?")) {
+                                onRemove(item.experienceId, item.sessionId);
+                              }
+                            } else {
+                              onDecrease(item.experienceId, item.sessionId);
+                            }
+                          }}
+                        >
+                          -
+                        </button>
                         <span className="px-2 text-sm font-medium">
                           {item.quantity}
                         </span>
-                        <button className="btn btn-sm btn-outline">+</button>
+                        {/* ➕ 增加按鈕 */}
+                        <button
+                          className="btn btn-sm btn-outline"
+                          onClick={() =>
+                            onIncrease(item.experienceId, item.sessionId)
+                          }
+                        >
+                          +
+                        </button>
                       </div>
 
                       {/* 商品總額 */}
                       <div className="min-w-[80px] text-right text-base font-bold text-gray-800 md:text-lg">
                         NT$
                         {(item.price * item.quantity).toLocaleString()}
+                      </div>
+
+                      {/* 編輯活動內容／直接從購物車移除 */}
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/experiences/${item.experienceId}`}
+                          className="btn btn-sm btn-ghost text-gray-600 hover:bg-gray-100"
+                        >
+                          編輯
+                        </Link>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-ghost text-red-500 hover:bg-red-50 hover:text-red-600"
+                          onClick={() => {
+                            if (confirm("確定要刪除此活動嗎？")) {
+                              onRemove(item.experienceId, item.sessionId);
+                            }
+                          }}
+                        >
+                          刪除
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -119,9 +176,7 @@ export default function CartPage() {
 
               {/* 右側欄位 */}
               <div className="w-full rounded-lg bg-white p-6 shadow-sm lg:flex-[1]">
-                <p className="mb-1 text-xs text-gray-500">
-                  {cartItems.length}件項目
-                </p>
+                <p className="mb-1 text-xs text-gray-500">{totalQty}件項目</p>
                 <div className="mb-1 text-xl font-medium text-gray-700">
                   NT$ {totalAmount.toLocaleString()}
                 </div>
@@ -131,7 +186,7 @@ export default function CartPage() {
                   </button>
                 </Link>
                 <p className="mt-2 text-center text-xs text-cyan-500">
-                  你可獲得 10 積分
+                  你可獲得 10 M幣
                 </p>
               </div>
             </div>
@@ -143,17 +198,37 @@ export default function CartPage() {
               </h3>
             </div>
 
+            {/* 🚀 4. 這裡改為使用 map 渲染從後端撈取到的推薦商品列表 */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="overflow-hidden rounded-lg bg-white p-4 shadow-sm">
-                <div className="mb-2 h-40 rounded-md bg-gray-200"></div>
-                <span className="text-xs text-gray-400">韓國 濟州</span>
-                <h5 className="mt-1 text-sm font-bold text-gray-800">
-                  濟州島9.81 Park門票
-                </h5>
-                <p className="mt-3 text-sm font-bold text-gray-800">
-                  NT$ 714 起
-                </p>
-              </div>
+              {recommendProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="overflow-hidden rounded-lg border border-gray-100 bg-white p-4 shadow-sm"
+                >
+                  <div className="mb-2 flex h-40 items-center justify-center overflow-hidden rounded-md bg-gray-200">
+                    {product.primaryImage ? (
+                      <img
+                        src={product.primaryImage}
+                        alt={product.title}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xs text-gray-400">暫無圖片</span>
+                    )}
+                  </div>
+                  <span className="text-xs text-gray-400">{product.city}</span>
+                  <h5 className="mt-1 line-clamp-2 min-h-[40px] text-sm font-bold text-gray-800">
+                    {product.title}
+                  </h5>
+                  <p className="mt-3 text-sm font-bold text-gray-800">
+                    NT${" "}
+                    {product.minPrice
+                      ? Number(product.minPrice).toLocaleString()
+                      : "---"}{" "}
+                    起
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -171,9 +246,11 @@ export default function CartPage() {
             <h3 className="mb-2 text-2xl font-bold text-gray-700">
               購物車空空的
             </h3>
-            <p className="mb-8 cursor-pointer text-base text-teal-500">
-              馬上選購你喜歡的商品吧！
-            </p>
+            <Link href="experiences/search/1">
+              <p className="mb-8 cursor-pointer text-base text-teal-500">
+                馬上選購你喜歡的商品吧！
+              </p>
+            </Link>
           </div>
         </div>
       )}

@@ -45,7 +45,7 @@ export default function ReviewPage() {
           </div>
 
           {/* 已送達狀態小標籤 */}
-          <span className="rounded bg-gray-200 px-2 py-0.5 text-[14px] font-medium text-gray-600">
+          <span className="rounded bg-gray-200 px-2 py-0.5 text-[14px] font-medium text-gray-600 whitespace-nowrap">
             已送達
           </span>
         </div>

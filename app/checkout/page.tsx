@@ -59,7 +59,7 @@ export default function CheckPage() {
 
                 {/* 已有聯絡人資訊小卡 */}
                 <div className="mb-6 flex items-start justify-between rounded-lg border bg-gray-50/50 p-4 text-sm text-gray-700">
-                  <div className="grid grid-cols-2 gap-x-8 gap-y-2">
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-2">
                     <div className="text-gray-400">姓</div>
                     <div>YANG</div>
                     <div className="text-gray-400">名</div>
@@ -185,11 +185,11 @@ export default function CheckPage() {
                 請確認資料填寫無誤，訂單送出後可能無法變更
               </div>
               <div className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm lg:border-none lg:bg-transparent lg:p-0 lg:shadow-none">
-                <span className="text-xs text-gray-500 lg:w-2/3">
+                <span className="text-xs text-gray-500 lg:w-2/3 sm:w-1/3">
                   前往付款後，訂單即送出，請於下一步選擇付款方式
                 </span>
                 <Link href="/payment/">
-                  <button className="btn border-none bg-[#45cad5] px-10 text-white hover:bg-[#36b3be]">
+                  <button className="btn border-none bg-[#45cad5] sm:px-10 text-white hover:bg-[#36b3be] whitespace-nowrap">
                     前往付款
                   </button>
                 </Link>
@@ -197,46 +197,75 @@ export default function CheckPage() {
             </div>
 
             {/* 【右欄：訂單明細摘要卡片】 加上了 sticky top-4 固頂效果 */}
-            <div className="sticky top-20 w-full rounded-lg border border-gray-100 bg-white p-6 text-gray-800 shadow-sm lg:flex-[1]">
-              <h3 className="mb-2 text-sm font-bold">
-                釜山海雲台藍線公園 - 膠囊列車及海岸列車車票
-              </h3>
-              <p className="mb-4 text-xs text-gray-400">
-                天空膠囊列車 (青沙浦至尾浦) - 2人
-              </p>
+            <div className="sticky top-20 flex w-full flex-col gap-4 text-gray-800 lg:flex-[1]">
+              {/*  第一塊白卡片：商品名稱與基本資料 */}
+              <div className="w-full rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+                <h3 className="mb-1 text-sm leading-snug font-bold text-gray-900">
+                  釜山海雲台藍線公園 - 膠囊列車及海岸列車車票
+                </h3>
+                <p className="mb-4 text-xs text-gray-400">
+                  天空膠囊列車 (青沙浦至尾浦) - 2人
+                </p>
 
-              <div className="my-4 flex flex-col gap-2 border-t border-b py-4 text-xs text-gray-600">
-                <div className="flex justify-between">
-                  <span>日期</span>
-                  <span>2026年7月21日</span>
+                <div className="flex flex-col gap-2 border-t border-gray-100 pt-3 text-xs text-gray-600">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">日期</span>
+                    <span className="font-medium text-gray-800">
+                      2026年7月21日
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">數量</span>
+                    <span className="font-medium text-gray-800">
+                      10:30 - 11:00 × 1
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span>數量</span>
-                  <span>10:30 - 11:00 × 1</span>
-                </div>
-              </div>
 
-              <div className="mb-2 flex items-center justify-between text-sm font-bold">
-                <span>總價</span>
-                <span>NT$ 1,034</span>
-              </div>
-              <div className="flex items-center justify-between border-t pt-4 text-lg font-bold text-orange-500">
-                <span>付款金額</span>
-                <span>NT$ 1,034</span>
-              </div>
-
-              {/* 酷幣回饋提示 */}
-              <div className="mt-6 rounded-lg border border-cyan-100 bg-cyan-50/60 p-3 text-xs text-cyan-600">
-                <span className="font-bold">Klook 酷幣</span>
-                <p className="mt-1">享以下額度折扣回饋：</p>
-                <div className="mt-2">
-                  <span className="badge badge-info badge-sm text-white">
-                    ≈ NT$ 1
+                <div className="mt-2 flex items-baseline justify-between border-t border-gray-100 pt-3">
+                  <span className="text-xs font-medium text-gray-400">
+                    總價
                   </span>
-                  <span className="ml-1 text-gray-400">(3 Klook 酷幣)</span>
+                  <span className="text-sm font-bold text-gray-900">
+                    NT$ 1,034
+                  </span>
                 </div>
+              </div>
+
+              {/*  第二塊白卡片：付款金額大橘字 */}
+              <div className="w-full rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold text-gray-900">
+                    付款金額
+                  </span>
+                  {/* 橘色大粗體字！ */}
+                  <span className="text-xl font-black text-[#ff5722]">
+                    NT$ 1,034
+                  </span>
+                </div>
+              </div>
+
+              {/* 第三塊白卡片：M幣回饋提示 */}
+              <div className="flex w-full flex-col gap-2 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+                <h5 className="text-xs font-bold text-gray-900">
+                  輕鬆享M幣回饋！
+                </h5>
+                <p className="text-[11px] text-gray-400">
+                  享以下額度折扣回饋：
+                </p>
+
+                {/* 亮綠藍色小膠囊標籤，看起來比原本的 badge 更精緻高級 */}
+                <div className="mt-1 flex items-center">
+                  <div className="flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-600">
+                    <span>≈ NT$ 1</span>
+                    <span className="text-[10px] font-normal text-gray-400">
+                      (1 M幣)
+                    </span>
+                  </div>
+                </div>
+
                 <p className="mt-2 text-[10px] text-gray-400">
-                  下次消費使用酷幣輕鬆折抵！
+                  下次消費使用M幣輕鬆折抵！
                 </p>
               </div>
             </div>

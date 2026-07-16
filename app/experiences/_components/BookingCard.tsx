@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from 'next/link';
 
 function Stepper({
   value,
@@ -85,12 +86,14 @@ export default function BookingCard() {
         </strong>
       </div>
 
+      <Link href="/cart">
       <button
         type="button"
         className="h-12 w-full rounded-md bg-[#68BBC3] text-[16px] font-extrabold text-white transition-colors hover:bg-[#55AAB2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#68BBC3]"
       >
         選擇方案
       </button>
+      </Link>
 
       <p className="mt-4 text-center text-[12px] text-[#8B9297]">
         預訂前不會向您收費
