@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import React, { useState, useRef, useEffect, ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -7,12 +7,26 @@ import { FaSearch } from "react-icons/fa";
 
 export default function Navbar() {
   const navLinks = [
+    { name: "登入", href: "/auth/login" },
+    { name: "註冊", href: "/auth/register" },
     { name: "部落格", href: "/blog" },
     { name: "體驗分類", href: "/categories" },
     { name: "品牌介紹", href: "/about" },
     { name: "聯絡我們", href: "/contact" },
   ];
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
+  // 點擊外部關閉選單
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [setIsOpen]);
   const pathname = usePathname();
   const isHomePage = pathname === "/";
   const [isScrolled, setIsScrolled] = useState(false);
@@ -124,27 +138,30 @@ export default function Navbar() {
           </Link>
         </div>
       </ul>
-      <div className="dropdown dropdown-end md:hidden">
-        <div tabIndex={0} role="button" className="h-[20px] w-[20px]">
-          <Image
-            src="/icon/bars.svg"
-            alt="Logo"
-            fill
-            className="h-auto w-auto"
-          />
-        </div>
-        <div className="dropdown-content menu-lg rounded-box z-1 w-52 p-2">
-          {navLinks.map((link, index) => (
-            <div
-              key={link.name}
-              className="flex items-center border-r border-amber-300 px-5 last:border-0"
-            >
-              <Link href={link.href} className="hover:text-gray-300">
-                {link.name}
-              </Link>
-            </div>
-          ))}
-        </div>
+      <div className="relative md:hidden" ref={menuRef}>
+        {/* 按鈕 */}
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="h-[20px] w-[20px]"
+        >
+          <img src="/icon/bars.svg" alt="Menu" />
+        </button>
+
+        {/* 選單容器 */}
+        {isOpen && (
+          <div className="bg-base-100 absolute top-full right-0 z-50 mt-2 w-[430px] p-2 shadow-xl">
+            {navLinks.map((link) => (
+              <div
+                key={link.name}
+                className="border-b border-gray-100 px-4 py-2 last:border-0"
+              >
+                <Link href={link.href} className="block hover:text-gray-300">
+                  {link.name}
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </nav>
   );
