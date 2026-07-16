@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { clearSelectedCoupon } from "@/app/member/coupon/utils";
+import { getApiServer } from "@/config/api-path";
 
 export default function PaymentPage() {
   // 管理選中的付款方式

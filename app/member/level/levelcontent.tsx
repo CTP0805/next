@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ArrowLeft, X, Crown } from "lucide-react";
 
 interface MemberLevelDetailDrawerProps {
@@ -113,13 +114,20 @@ export default function MemberLevelDetailDrawer({
   const titleId = useId();
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Portal 需等 client mount，避免 SSR/水合差異
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    closeBtnRef.current?.focus();
+    // 延遲 focus，避免部分行動瀏覽器搶焦失敗
+    const t = window.setTimeout(() => closeBtnRef.current?.focus(), 50);
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -127,6 +135,7 @@ export default function MemberLevelDetailDrawer({
 
     window.addEventListener("keydown", onKeyDown);
     return () => {
+      window.clearTimeout(t);
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
@@ -134,34 +143,40 @@ export default function MemberLevelDetailDrawer({
 
   const progressWidth = Math.min(100, Math.max(0, MEMBER_STATUS.progressPercent));
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <>
-      {/* Backdrop */}
+      {/* Backdrop：關閉時完全不接收點擊，避免蓋住主頁按鈕 */}
       <div
-        className={`fixed inset-0 z-[60] bg-black/50 transition-opacity duration-300 ${
-          isOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        className={`fixed inset-0 z-[200] bg-black/50 transition-opacity duration-300 ${
+          isOpen
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Slide-in Panel */}
+      {/* Slide-in Panel：portal 到 body，不受 member layout 層級／overflow 影響 */}
       <div
         ref={panelRef}
         role="dialog"
-        aria-modal="true"
+        aria-modal={isOpen}
         aria-labelledby={titleId}
         aria-hidden={!isOpen}
-        className={`fixed top-0 right-0 z-[70] flex h-full w-full max-w-[480px] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out ${
-          isOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed inset-y-0 right-0 z-[210] flex h-[100dvh] w-full max-w-[min(480px,100vw)] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out ${
+          isOpen
+            ? "pointer-events-auto translate-x-0"
+            : "pointer-events-none translate-x-full"
         }`}
       >
         {/* Header */}
-        <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 px-6 py-4">
+        <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 px-4 py-4 sm:px-6">
           <button
             type="button"
             onClick={onClose}
-            className="flex items-center gap-2 text-gray-700 transition-colors hover:text-gray-900"
+            className="flex min-h-11 items-center gap-2 px-1 text-gray-700 transition-colors hover:text-gray-900"
           >
             <ArrowLeft className="h-5 w-5" aria-hidden />
             <span className="font-medium">返回</span>
@@ -171,14 +186,14 @@ export default function MemberLevelDetailDrawer({
             type="button"
             onClick={onClose}
             aria-label="關閉會員詳情"
-            className="rounded-xl p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-[12px] p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 space-y-10 overflow-y-auto px-6 py-8 text-gray-800">
+        <div className="flex-1 space-y-10 overflow-y-auto overscroll-contain px-4 py-6 text-gray-800 sm:px-6 sm:py-8">
           {/* ELITE STATUS */}
           <section>
             <div className="mb-2 flex items-center gap-2 text-teal-600">
@@ -201,7 +216,7 @@ export default function MemberLevelDetailDrawer({
               </span>
             </div>
             <div
-              className="mb-2 h-2.5 overflow-hidden rounded-full bg-gray-200"
+              className="mb-2 h-2.5 overflow-hidden rounded-[12px] bg-gray-200"
               role="progressbar"
               aria-valuenow={progressWidth}
               aria-valuemin={0}
@@ -209,7 +224,7 @@ export default function MemberLevelDetailDrawer({
               aria-label="升等進度"
             >
               <div
-                className="h-full rounded-full bg-gradient-to-r from-teal-400 to-cyan-500 transition-all duration-500"
+                className="h-full rounded-[12px] bg-gradient-to-r from-teal-400 to-cyan-500 transition-all duration-500"
                 style={{ width: `${progressWidth}%` }}
               />
             </div>
@@ -230,7 +245,7 @@ export default function MemberLevelDetailDrawer({
           <section>
             <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
               <h3 className="text-2xl font-bold">C 級 會員權益</h3>
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-500">
+              <span className="rounded-[12px] bg-gray-100 px-3 py-1 text-xs text-gray-500">
                 會員分級權益懶人包
               </span>
             </div>
@@ -246,9 +261,7 @@ export default function MemberLevelDetailDrawer({
                       <th
                         key={level.key}
                         className={`px-3 py-3 text-center font-semibold ${level.headerClass} ${
-                          level.key === CURRENT_LEVEL_KEY
-                            ? "bg-amber-50"
-                            : ""
+                          level.key === CURRENT_LEVEL_KEY ? "bg-amber-50" : ""
                         }`}
                       >
                         {level.label}
@@ -322,7 +335,7 @@ export default function MemberLevelDetailDrawer({
               {FAQS.map((item) => (
                 <details
                   key={item.q}
-                  className="group rounded-xl border border-gray-200 px-5 py-4"
+                  className="group rounded-[12px] border border-gray-200 px-5 py-4"
                 >
                   <summary className="flex cursor-pointer list-none items-center justify-between font-medium text-gray-800 group-open:mb-3">
                     {item.q}
@@ -341,7 +354,7 @@ export default function MemberLevelDetailDrawer({
         </div>
 
         {/* Footer */}
-        <div className="flex flex-shrink-0 gap-4 border-t border-gray-100 px-6 py-4 text-xs text-gray-400">
+        <div className="flex flex-shrink-0 gap-4 border-t border-gray-100 px-4 py-4 text-xs text-gray-400 sm:px-6">
           <a href="#" className="hover:text-gray-600">
             隱私權政策
           </a>
@@ -358,6 +371,7 @@ export default function MemberLevelDetailDrawer({
           </button>
         </div>
       </div>
-    </>
+    </>,
+    document.body,
   );
 }

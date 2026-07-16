@@ -1,11 +1,11 @@
 /**
- * 會員優惠／酷幣 資料模型
+ * 會員優惠／M幣 資料模型
  * 欄位命名對齊未來 DB／API，前端 mock 與正式匯入可共用。
  *
  * 之後若後端欄位名不同，只改 mapFromApi() 即可。
  */
 
-/** 酷幣帳戶（一使用者一筆） */
+/** M幣帳戶（一使用者一筆） */
 export interface PointWallet {
   user_id: number;
   /** 目前可用餘額 */
@@ -16,7 +16,7 @@ export interface PointWallet {
 }
 
 /**
- * 酷幣流水
+ * M幣流水
  * DB 建議表名：point_transactions
  */
 export interface PointTransaction {
@@ -42,12 +42,7 @@ export interface PointTransaction {
 
 /** 優惠券種類（UI 標籤／篩選用，非 DB ENUM 也可） */
 export type CouponCategory =
-  | "member"
-  | "welcome"
-  | "seasonal"
-  | "flash"
-  | "experience"
-  | "shipping";
+  "member" | "welcome" | "seasonal" | "flash" | "experience" | "shipping";
 
 /**
  * 優惠券主檔
@@ -125,11 +120,11 @@ export interface Order {
   coupon_id: number | null;
   /** 優惠券折抵金額 */
   coupon_discount: number;
-  /** 本次訂單折抵酷幣數量 */
+  /** 本次訂單折抵M幣數量 */
   points_redeemed: number;
   /** 最終實付總額 */
   final_amount: number;
-  /** 本筆訂單新賺取的酷幣 */
+  /** 本筆訂單新賺取的M幣 */
   points_earned: number;
   created_at: string;
   updated_at: string;
@@ -171,7 +166,8 @@ export interface SelectedCouponPayload {
 }
 
 export type PointFilter = "all" | "earned" | "used" | "expired";
-export type CouponFilter = "all" | "available" | "scheduled" | "used" | "expired";
+export type CouponFilter =
+  "all" | "available" | "scheduled" | "used" | "expired";
 export type CouponPageTab = "points" | "coupons";
 
 /** 會員優惠頁一次載入的資料包（之後可對應單一 API） */
