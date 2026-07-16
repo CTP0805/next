@@ -5,10 +5,6 @@ import Footer from "./Footer";
 
 export default function FooterGuard() {
   // 取得目前網址路徑
-  // 例如：
-  // /login
-  // /register
-  // /member/profile
   const pathname = usePathname();
 
   // 這裡放「不想顯示 footer 的路由」
@@ -17,6 +13,7 @@ export default function FooterGuard() {
     "/auth/register",
     "/auth/forgot-password",
     "/auth/reset-password",
+    "/auth/verify-email",
   ];
 
   // 判斷目前頁面是不是在不要顯示 footer 的清單裡

@@ -138,7 +138,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[url('/images/register-bg.jpg')] bg-cover bg-left text-white">
+    <main className="min-h-screen bg-[url('/images/register-bg.jpg')] bg-cover bg-[position:33%_center] xl:bg-left text-white">
       <div>
         <Toaster />
       </div>

@@ -143,7 +143,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <main className="min-h-screen bg-[url('/images/login-bg.jpg')] bg-cover bg-left text-white">
+      <main className="min-h-screen bg-[url('/images/login-bg.jpg')] bg-cover bg-[position:48%_center] xl:bg-left text-white">
         <div>
           <Toaster />
         </div>
