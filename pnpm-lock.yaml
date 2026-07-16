@@ -16,7 +16,7 @@ importers:
         version: 48.3.0
       daisyui:
         specifier: ^5.6.13
-        version: 5.6.13
+        version: 5.6.16
       dompurify:
         specifier: ^3.4.11
         version: 3.4.11
@@ -41,6 +41,9 @@ importers:
       react-dom:
         specifier: 19.2.4
         version: 19.2.4(react@19.2.4)
+      react-easy-crop:
+        specifier: ^6.2.2
+        version: 6.2.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-hot-toast:
         specifier: ^2.6.0
         version: 2.6.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1436,8 +1439,8 @@ packages:
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
 
-  daisyui@5.6.13:
-    resolution: {integrity: sha512-0UHyNG3TzF7pDIbPcWyLKQfgtGhJcIq2x26jwsDKp7ZhL0GwaqIMZ12+TWfp8p+mE4NNc29SJk63hEXTz3MQkg==}
+  daisyui@5.6.16:
+    resolution: {integrity: sha512-A5/IrcFCXyfzQ7M2fnKVPfMbKCVu0xeM7/G22gK1XRcp2dgA39kvFOeEAK8f2KpJJQJ+s9Jc5pZoJoYsPEJ8JQ==}
 
   damerau-levenshtein@1.0.8:
     resolution: {integrity: sha512-sdQSFB7+llfUcQHUQO3+B8ERRj0Oa4w9POWMI/puGtuf7gFywGmkaLCElnudfTiKZV+NvHqL0ifzdrI8Ro7ESA==}
@@ -2418,6 +2421,9 @@ packages:
     resolution: {integrity: sha512-J6l92tKHX6w8Jy5nO1Vuc01NoIiRGi/d6qBKVxh+IQ8Cr3b6HbVNfKiF8ZpFKufTwpwxMmce2W3iQZ861ZRyTg==}
     engines: {node: '>=18'}
 
+  normalize-wheel@1.0.1:
+    resolution: {integrity: sha512-1OnlAPZ3zgrk8B91HyRj+eVv+kS5u+Z0SCsak6Xil/kmgEia50ga7zfkumayonZrImffAxPU/5WcyGhzetHNPA==}
+
   object-assign@4.1.1:
     resolution: {integrity: sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==}
     engines: {node: '>=0.10.0'}
@@ -2592,6 +2598,12 @@ packages:
     resolution: {integrity: sha512-AXJdLo8kgMbimY95O2aKQqsz2iWi9jMgKJhRBAxECE4IFxfcazB2LmzloIoibJI3C12IlY20+KFaLv+71bUJeQ==}
     peerDependencies:
       react: ^19.2.4
+
+  react-easy-crop@6.2.2:
+    resolution: {integrity: sha512-b0HOicSvLYoNk1yvZTwjH8sNjF5uD9xLtWrSDnv+fx1dXTbwd8bNLQaP6gjXw//A+tni9Mw5KDmPNOEjKF55NQ==}
+    peerDependencies:
+      react: '>=16.4.0'
+      react-dom: '>=16.4.0'
 
   react-hot-toast@2.6.0:
     resolution: {integrity: sha512-bH+2EBMZ4sdyou/DPrfgIouFpcRLCJ+HoCA32UoAYHn6T3Ur5yfcDCeSr5mwldl6pFOsiocmrXMuoCJ1vV8bWg==}
@@ -4836,7 +4848,7 @@ snapshots:
 
   csstype@3.2.3: {}
 
-  daisyui@5.6.13: {}
+  daisyui@5.6.16: {}
 
   damerau-levenshtein@1.0.8: {}
 
@@ -6191,6 +6203,8 @@ snapshots:
 
   node-releases@2.0.50: {}
 
+  normalize-wheel@1.0.1: {}
+
   object-assign@4.1.1: {}
 
   object-inspect@1.13.4: {}
@@ -6326,6 +6340,12 @@ snapshots:
     dependencies:
       react: 19.2.4
       scheduler: 0.27.0
+
+  react-easy-crop@6.2.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+    dependencies:
+      normalize-wheel: 1.0.1
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
 
   react-hot-toast@2.6.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:

@@ -8,6 +8,8 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import toast, { Toaster } from "react-hot-toast";
+import { API_SERVER } from "@/config/api-path";
+
 
 // 還不確定用不用的到
 type LoginRequest = {
@@ -22,7 +24,7 @@ type LoginResponse = {
   user?: User;
 };
 
-export default function LoginPage() {
+export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
 
   // isLoading 用來控制按下登入後，按鈕顯示「登入中」
@@ -30,54 +32,40 @@ export default function LoginPage() {
   const router = useRouter();
 
   // 使用者按下「登入」按鈕時會執行這個函式
-  async function handleLogin(
+  async function handleForgotPassword(
     e: SyntheticEvent<HTMLFormElement>,
   ): Promise<void> {
     // 阻止表單預設刷新頁面的行為
     e.preventDefault();
 
-    // 等等就會替換成這段
-    try {
-      setIsLoading(true);
-      
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-
-    /*
+    const trimmedEmail = email.trim();
     try {
       // 開始送資料時，讓按鈕變成 loading 狀態
       setIsLoading(true);
 
       // 前端送資料給後端
       // API_SERVER 要確認 port 號
-      const response = await fetch(`${API_SERVER}/api/auth/login`, {
+      const response = await fetch(`${API_SERVER}/api/auth/forgot-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           email: trimmedEmail,
-          password,
         }),
       });
 
       const result = await response.json();
 
-      // 如果後端說登入失敗
       if (!response.ok) {
         toast.error(result.message || "登入失敗(前端)");
         return;
       }
 
-      // 如果登入成功，通常會把 token 存起來
-      // 注意：正式專案更建議用 HttpOnly Cookie，這裡先用最容易懂的版本
       if (response.ok) {
-        localStorage.setItem("kenny-auth", JSON.stringify(result.data));
+        
         toast.success(result.message || "登入成功(前端)");
-        router.push("/");
+        
         return;
       }
 
@@ -90,12 +78,12 @@ export default function LoginPage() {
       // 不管成功或失敗，都把 loading 關掉
       setIsLoading(false);
     }
-    */
+    
   }
 
   return (
     <>
-      <main className="min-h-screen bg-[url('/images/login-bg.jpg')] bg-cover bg-left text-white">
+      <main className="min-h-screen bg-[url('/images/login-bg.jpg')] bg-cover bg-[position:48%_center] xl:bg-left text-white">
         <div>
           <Toaster />
         </div>
@@ -112,7 +100,7 @@ export default function LoginPage() {
             <div className="flex w-full max-w-md flex-col overflow-hidden rounded-[12px] border border-white/80 bg-black/35 shadow-2xl backdrop-blur-[2px] xl:max-w-[1280px] xl:flex-row">
               {/* 左側：登入表單 */}
               <div className="flex w-full items-center justify-center px-5 py-10 sm:px-8 sm:py-12 xl:w-1/2 xl:px-16 xl:px-20">
-                <form onSubmit={handleLogin} className="w-full max-w-[470px]">
+                <form onSubmit={handleForgotPassword} className="w-full max-w-[470px]">
                   <h2 className="mb-10 text-center">忘記密碼</h2>
                   <p className="text-center">請輸入您的電子信箱</p>
                   <p className="mb-6 text-center">
