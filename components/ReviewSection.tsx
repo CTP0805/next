@@ -21,15 +21,23 @@ export function ReviewCard() {
   return (
     <div className="rounded-3xl bg-gray-100 p-6 shadow-sm">
       <div className="flex items-center gap-3">
-        <div className="h-12 w-12 rounded-full bg-gray-300" />
-
+        <div className="relative aspect-square h-12 w-12 rounded-full bg-gray-300">
+          <Image
+            src="/images/carousel1.jpeg"
+            alt=""
+            className="rounded-full"
+            fill
+          />
+        </div>
         <div>
           <p className="">Sarah W.</p>
           ⭐⭐⭐⭐⭐
         </div>
       </div>
 
-      <p className="mt-4 text-gray-600">「這不是觀光行程，而是在交朋友。」</p>
+      <p className="mt-4 text-gray-600">
+        「這不是觀光行程，而是在交朋友。..........這不是觀光行程，而是在交朋友。這不是觀光行程，而是在交朋友。這不是觀光行程，而是在交朋友。.」
+      </p>
     </div>
   );
 }
@@ -41,7 +49,7 @@ export function ImageCard() {
   return (
     <div className="relative h-96 overflow-hidden rounded-3xl">
       <Image
-        src="/images/carousel1.jpg"
+        src="/images/carousel1.jpeg"
         alt=""
         fill
         className="rounded-3xl object-cover"
@@ -63,7 +71,7 @@ export default function Home() {
           已有超過 10,000 位探險家在 Meet Locals 寫下故事
         </p>
       </div>
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-8 xl:grid-cols-4">
         {columns.map((column, index) => (
           <div
             key={index}
