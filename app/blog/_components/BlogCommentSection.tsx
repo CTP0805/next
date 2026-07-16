@@ -38,6 +38,9 @@ function formatDate(iso: string) {
   });
 }
 
+const fieldClass =
+  "w-full rounded-[12px] border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#45cad5] focus:ring-2 focus:ring-[#45cad5]/20";
+
 export default function BlogCommentSection({
   postSlug,
 }: BlogCommentSectionProps) {
@@ -84,28 +87,33 @@ export default function BlogCommentSection({
   }
 
   return (
-    <section className="mt-16 border-t border-gray-200 pt-12">
-      <div className="mb-8 flex items-end justify-between gap-4">
+    <section className="rounded-[12px] border border-gray-100 bg-white p-5 shadow-sm sm:p-8">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3 sm:mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">留言區</h2>
+          <h2 className="flex items-center gap-3 text-xl font-bold text-gray-900 sm:text-2xl">
+            <span
+              className="h-6 w-1.5 rounded-[12px] bg-[#45cad5]"
+              aria-hidden
+            />
+            留言區
+          </h2>
           <p className="mt-2 text-sm text-gray-500">
             分享你的想法，與其他旅人交流心得
           </p>
         </div>
-        <span className="rounded-full bg-teal-50 px-3 py-1 text-sm font-medium text-teal-700">
+        <span className="rounded-[12px] bg-teal-50 px-3 py-1 text-sm font-medium text-teal-700">
           {countLabel}
         </span>
       </div>
 
-      {/* 發表留言 */}
       <form
         onSubmit={handleSubmit}
-        className="mb-10 rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+        className="mb-8 rounded-[12px] border border-gray-100 bg-gray-50/80 p-4 sm:p-6"
       >
         <div className="mb-4">
           <label
             htmlFor="comment-author"
-            className="mb-2 block text-sm font-medium text-gray-700"
+            className="mb-1.5 block text-sm font-medium text-gray-700"
           >
             暱稱
           </label>
@@ -116,14 +124,14 @@ export default function BlogCommentSection({
             onChange={(e) => setAuthor(e.target.value)}
             maxLength={24}
             placeholder="你的暱稱"
-            className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#68BBC3] focus:ring-2 focus:ring-[#68BBC3]/25"
+            className={`h-11 ${fieldClass}`}
           />
         </div>
 
         <div className="mb-4">
           <label
             htmlFor="comment-content"
-            className="mb-2 block text-sm font-medium text-gray-700"
+            className="mb-1.5 block text-sm font-medium text-gray-700"
           >
             留言內容
           </label>
@@ -134,16 +142,14 @@ export default function BlogCommentSection({
             rows={4}
             maxLength={500}
             placeholder="寫下你的留言…"
-            className="w-full resize-y rounded-xl border border-gray-200 bg-white px-4 py-3 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#68BBC3] focus:ring-2 focus:ring-[#68BBC3]/25"
+            className={`resize-y py-3 ${fieldClass}`}
           />
           <div className="mt-1 text-right text-xs text-gray-400">
             {content.length}/500
           </div>
         </div>
 
-        {error ? (
-          <p className="mb-3 text-sm text-red-500">{error}</p>
-        ) : null}
+        {error ? <p className="mb-3 text-sm text-red-500">{error}</p> : null}
         {submitted ? (
           <p className="mb-3 text-sm text-teal-600">留言已送出，感謝分享！</p>
         ) : null}
@@ -151,27 +157,26 @@ export default function BlogCommentSection({
         <div className="flex justify-end">
           <button
             type="submit"
-            className="rounded-xl bg-[#45cad5] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#36b3be]"
+            className="rounded-[12px] bg-[#45cad5] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#36b3be]"
           >
             送出留言
           </button>
         </div>
       </form>
 
-      {/* 留言列表 */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         {comments.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center text-gray-500">
+          <p className="rounded-[12px] border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center text-sm text-gray-500">
             還沒有留言，成為第一個留言的人吧！
           </p>
         ) : (
           comments.map((comment) => (
             <article
               key={comment.id}
-              className="rounded-xl border border-gray-100 bg-gray-50/70 px-5 py-4"
+              className="rounded-[12px] border border-gray-100 bg-gray-50/60 px-4 py-4 sm:px-5"
             >
               <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#45cad5]/15 text-sm font-bold text-[#36b3be]">
+                <div className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-[#45cad5]/15 text-sm font-bold text-[#36b3be]">
                   {comment.author.slice(0, 1)}
                 </div>
                 <span className="font-semibold text-gray-900">

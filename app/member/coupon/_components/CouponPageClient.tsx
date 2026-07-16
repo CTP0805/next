@@ -12,6 +12,7 @@ import type {
   PointFilter,
 } from "../types";
 import {
+  clearSelectedCoupon,
   deriveCouponStatus,
   filterCoupons,
   filterTransactions,
@@ -19,7 +20,6 @@ import {
   LIST_PAGE_SIZE,
   normalizeRedeemCode,
   paginateList,
-  readSelectedCoupon,
   saveSelectedCoupon,
 } from "../utils";
 import WalletBanner from "./WalletBanner";
@@ -42,10 +42,8 @@ export default function CouponPageClient({ data }: CouponPageClientProps) {
   const [couponPage, setCouponPage] = useState(1);
   const [coupons, setCoupons] = useState<MemberCouponView[]>(data.coupons);
   const [redeemPool, setRedeemPool] = useState<Coupon[]>(data.redeemable_codes);
-  const [selectedId, setSelectedId] = useState<number | null>(() => {
-    const saved = readSelectedCoupon();
-    return saved?.member_coupon_id ?? null;
-  });
+  /** 僅本次停留在此頁時的暫選；不從 localStorage 還原，避免跳轉後殘留「已選用」 */
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [nextLocalId, setNextLocalId] = useState(() => {
     const maxId = data.coupons.reduce(
       (max, c) => Math.max(max, c.member_coupon_id),
@@ -53,6 +51,12 @@ export default function CouponPageClient({ data }: CouponPageClientProps) {
     );
     return maxId + 1;
   });
+
+  // 回到優惠頁時清掉上次跳轉／未完成結帳的選用狀態
+  useEffect(() => {
+    clearSelectedCoupon();
+    setSelectedId(null);
+  }, []);
 
   const pointCounts = useMemo(() => {
     const { transactions } = data;
@@ -118,9 +122,19 @@ export default function CouponPageClient({ data }: CouponPageClientProps) {
       toast.error("此優惠券目前無法使用");
       return;
     }
+
+    // 再點同一張 = 取消選用
+    if (selectedId === coupon.member_coupon_id) {
+      clearSelectedCoupon();
+      setSelectedId(null);
+      toast.success("已取消選用優惠券");
+      return;
+    }
+
     saveSelectedCoupon(coupon);
     setSelectedId(coupon.member_coupon_id);
     toast.success(`已選用「${coupon.title}」，前往購物車結帳時可套用`);
+    // 跳轉後此頁 unmount；回來時 effect 會清掉選用狀態
     router.push("/cart");
   }
 
@@ -178,7 +192,7 @@ export default function CouponPageClient({ data }: CouponPageClientProps) {
   }
 
   return (
-    <div className="w-full min-w-0 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+    <div className="w-full min-w-0 overflow-x-hidden rounded-[12px] border border-gray-100 bg-white shadow-sm">
       <Toaster position="top-center" />
       <WalletBanner wallet={data.wallet} />
 

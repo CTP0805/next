@@ -39,7 +39,7 @@ export default function SegmentTabs<T extends string>({
               role="tab"
               aria-selected={active}
               onClick={() => onChange(item.key)}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+              className={`rounded-[12px] px-3 py-1.5 text-xs font-medium transition ${
                 active
                   ? "bg-[#45cad5] text-white"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"

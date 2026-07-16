@@ -49,7 +49,7 @@ export default function CouponList({
         return (
           <article
             key={coupon.member_coupon_id}
-            className={`overflow-hidden rounded-xl border shadow-sm transition ${
+            className={`overflow-hidden rounded-[12px] border shadow-sm transition ${
               isSelected
                 ? "border-[#45cad5] ring-2 ring-[#45cad5]/30"
                 : "border-gray-100"
@@ -82,7 +82,7 @@ export default function CouponList({
                       {coupon.title}
                     </h3>
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      className={`rounded-[12px] px-2 py-0.5 text-[10px] font-medium ${
                         coupon.status === "available"
                           ? "bg-emerald-50 text-emerald-600"
                           : coupon.status === "scheduled"
@@ -95,12 +95,12 @@ export default function CouponList({
                       {couponStatusLabel(coupon.status)}
                     </span>
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${couponCategoryTone(coupon.category)}`}
+                      className={`rounded-[12px] px-2 py-0.5 text-[10px] font-medium ${couponCategoryTone(coupon.category)}`}
                     >
                       {couponCategoryLabel(coupon.category)}
                     </span>
                     {isSelected ? (
-                      <span className="rounded-full bg-cyan-50 px-2 py-0.5 text-[10px] font-medium text-cyan-700">
+                      <span className="rounded-[12px] bg-cyan-50 px-2 py-0.5 text-[10px] font-medium text-cyan-700">
                         已選用
                       </span>
                     ) : null}
@@ -146,8 +146,10 @@ export default function CouponList({
                   <div className="flex flex-wrap items-center gap-1.5">
                     <button
                       type="button"
-                      className="rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-gray-600 transition hover:bg-gray-50"
-                      onClick={async () => {
+                      className="min-h-10 rounded-[12px] border border-gray-200 bg-white px-3 py-2 text-[11px] font-medium text-gray-600 transition hover:bg-gray-50"
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         const ok = await copyText(coupon.code);
                         if (ok) {
                           const { default: toast } = await import(
@@ -161,31 +163,39 @@ export default function CouponList({
                     </button>
                     <button
                       type="button"
-                      className="rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-gray-600 transition hover:bg-gray-50"
-                      onClick={() =>
-                        setExpandedId(isExpanded ? null : coupon.member_coupon_id)
-                      }
+                      className="min-h-10 rounded-[12px] border border-gray-200 bg-white px-3 py-2 text-[11px] font-medium text-gray-600 transition hover:bg-gray-50"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setExpandedId(
+                          isExpanded ? null : coupon.member_coupon_id,
+                        );
+                      }}
                     >
                       {isExpanded ? "收合" : "詳情"}
                     </button>
                     {coupon.status === "available" ? (
                       <button
                         type="button"
-                        className={`rounded-xl px-3 py-1.5 text-xs font-semibold text-white transition ${
+                        className={`min-h-10 rounded-[12px] px-3 py-2 text-xs font-semibold text-white transition ${
                           isSelected
                             ? "bg-emerald-500 hover:bg-emerald-600"
                             : "bg-[#45cad5] hover:bg-[#36b3be]"
                         }`}
-                        onClick={() => onUse(coupon)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onUse(coupon);
+                        }}
                       >
-                        {isSelected ? "已選用" : "使用"}
+                        {isSelected ? "取消選用" : "使用"}
                       </button>
                     ) : null}
                   </div>
                 </div>
 
                 {isExpanded ? (
-                  <div className="mt-1 rounded-lg bg-slate-50 px-3 py-2 text-[11px] leading-relaxed text-gray-500">
+                  <div className="mt-1 rounded-[12px] bg-slate-50 px-3 py-2 text-[11px] leading-relaxed text-gray-500">
                     <p>
                       領取時間：{formatDateTime(coupon.received_at)}
                     </p>

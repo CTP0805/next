@@ -7,7 +7,7 @@ interface WalletBannerProps {
 
 export default function WalletBanner({ wallet }: WalletBannerProps) {
   return (
-    <div className="relative h-[188px] w-full overflow-hidden rounded-t-xl bg-[#00B4D8]">
+    <div className="relative h-[188px] w-full overflow-hidden rounded-t-[12px] bg-[#00B4D8]">
       <Link
         href="/points"
         className="absolute top-4 right-6 text-sm font-medium text-white/90 transition-colors hover:text-white"
