@@ -172,7 +172,7 @@ export default function ExperienceCategoryPage() {
           與 <span className="text-[#68BBC3]">巴黎</span> 相關的體驗
         </h2>
         <div className="mt-9 grid grid-cols-[280px_minmax(0,1fr)] items-start gap-8 max-lg:grid-cols-1 max-md:mt-2">
-          <div className="sticky top-28 h-fit max-lg:hidden">
+          <div className="sticky top-25 h-fit max-lg:hidden">
             <FilterPanel />
           </div>
           <section aria-label="巴黎體驗列表" className="min-w-0">

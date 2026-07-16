@@ -62,7 +62,7 @@ const reviews = [
 
 export default function ReviewsSection() {
   return (
-    <section id="reviews" className="scroll-mt-36 pt-12">
+    <section id="reviews" className="scroll-mt-20 pt-14">
       <h4>旅人好評</h4>
 
       <div className="mt-4 mb-10 flex flex-wrap items-center gap-2">
