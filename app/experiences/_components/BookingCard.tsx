@@ -86,22 +86,15 @@ export default function BookingCard() {
         </strong>
       </div>
 
-      <Link href="/cart">
-      <button
-        type="button"
-        className="h-12 w-full rounded-md bg-[#68BBC3] text-[16px] font-extrabold text-white transition-colors hover:bg-[#55AAB2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#68BBC3]"
-      >
-        選擇方案
-      </button>
-      </Link>
+
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
           className="h-12 rounded-xl bg-[#FF9224] text-[16px] font-extrabold text-white transition-colors hover:bg-[#F48312] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF9224]"
-        >
+          >
           加入購物車
         </button>
-
+          
         <button
           type="button"
           className="h-12 rounded-xl bg-[#68BBC3] text-[16px] font-extrabold text-white transition-colors hover:bg-[#55AAB2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#68BBC3]"
