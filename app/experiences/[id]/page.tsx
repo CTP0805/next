@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { useParams } from "next/navigation"; // 💡 引入 useParams 獲取網址 ID
 import {
   HiStar,
   HiOutlineHeart,
@@ -17,16 +18,45 @@ import ReviewsSection from "@/app/experiences/_components/ReviewsSection";
 import NotesSection from "@/app/experiences/_components/NotesSection";
 import BookingCard from "@/app/experiences/_components/BookingCard";
 
-type Experience = {
-  id: number;
+// 💡 調整 Type 定義，以符合後端資料庫回傳的真實欄位
+type ExperienceNote = {
   title: string;
-  location: string;
-  rating: string;
-  reviews: string;
-  price: string;
-  image: string;
+  content: string;
 };
 
+type Experience = {
+  id: number;
+  category_id: number;
+  category_name: string;
+
+  host_id: number;
+  host_name: string;
+  host_bio: string | null;
+  host_avatar: string | null;
+  host_rating: number;
+  host_role: string | null;
+
+  title: string;
+  subtitle: string;
+  description: string;
+  notice: string | null;
+  meeting_point: string;
+  city: string;
+  longitude: number | null;
+  latitude: number | null;
+
+  price: number;
+  adult_price: number;
+  child_price: number;
+  duration_minutes: number;
+
+  image_url: string | null;
+
+  rating: number;
+  review_count: number;
+
+  notes: ExperienceNote[];
+};
 const gallery = [
   {
     src: "/images/experiences/seine-picnic.jpg",
@@ -50,13 +80,6 @@ const gallery = [
   },
 ] as const;
 
-const highlights = [
-  "10 年在巴黎生活的在地嚮導，帶你避開觀光人潮，從日常視角認識城市。",
-  "每團最多 8 人的小團體驗，保留充分交流與彈性停留的時間。",
-  "品嚐法式起司、麵包與自然酒，認識巴黎人的餐桌文化。",
-  "行程節奏輕鬆，可依天氣與成員喜好微調，適合第一次來巴黎的旅人。",
-];
-
 function IconButton({
   label,
   children,
@@ -75,16 +98,55 @@ function IconButton({
   );
 }
 
-export default function ExperienceDetailPage({
-  experience,
-}: {
-  experience: Experience;
-}) {
+const formatDuration = (minutes: number) => {
+  const hours = minutes / 60;
+
+  if (Number.isInteger(hours)) {
+    return `${hours} 小時`;
+  }
+
+  return `${hours.toFixed(1)} 小時`;
+};
+
+export default function ExperienceDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
+  const [experience, setExperience] = useState<Experience | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
   const [activeHash, setActiveHash] = useState("overview");
-  // ⭕️ 1. 控制回到頂端按鈕的顯示狀態
+  // 1. 控制回到頂端按鈕的顯示狀態
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // ⭕️ 2. 監聽滾動距離
+  useEffect(() => {
+    if (!id) return;
+
+    const getExperience = async () => {
+      try {
+        setIsLoading(true);
+        setErrorMessage("");
+
+        const res = await fetch(`http://localhost:3001/api/experiences/${id}`);
+        const resData = await res.json();
+
+        if (resData.status !== "success") {
+          setErrorMessage(resData.message ?? "找不到此體驗");
+          return;
+        }
+
+        setExperience(resData.data);
+      } catch (error) {
+        console.error("取得體驗詳情失敗:", error);
+        setErrorMessage("無法取得體驗資料");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getExperience();
+  }, [id]);
+
+  // 2. 監聽滾動距離
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 400) {
@@ -97,13 +159,24 @@ export default function ExperienceDetailPage({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // ⭕️ 3. 平滑回到頂端邏輯
+  // 3. 平滑回到頂端邏輯
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
       behavior: "smooth",
     });
   };
+  if (isLoading) {
+    return <div className="px-6 py-20 text-center">載入中...</div>;
+  }
+
+  if (errorMessage || !experience) {
+    return (
+      <div className="px-6 py-20 text-center text-[#687076]">
+        {errorMessage || "找不到此體驗"}
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-white text-[#292E33]">
       <main className="mx-auto w-full max-w-[1280px] px-6 pt-10 pb-28 max-sm:px-2 max-sm:pt-0">
@@ -111,27 +184,25 @@ export default function ExperienceDetailPage({
           className="hidden text-sm font-medium sm:block"
           aria-label="麵包屑"
         >
-          {/* 1. 可點擊或主要的層級：全部改成亮青色 [#68BBC3] */}
           <span className="cursor-pointer font-bold text-[#68BBC3] hover:underline">
             首頁
           </span>
           <span className="mx-2 text-[#7B8388]">›</span>
           <span className="cursor-pointer text-[#68BBC3] hover:underline">
-            法國
+            義大利
           </span>
           <span className="mx-2 text-[#7B8388]">›</span>
           <span className="cursor-pointer text-[#68BBC3] hover:underline">
-            巴黎
+            {experience.city}
           </span>
           <span className="mx-2 text-[#7B8388]">›</span>
           <span className="cursor-pointer text-[#68BBC3] hover:underline">
-            美食饗宴
+            {experience.category_name}
           </span>
 
-          {/* 2. 最後一層（當前商品）：維持原本的灰色 [#7B8388]，代表不用點擊 */}
           <span className="mx-2 text-[#7B8388]">›</span>
           <span className="inline-block max-w-[200px] truncate align-bottom text-[#7B8388]">
-            塞納河黃昏野餐
+            {experience.title}
           </span>
         </nav>
 
@@ -139,8 +210,10 @@ export default function ExperienceDetailPage({
           {/* 第一張主圖容器 (在手機版將作為所有浮動按鈕的基地) */}
           <div className="relative min-h-[360px] overflow-hidden max-sm:h-[280px] max-sm:min-h-0">
             <Image
-              src={gallery[0].src}
-              alt={gallery[0].alt}
+              src={
+                experience.image_url ?? "/images/experiences/seine-picnic.jpg"
+              }
+              alt={experience.title}
               fill
               priority
               sizes="(max-width: 768px) 100vw, 62vw"
@@ -202,7 +275,6 @@ export default function ExperienceDetailPage({
                   className="object-cover"
                 />
                 {index === 3 && (
-                  /* 💻 電腦/平版版專屬的查看全部按鈕 */
                   <button
                     type="button"
                     className="absolute right-4 bottom-4 rounded-md bg-black/65 px-4 py-2 text-[14px] font-bold text-white backdrop-blur-sm"
@@ -217,21 +289,26 @@ export default function ExperienceDetailPage({
 
         <section className="flex items-end justify-between gap-6 py-7 max-sm:px-5">
           <div>
-            <h3 className="leading-tight">
-              塞納河黃昏野餐、橋上故事與小酒館收尾
-            </h3>
+            <h3 className="leading-tight">{experience.title}</h3>
 
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[14px] text-[#727A7F]">
               {/* 💡 核心修正：把星星和 4.9 用一個 flex 區塊緊緊鎖在一起 */}
               {/* 這裡的 gap-1 讓星星和 4.9 的距離變得超級近，同時也享受外層 gap-x-4 的推擠效果 */}
               <div className="flex items-center gap-1">
                 <HiStar className="size-4 shrink-0 text-[#FFA938]" />
-                <span className="font-extrabold text-[#F4A629]">4.9</span>
+                <span className="font-extrabold text-[#F4A629]">
+                  {" "}
+                  {experience.rating.toFixed(1)}
+                </span>
               </div>
 
-              <span>1,284 則評價</span>
+              <span>
+                {experience.review_count.toLocaleString("zh-TW")} 則評價
+              </span>
               <span>18K+ 人參加</span>
-              <span>體驗時間：3.5 小時</span>
+              <span>
+                體驗時間：{formatDuration(experience.duration_minutes)}
+              </span>
               <span>中文 / English</span>
             </div>
           </div>
@@ -246,7 +323,7 @@ export default function ExperienceDetailPage({
         <div className="grid grid-cols-[minmax(0,1fr)_320px] items-start gap-12 max-lg:grid-cols-1">
           <div className="w-full max-sm:px-5">
             <div className="w-full border-t border-[#DEE3E5]" />
-            <nav className="sticky top-25 z-20 flex gap-8 border-b border-[#DEE3E5] bg-white/95 px-1 backdrop-blur max-sm:[scrollbar-width:none] max-sm:overflow-x-auto max-sm:[&::-webkit-scrollbar]:hidden">
+            <nav className="sticky top-15 z-20 flex gap-8 border-b border-[#DEE3E5] bg-white/95 px-1 backdrop-blur max-sm:[scrollbar-width:none] max-sm:overflow-x-auto max-sm:[&::-webkit-scrollbar]:hidden">
               {[
                 ["#overview", "體驗介紹"],
                 ["#host", "在地嚮導"],
@@ -276,27 +353,41 @@ export default function ExperienceDetailPage({
               })}
             </nav>
 
-            <section id="overview" className="scroll-mt-36 pt-9">
+            <section id="overview" className="scroll-mt-24 pt-9">
               <ul className="space-y-4">
-                {highlights.map((highlight) => (
-                  <li
-                    key={highlight}
-                    className="grid grid-cols-[20px_minmax(0,1fr)] gap-3 text-sm leading-7 text-[#61696E]"
-                  >
-                    <span className="text-[#68BBC3]">◎</span>
-                    <span>{highlight}</span>
-                  </li>
-                ))}
+                {experience.description
+                  .split(/[。.!！?？]/)
+                  .map((item) => item.trim())
+                  .filter(Boolean)
+                  .map((item) => (
+                    <li
+                      key={item}
+                      className="grid grid-cols-[20px_minmax(0,1fr)] gap-3 text-sm leading-7 text-[#61696E]"
+                    >
+                      <span className="text-[#68BBC3]">◎</span>
+                      <span>{item}。</span>
+                    </li>
+                  ))}
               </ul>
             </section>
 
-            <HostSection />
-            <LocationSection />
+            <HostSection
+              hostName={experience.host_name}
+              hostRole={experience.host_role}
+              hostBio={experience.host_bio}
+              hostAvatar={experience.host_avatar}
+              city={experience.city}
+            />
+            <LocationSection
+              meetingPoint={experience.meeting_point}
+              longitude={experience.longitude}
+              latitude={experience.latitude}
+            />
             <ReviewsSection />
-            <NotesSection />
+            <NotesSection notes={experience.notes} />
           </div>
 
-          <div className="hidden lg:sticky lg:top-30 lg:block">
+          <div className="hidden lg:sticky lg:top-20 lg:block">
             <BookingCard />
           </div>
         </div>
@@ -320,7 +411,7 @@ export default function ExperienceDetailPage({
             <span className="text-xs font-bold text-[#7B8388]">每人只要</span>
             {/* 💡 暫時寫死：等之後串 API 時，再把它換回 {experience?.price} */}
             <span className="text-[18px] font-black text-[#30353A]">
-              NT$ 1,960 起
+              NT$ {experience.adult_price.toLocaleString("zh-TW")} 起
             </span>
           </div>
 
