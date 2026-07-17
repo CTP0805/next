@@ -27,14 +27,64 @@ interface RecommendProduct {
 
 export default function CartPage() {
   // 從自訂的 useCart 鉤子中解構出狀態與方法
-  const { items, totalQty, totalAmount, onIncrease, onDecrease, onRemove } =
-    useCart();
+  const {
+    items,
+    setItems,
+    totalQty,
+    totalAmount,
+    onIncrease,
+    onDecrease,
+    onRemove,
+  } = useCart();
+  
   //記錄全選勾選
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   //宣告用來存推薦商品的state
   const [recommendProducts, setRecommendProducts] = useState<
     RecommendProduct[]
   >([]);
+
+  //刪除選中活動
+  const handleRemoveSelected = async () => {
+    if (selectedKeys.length === 0) {
+      alert("請先勾選要刪除的商品！");
+      return;
+    }
+
+    if (confirm(`確定要刪除這 ${selectedKeys.length} 項活動嗎？`)) {
+      // 遍歷所有被選中的 key，例如 "2-101"
+      try {
+        //直接在前端過濾掉「所有被勾選的項目」並更新畫面
+        // 這裡直接用 filter 過濾掉勾選的 key，保證畫面「一次性」同時刪除所有選中的商品
+        const remainingItems = items.filter(
+          (item) =>
+            !selectedKeys.includes(`${item.experienceId}-${item.sessionId}`),
+        );
+        // 繞過 context 的 setItems 打架：
+        // 利用一個 map，只讓 onRemove 去發後端 fetch，但「阻止」它們重複、混亂地修改前端 items 狀態D
+
+        const deletePromises = selectedKeys.map((key) => {
+          const [experienceId, sessionId] = key.split("-").map(Number);
+          // 執行onRemove（確保後端 fetch 有被發送去刪除）
+          return onRemove(experienceId, sessionId);
+        });
+
+        // 同時發送所有後端刪除請求
+        await Promise.all(deletePromises);
+
+        // 重點：因為剛才多個 onRemove 會互相覆蓋狀態，我們在最後「強行」把前端 items 設定為我們過濾好的乾淨狀態！
+        //
+        setItems(remainingItems);
+
+        // 刪除完成後，清空勾選狀態
+        setSelectedKeys([]);
+        alert("已成功刪除選中活動！");
+      } catch (error) {
+        console.error("批次刪除失敗:", error);
+        alert("刪除時發生錯誤，請重整網頁。");
+      }
+    }
+  };
 
   // ==========================================
   //「全選與單選邏輯」
@@ -109,7 +159,12 @@ export default function CartPage() {
                       全選
                     </span>
                   </label>
-                  <button className="btn btn-outline">刪除選中活動</button>
+                  <button
+                    className="btn btn-outline"
+                    onClick={handleRemoveSelected}
+                  >
+                    刪除選中活動
+                  </button>
                 </div>
 
                 {/* 🚀 循環讀取來自 Context 的 items */}

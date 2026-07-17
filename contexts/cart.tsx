@@ -29,6 +29,7 @@ export interface CartItem {
 //要使用context共享的value類型
 interface CartcontextType {
   items: CartItem[];
+  setItems: (items: CartItem[]) => void;
   totalQty: number;
   totalAmount: number;
 
@@ -80,13 +81,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []); // 空陣列代表只在網頁開啟時拿一次
 
   //處理遞增: 增加指定行程與場次的數量
-  const onIncrease = (experienceId: number, sessionId: number) => {
+  const onIncrease = async (experienceId: number, sessionId: number) => {
+    // 1. 先找出原本的項目，計算加 1 後的最新數量
+    const currentItem = items.find(
+      (v) => v.experienceId === experienceId && v.sessionId === sessionId,
+    );
+    if (!currentItem) return;
+    const targetQty = currentItem.quantity + 1;
+
+    // 2. 先更新前端狀態，讓使用者點擊時數字瞬間改變
     const nextItems = items.map((v) => {
       // 必須同時符合商品 ID 與 場次 ID
       if (v.experienceId === experienceId && v.sessionId === sessionId) {
         // 對符合條件的物件作修改
         // 用展開運算子作複製物件，並修改quantity屬性值+1
-        return { ...v, quantity: v.quantity + 1 };
+        return { ...v, quantity: targetQty };
       } else {
         // 不符條件的直接回傳保持原樣
         return v;
@@ -94,15 +103,41 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
     // 設定到狀態中成為新狀態
     setItems(nextItems);
+
+    //在背景偷偷向後端發送更新 API
+    try {
+      await fetch(`http://localhost:3001/api/cart/update`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: 1, // 暫時寫死的會員 ID
+          experienceId,
+          sessionId,
+          quantity: targetQty, // 告訴後端最新數量
+        }),
+      });
+    } catch (err) {
+      console.error("同步後端數量失敗", err);
+    }
   };
 
-  //處理遞減: 減少指定的商品數量
-  const onDecrease = (experienceId: number, sessionId: number) => {
+  //處理遞減
+  const onDecrease = async (experienceId: number, sessionId: number) => {
+    // 1. 找出原本的項目，計算減 1 後的最新數量 (最少為 1)
+    const currentItem = items.find(
+      (v) => v.experienceId === experienceId && v.sessionId === sessionId,
+    );
+    if (!currentItem) return;
+    const targetQty =
+      currentItem.quantity - 1 < 1 ? 1 : currentItem.quantity - 1;
+
+    // 2. 如果數量已經是 1 還點減，就不執行任何動作 (防止發送沒意義的 API 請求)
+    if (currentItem.quantity === 1) return;
+
+    // 3. 更新前端狀態
     const nextItems = items.map((v) => {
       if (v.experienceId === experienceId && v.sessionId === sessionId) {
-        // 避免減到 0 以下，如果已經是 1，維持 1
-        const newQty = v.quantity - 1;
-        return { ...v, quantity: newQty < 1 ? 1 : newQty };
+        return { ...v, quantity: targetQty };
       } else {
         // 不符條件的直接回傳保持原樣
         return v;
@@ -111,6 +146,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     // 設定到狀態中成為新狀態
     setItems(nextItems);
+
+    // 4. 背景發送更新 API
+    try {
+      await fetch("http://localhost:3001/api/cart/update", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: 1, // 暫時寫死的會員 ID
+          experienceId,
+          sessionId,
+          quantity: targetQty, // 告訴後端最新數量
+        }),
+      });
+    } catch (error) {
+      console.error("同步後端數量失敗:", error);
+    }
   };
 
   //處理刪除:從購物車中刪除指定商品
@@ -187,16 +238,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     newProduct: ProductItem,
     newSessionId: number,
     newQuantity: number,
-    newSessionName?: string
+    newSessionName?: string,
   ) => {
     // 1. 先過濾掉舊的那一筆資料
     const filteredItems = items.filter(
-      (v) => !(v.experienceId === oldExperienceId && v.sessionId === oldSessionId)
+      (v) =>
+        !(v.experienceId === oldExperienceId && v.sessionId === oldSessionId),
     );
 
     // 2. 檢查新選擇的商品+場次，是否已經存在於「剩餘的」購物車中
     const foundIndex = filteredItems.findIndex(
-      (v) => v.experienceId === newProduct.experienceId && v.sessionId === newSessionId
+      (v) =>
+        v.experienceId === newProduct.experienceId &&
+        v.sessionId === newSessionId,
     );
 
     if (foundIndex !== -1) {
@@ -234,6 +288,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     <CartContext.Provider
       value={{
         items,
+        setItems,
         totalQty,
         totalAmount,
         onEdit,
