@@ -2,6 +2,7 @@
 "use client";
 
 import { createContext, useState, useContext, useEffect } from "react";
+import { API_SERVER } from "@/config/api-path";
 
 //定義商品項目型別
 export interface ProductItem {
@@ -43,6 +44,16 @@ interface CartcontextType {
   onDecrease: (experienceId: number, sessionId: number) => void;
   onIncrease: (experienceId: number, sessionId: number) => void;
   onRemove: (experienceId: number, sessionId: number) => void;
+
+  //編輯功能
+  onEdit: (
+    oldExperienceId: number,
+    oldSessionId: number,
+    newProduct: ProductItem,
+    newSessionId: number,
+    newQuantity: number,
+    newSessionName?: string,
+  ) => void;
 }
 
 //使用null最為預設值
@@ -55,18 +66,18 @@ CartContext.displayName = "CartContext";
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
 
-//新增useEffect,在 Provider 第一次渲染時，去後端拿真實的購物車商品
-useEffect(() => {
-  fetch("http://localhost:3001/api/cart/cart")
-    .then((res) => res.json())
-    .then((resData) => {
-      if (resData.success) {
-        // 將後端回傳的購物車陣列存進 state 中
-        setItems(resData.data);
-      }
-    })
-    .catch((err) => console.error("無法取得購物車資料:", err));
-}, []); // 空陣列代表只在網頁開啟時拿一次
+  //新增useEffect,在 Provider 第一次渲染時，去後端拿真實的購物車商品
+  useEffect(() => {
+    fetch(`${API_SERVER}/api/cart/cart`)
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData.success) {
+          // 將後端回傳的購物車陣列存進 state 中
+          setItems(resData.data);
+        }
+      })
+      .catch((err) => console.error("無法取得購物車資料:", err));
+  }, []); // 空陣列代表只在網頁開啟時拿一次
 
   //處理遞增: 增加指定行程與場次的數量
   const onIncrease = (experienceId: number, sessionId: number) => {
@@ -104,6 +115,23 @@ useEffect(() => {
 
   //處理刪除:從購物車中刪除指定商品
   const onRemove = (experienceId: number, sessionId: number) => {
+    //先通知後端資料庫刪除這筆資料
+    fetch(
+      `${API_SERVER}/api/cart/cart-items?experienceId=${experienceId}&sessionId=${sessionId}`,
+      {
+        method: "DELETE",
+      },
+    )
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData.success) {
+          console.log("資料庫已成功同步刪除");
+        } else {
+          console.warn("後端刪除失敗:", resData.message);
+        }
+      })
+      .catch((err) => console.error("同步後端刪除出錯:", err));
+
     const nextItems = items.filter((v) => {
       // 排除掉同時符合 experienceId 和 sessionId 的那一筆
       return !(v.experienceId === experienceId && v.sessionId === sessionId);
@@ -152,6 +180,48 @@ useEffect(() => {
     }
   };
 
+  //處理編輯:移除舊的，並塞入新的
+  const onEdit = (
+    oldExperienceId: number,
+    oldSessionId: number,
+    newProduct: ProductItem,
+    newSessionId: number,
+    newQuantity: number,
+    newSessionName?: string
+  ) => {
+    // 1. 先過濾掉舊的那一筆資料
+    const filteredItems = items.filter(
+      (v) => !(v.experienceId === oldExperienceId && v.sessionId === oldSessionId)
+    );
+
+    // 2. 檢查新選擇的商品+場次，是否已經存在於「剩餘的」購物車中
+    const foundIndex = filteredItems.findIndex(
+      (v) => v.experienceId === newProduct.experienceId && v.sessionId === newSessionId
+    );
+
+    if (foundIndex !== -1) {
+      // 如果新選擇的場次本來就在購物車其他地方有了，就直接合併數量
+      const nextItems = filteredItems.map((v, idx) => {
+        if (idx === foundIndex) {
+          return { ...v, quantity: v.quantity + newQuantity };
+        }
+        return v;
+      });
+      setItems(nextItems);
+    } else {
+      // 如果是一筆全新的商品+場次組合，就建立新項目並塞進去
+      const newItem: CartItem = {
+        experienceId: newProduct.experienceId,
+        name: newProduct.name,
+        price: newProduct.price,
+        sessionId: newSessionId,
+        quantity: newQuantity,
+        sessionName: newSessionName,
+      };
+      setItems([newItem, ...filteredItems]);
+    }
+  };
+
   // 計算總數量：使用 reduce 方法累加所有商品的數量
   // reduce(累加器函數, 初始值) - acc是累加器，item是當前項目，0是初始值
   const totalQty = items.reduce((acc, item) => acc + item.quantity, 0);
@@ -166,6 +236,7 @@ useEffect(() => {
         items,
         totalQty,
         totalAmount,
+        onEdit,
         onAdd,
         onDecrease,
         onIncrease,

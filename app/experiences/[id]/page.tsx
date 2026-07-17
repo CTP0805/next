@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation"; // 💡 引入 useParams 獲取網址 ID
+import { useParams, useSearchParams, useRouter } from "next/navigation"; // 💡 引入 useParams 獲取網址 ID
 import {
   HiStar,
   HiOutlineHeart,
@@ -17,6 +17,7 @@ import LocationSection from "@/app/experiences/_components/LocationSection";
 import ReviewsSection from "@/app/experiences/_components/ReviewsSection";
 import NotesSection from "@/app/experiences/_components/NotesSection";
 import BookingCard from "@/app/experiences/_components/BookingCard";
+import { useCart } from "@/contexts/cart";
 
 // 💡 調整 Type 定義，以符合後端資料庫回傳的真實欄位
 type ExperienceNote = {
@@ -110,6 +111,10 @@ const formatDuration = (minutes: number) => {
 
 export default function ExperienceDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams(); // 💡 獲取網址 Query 參數
+  const router = useRouter(); // 💡 獲取 Next.js 路由路由器
+  const { onAdd, onEdit } = useCart(); // 💡 從你的 Context 中引入這兩個好幫手
+
   const id = params.id as string;
   const [experience, setExperience] = useState<Experience | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -117,6 +122,21 @@ export default function ExperienceDetailPage() {
   const [activeHash, setActiveHash] = useState("overview");
   // 1. 控制回到頂端按鈕的顯示狀態
   const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // 📱 手機版選擇場次與人的人數狀態（通常需要與 UI 的點擊綁定，這裡先提供 State 管理）
+  const [selectedSessionId, setSelectedSessionId] = useState<number>(101); // 預設某場次
+  const [selectedQty, setSelectedQty] = useState<number>(1); // 預設 1 人
+  const [selectedSessionName, setSelectedSessionName] =
+    useState<string>("2026-08-07 17:00");
+
+  // 💡 1. 網址參數解析：判斷當前是否處於「編輯模式」並記錄舊資料
+  const isEditMode = searchParams.get("edit") === "true";
+  const oldSessionId = searchParams.get("oldSession")
+    ? Number(searchParams.get("oldSession"))
+    : null;
+  const oldQty = searchParams.get("oldQty")
+    ? Number(searchParams.get("oldQty"))
+    : null;
 
   useEffect(() => {
     if (!id) return;
@@ -166,6 +186,39 @@ export default function ExperienceDetailPage() {
       behavior: "smooth",
     });
   };
+
+  // 💡 2. 統一的購物車提交處理函式（不管是手機版點擊、還是 BookingCard 點擊都用這一個！）
+  const handleCartSubmit = (
+    targetSessionId: number,
+    targetQty: number,
+    targetSessionName?: string,
+  ) => {
+    if (!experience) return;
+
+    const productInfo = {
+      experienceId: experience.id,
+      name: experience.title,
+      price: experience.price,
+    };
+
+    if (isEditMode && oldSessionId !== null) {
+      // 編輯模式：呼叫 onEdit
+      onEdit(
+        experience.id,
+        oldSessionId,
+        productInfo,
+        targetSessionId,
+        targetQty,
+        targetSessionName,
+      );
+      router.push("/cart"); // 編輯完成回購物車
+    } else {
+      // 一般新增模式
+      onAdd(productInfo, targetSessionId, targetQty, targetSessionName);
+      alert("已加入購物車！");
+    }
+  };
+
   if (isLoading) {
     return <div className="px-6 py-20 text-center">載入中...</div>;
   }
@@ -387,8 +440,15 @@ export default function ExperienceDetailPage() {
             <NotesSection notes={experience.notes} />
           </div>
 
+          {/* 💡 桌機版 BookingCard 修改：傳入 onSubmit (handleCartSubmit) 以及編輯預設參數 */}
           <div className="hidden lg:sticky lg:top-20 lg:block">
-            <BookingCard />
+            <BookingCard
+              experience={experience}
+              isEditMode={isEditMode}
+              oldSessionId={oldSessionId}
+              oldQty={oldQty}
+              onSubmit={handleCartSubmit} // 💡 讓 BookingCard 直接執行統一處理函式
+            />
           </div>
         </div>
         {/* 📱 手機版專屬：右下角圓形回到頂端按鈕（避開底部浮動條，改用 bottom-36 飄在它上方） */}
@@ -418,20 +478,39 @@ export default function ExperienceDetailPage() {
           {/* 2. 下層：橫向滿版的雙按鈕 */}
           <div className="flex w-full gap-3">
             {/* 橘色按鈕：加入購物車 */}
-            <button
-              type="button"
-              className="flex-1 rounded-xl bg-[#FF9224] py-4 text-center text-sm font-black text-white transition-transform active:scale-[0.98]"
-            >
-              加入購物車
-            </button>
+            {isEditMode ? (
+              <button
+                type="button"
+                onClick={() =>
+                  handleCartSubmit(
+                    selectedSessionId,
+                    selectedQty,
+                    selectedSessionName,
+                  )
+                }
+                className="flex-1 rounded-xl bg-[#68BBC3] py-4 text-center text-sm font-black text-white transition-transform active:scale-[0.98]"
+              >
+                確認修改商品
+              </button>
+            ) : (
+              // 一般模式：維持原本的雙按鈕
+              <>
+                <button
+                  type="button"
+                  className="flex-1 rounded-xl bg-[#FF9224] py-4 text-center text-sm font-black text-white transition-transform active:scale-[0.98]"
+                >
+                  加入購物車
+                </button>
 
-            {/* 藍綠色按鈕：立即預訂 */}
-            <button
-              type="button"
-              className="flex-1 rounded-xl bg-[#68BBC3] py-4 text-center text-sm font-black text-white transition-transform active:scale-[0.98]"
-            >
-              立即預訂
-            </button>
+                {/* 藍綠色按鈕：立即預訂 */}
+                <button
+                  type="button"
+                  className="flex-1 rounded-xl bg-[#68BBC3] py-4 text-center text-sm font-black text-white transition-transform active:scale-[0.98]"
+                >
+                  立即預訂
+                </button>
+              </>
+            )}
           </div>
         </div>
       </main>

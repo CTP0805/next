@@ -151,9 +151,11 @@ export default function CartPage() {
 
                       {/* 編輯活動內容／直接從購物車移除 */}
                       <div className="flex items-center gap-2">
+
+                        {/* 編輯活動內容 / 直接帶著舊場次ID跳轉 */}
                         <Link
-                          href={`/experiences/${item.experienceId}`}
-                          className="btn btn-sm btn-ghost text-gray-600 hover:bg-gray-100"
+                          href={`/experiences/${item.experienceId}?edit=true&oldSession=${item.sessionId}&oldQty=${item.quantity}`}
+                          className="btn btn-sm btn-outline text-gray-600 hover:bg-gray-100"
                         >
                           編輯
                         </Link>

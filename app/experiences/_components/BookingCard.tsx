@@ -37,9 +37,35 @@ function Stepper({
   );
 }
 
-export default function BookingCard() {
-  const [adults, setAdults] = useState(2);
+// 💡 1. 宣告 Props 型別，對應外層丟進來的資料
+interface BookingCardProps {
+  experience: {
+    id: number;
+    title: string;
+    price: number;
+    adult_price: number;
+  };
+  isEditMode?: boolean;
+  oldSessionId?: number | null;
+  oldQty?: number | null;
+  onSubmit: (sessionId: number, quantity: number, sessionName?: string) => void; // 💡 統一處理函式
+}
+
+export default function BookingCard({
+  experience,
+  isEditMode = false,
+  oldSessionId = null,
+  oldQty = null,
+  onSubmit,
+}: BookingCardProps) {
+  //  初始化人數：如果有帶 oldQty (編輯模式) 就用舊的，沒有就預設 2 人
+  const [adults, setAdults] = useState(oldQty??2);
   const [children, setChildren] = useState(0);
+
+  // 💡 模擬場次與選擇狀態 (實務上可以根據你的下拉選單 selected index 去更換 sessionId)
+  const [sessionId, setSessionId] = useState<number>(oldSessionId ?? 101); 
+  const [sessionName, setSessionName] = useState<string>("17:00 - 20:30");
+
   const unitPrice = 1960;
   const total = adults * unitPrice;
 
@@ -90,9 +116,12 @@ export default function BookingCard() {
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
+          onClick={() => {
+            onSubmit(sessionId, adults, sessionName);
+          }}
           className="h-12 rounded-xl bg-[#FF9224] text-[16px] font-extrabold text-white transition-colors hover:bg-[#F48312] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF9224]"
           >
-          加入購物車
+            {isEditMode ? "確認修改" : "加入購物車"}
         </button>
           
         <button

@@ -42,7 +42,7 @@ export default function PaymentPage() {
       return; // 結束執行
     }
 
-    // 🌟 狀況 B：如果使用者選信用卡（維持你最愛的 4 行粗暴網址轉跳）
+    // 🌟 狀況 B：如果使用者選信用卡
     if (paymentMethod === "ecpay") {
       // 直接導向後端 Express 的 Port 3001 的 /ecpay 路由
       window.location.href = `http://localhost:3001/ecpay?amount=${amount}&items=${encodeURIComponent(items)}&method=${paymentMethod}`;
