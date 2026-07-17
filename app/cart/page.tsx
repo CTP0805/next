@@ -29,10 +29,51 @@ export default function CartPage() {
   // 從自訂的 useCart 鉤子中解構出狀態與方法
   const { items, totalQty, totalAmount, onIncrease, onDecrease, onRemove } =
     useCart();
+  //記錄全選勾選
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   //宣告用來存推薦商品的state
   const [recommendProducts, setRecommendProducts] = useState<
     RecommendProduct[]
   >([]);
+
+  // ==========================================
+  //「全選與單選邏輯」
+  // ==========================================
+
+  // A. 判定：是不是「所有的購物車商品」都已經被勾選了？
+  const isAllSelected =
+    items.length > 0 &&
+    items.every((item) =>
+      selectedKeys.includes(`${item.experienceId}-${item.sessionId}`),
+    );
+
+  // B. 處理「全選/全不選」checkbox 的點擊事件
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      // 如果已經全選，點擊後就「全不選」
+      setSelectedKeys([]);
+    } else {
+      // 如果沒有全選，點擊後把「所有購物車項目」的唯一 key 塞進去
+      const allKeys = items.map(
+        (item) => `${item.experienceId}-${item.sessionId}`,
+      );
+      setSelectedKeys(allKeys);
+    }
+  };
+
+  // C. 處理「單一商品」checkbox 的點擊事件
+  const handleSelectItem = (experienceId: number, sessionId: number) => {
+    const itemKey = `${experienceId}-${sessionId}`;
+    if (selectedKeys.includes(itemKey)) {
+      // 原本有勾選 -> 取消勾選
+      setSelectedKeys(selectedKeys.filter((key) => key !== itemKey));
+    } else {
+      // 原本沒勾選 -> 加上勾選
+      setSelectedKeys([...selectedKeys, itemKey]);
+    }
+  };
+
+  // ==========================================
   // 🚀 3. 在 useEffect 中向你的 Express 後端拉取商品資料
   useEffect(() => {
     fetch("http://localhost:3001/api/cart/experience")
@@ -61,6 +102,8 @@ export default function CartPage() {
                     <input
                       type="checkbox"
                       className="check checkbox-primary h-6 w-6 rounded-md"
+                      checked={isAllSelected} // 自動同步是否全選的狀態
+                      onChange={handleSelectAll} // 點擊全選/取消全選
                     />
                     <span className="whitespace-nowrap text-gray-900">
                       全選
@@ -79,19 +122,47 @@ export default function CartPage() {
                       <input
                         type="checkbox"
                         className="checkbox checkbox-primary checkbox-sm mt-1 md:mt-0 md:self-center"
+                        checked={selectedKeys.includes(
+                          `${item.experienceId}-${item.sessionId}`,
+                        )}
+                        //點擊時，切換這筆商品的勾選狀態
+                        onChange={() =>
+                          handleSelectItem(item.experienceId, item.sessionId)
+                        }
                       />
 
                       {/* 這裡改成讀取真正的 item.image */}
-                      <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-200 text-xs text-gray-400">
-                        {item.image ? (
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          "商品圖片"
-                        )}
+                      <div className="flex w-24 flex-shrink-0 flex-col gap-2">
+                        <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-md bg-gray-200 text-xs text-gray-400">
+                          {item.image ? (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            "商品圖片"
+                          )}
+                        </div>
+                        <div className="flex justify-center gap-2">
+                          <Link
+                            href={`/experiences/${item.experienceId}?edit=true&oldSession=${item.sessionId}&oldQty=${item.quantity}`}
+                            className="btn btn-sm text-gray-600 hover:bg-gray-100"
+                          >
+                            編輯
+                          </Link>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-ghost text-red-500 hover:bg-red-50 hover:text-red-600"
+                            onClick={() => {
+                              if (confirm("確定要刪除此活動嗎？")) {
+                                onRemove(item.experienceId, item.sessionId);
+                              }
+                            }}
+                          >
+                            刪除
+                          </button>
+                        </div>
                       </div>
 
                       <div className="min-w-0 flex-1">
@@ -147,29 +218,6 @@ export default function CartPage() {
                       <div className="min-w-[80px] text-right text-base font-bold text-gray-800 md:text-lg">
                         NT$
                         {(item.price * item.quantity).toLocaleString()}
-                      </div>
-
-                      {/* 編輯活動內容／直接從購物車移除 */}
-                      <div className="flex items-center gap-2">
-
-                        {/* 編輯活動內容 / 直接帶著舊場次ID跳轉 */}
-                        <Link
-                          href={`/experiences/${item.experienceId}?edit=true&oldSession=${item.sessionId}&oldQty=${item.quantity}`}
-                          className="btn btn-sm btn-outline text-gray-600 hover:bg-gray-100"
-                        >
-                          編輯
-                        </Link>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-ghost text-red-500 hover:bg-red-50 hover:text-red-600"
-                          onClick={() => {
-                            if (confirm("確定要刪除此活動嗎？")) {
-                              onRemove(item.experienceId, item.sessionId);
-                            }
-                          }}
-                        >
-                          刪除
-                        </button>
                       </div>
                     </div>
                   </div>
