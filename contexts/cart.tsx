@@ -232,7 +232,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   //處理編輯:移除舊的，並塞入新的
-  const onEdit = (
+  const onEdit = async (
     oldExperienceId: number,
     oldSessionId: number,
     newProduct: ProductItem,
@@ -273,6 +273,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         sessionName: newSessionName,
       };
       setItems([newItem, ...filteredItems]);
+    }
+    // 2. 🚀 同步發送請求到後端更新資料庫！
+    try {
+      await fetch("http://localhost:3001/api/cart/edit", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          // 冒號左邊是「後端收的名字」，冒號右邊是「前端本函式擁有的變數」
+          experienceId: oldExperienceId,
+          oldSessionId: oldSessionId,
+          newSessionId: newSessionId,
+          newQuantity: newQuantity,
+        }),
+      });
+    } catch (error) {
+      console.error("同步後端編輯失敗:", error);
     }
   };
 
