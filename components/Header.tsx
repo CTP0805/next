@@ -1,12 +1,20 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useAuth } from "@/contexts/auth-context"; // 引入你建立的 Context
 import { usePathname } from "next/navigation";
 import { FaSearch } from "react-icons/fa";
-import { FaCartShopping } from "react-icons/fa6";
-
-import { useAuth } from "@/contexts/auth-context"; // 引入你建立的 Context
+import {
+  FaCartShopping,
+  FaUser,
+  FaAward,
+  FaBagShopping,
+  FaTicket,
+  FaCommentDots,
+  FaHeart,
+  FaClockRotateLeft,
+} from "react-icons/fa6";
 
 export default function Navbar() {
   const { auth, isAuthenticated, logout } = useAuth(); // 直接使用 Context 提供的狀態與方法
@@ -17,20 +25,43 @@ export default function Navbar() {
     { name: "品牌介紹", href: "/about" },
     { name: "聯絡我們", href: "/contact" },
   ];
-
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  // 點擊外部關閉選單
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const memberLists: MemberList[] = [
+    {
+      label: "會員資料",
+      icon: <FaUser />,
+      href: "/member/profile",
+    },
+    {
+      label: "會員等級",
+      icon: <FaAward />,
+      href: "/member/level",
+    },
+    {
+      label: "我的訂單",
+      icon: <FaBagShopping />,
+      href: "/member/order",
+    },
+    {
+      label: "我的優惠",
+      icon: <FaTicket />,
+      href: "/member/coupon",
+    },
+    {
+      label: "我的評價",
+      icon: <FaCommentDots />,
+      href: "/member/review",
+    },
+    {
+      label: "心願清單",
+      icon: <FaHeart />,
+      href: "/member/favorites",
+    },
+    {
+      label: "最近瀏覽",
+      icon: <FaClockRotateLeft />,
+      href: "/member/recently-viewed",
+    },
+  ];
 
   const pathname = usePathname();
   const isHomePage = pathname === "/";
@@ -91,33 +122,6 @@ export default function Navbar() {
       {/* 右側功能區 */}
       <ul className="hidden items-center md:flex">
         {isAuthenticated ? (
-          <div className="flex items-center gap-2">
-            <Link href="/member/profile" className="hover:text-gray-300">
-              {auth.name} 會員中心
-            </Link>
-            <button onClick={logout} className="hover:text-gray-300">
-              登出
-            </button>
-          </div>
-        ) : (
-          <>
-            <div className="px-2">
-              <Link href="/auth/login" className="hover:text-gray-300">
-                登入
-              </Link>
-            </div>
-            <span>/</span>
-            <div className="px-2">
-              <Link href="/auth/register" className="hover:text-gray-300">
-                註冊
-              </Link>
-            </div>
-          </>
-        )}
-      </ul>
-      {/* 在父容器中直接放置 dropdown，不被 relative md:hidden 限制 */}
-      <div className="gap-1">
-        {isAuthenticated ? (
           <div className="dropdown dropdown-end">
             <div
               tabIndex={0}
@@ -142,26 +146,66 @@ export default function Navbar() {
             </ul>
           </div>
         ) : null}
+        {isAuthenticated ? (
+          <div className="flex items-center gap-2">
+            <Link
+              href="/member/profile"
+              className="flex items-center gap-2 hover:text-gray-300"
+            >
+              {/* 使用 w-auto h-[1em] 讓圖片高度自動跟隨文字行高 */}
+              <Image
+                src="/images/avatar-test.png"
+                alt={auth.name}
+                className="h-[1em] w-[1em] rounded-full object-cover"
+                width={16}
+                height={16}
+              />
+              <span>{auth.name} 你好～</span>
+            </Link>
+            <button onClick={logout} className="hover:text-gray-300">
+              登出
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="px-2">
+              <Link href="/auth/login" className="hover:text-gray-300">
+                登入
+              </Link>
+            </div>
+            <span>/</span>
+            <div className="px-2">
+              <Link href="/auth/register" className="hover:text-gray-300">
+                註冊
+              </Link>
+            </div>
+          </>
+        )}
+      </ul>
+      {/* 在父容器中直接放置 dropdown，不被 relative md:hidden 限制 */}
+      <div className="gap-1 md:hidden">
+        {isAuthenticated ? (
+          <div className="dropdown dropdown-end">
+            <div
+              tabIndex={0}
+              role="button"
+              className="btn btn-ghost btn-circle"
+            >
+              <FaCartShopping />
+            </div>
+            <ul
+              tabIndex={0}
+              className="menu dropdown-content fixed right-0 z-50 w-screen bg-white p-4 text-black shadow"
+            ></ul>
+          </div>
+        ) : null}
         <div className="dropdown dropdown-end md:hidden">
           <div
             tabIndex={0}
             role="button"
             className="btn btn-ghost btn-circle md:hidden"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M4 6h16M4 12h16M4 18h7"
-              />
-            </svg>
+            <FaUser />
           </div>
 
           {/* 使用 fixed 讓它直接脫離文檔流，實現滿版 */}
@@ -169,15 +213,20 @@ export default function Navbar() {
             tabIndex={0}
             className="menu dropdown-content fixed right-0 z-50 w-screen bg-white p-4 text-black"
           >
-            <li>
-              <a>333</a>
-            </li>
-            <li>
-              <a>Portfolio</a>
-            </li>
-            <li>
-              <a>About</a>
-            </li>
+            {memberLists.map((v, i) => {
+              return (
+                <li key={i} className="items-center">
+                  <Link href={v.href}>{v.label}</Link>
+                </li>
+              );
+            })}
+            {isAuthenticated ? (
+              <li>
+                <button onClick={logout} className="">
+                  登出
+                </button>
+              </li>
+            ) : null}
           </ul>
         </div>
         <div className="dropdown dropdown-end md:hidden">
@@ -207,15 +256,13 @@ export default function Navbar() {
             tabIndex={0}
             className="menu dropdown-content fixed right-0 z-50 w-screen bg-white p-4 text-black"
           >
-            <li>
-              <a>Homepage</a>
-            </li>
-            <li>
-              <a>Portfolio</a>
-            </li>
-            <li>
-              <a>About</a>
-            </li>
+            {navLinks.map((v, i) => {
+              return (
+                <li key={i}>
+                  <Link href={v.href}>{v.name}</Link>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>
