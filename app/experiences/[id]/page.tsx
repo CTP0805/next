@@ -187,8 +187,8 @@ export default function ExperienceDetailPage() {
     });
   };
 
-  // 💡 2. 統一的購物車提交處理函式（不管是手機版點擊、還是 BookingCard 點擊都用這一個！）
-  const handleCartSubmit = (
+  // 💡 統一的購物車提交處理函式（不管是手機版點擊、還是 BookingCard 點擊都用這一個！）
+  const handleCartSubmit =async (
     targetSessionId: number,
     targetQty: number,
     targetSessionName?: string,
@@ -199,8 +199,10 @@ export default function ExperienceDetailPage() {
       experienceId: experience.id,
       name: experience.title,
       price: experience.price,
+      image: experience.image_url,
     };
 
+    try {
     if (isEditMode && oldSessionId !== null) {
       // 編輯模式：呼叫 onEdit
       onEdit(
@@ -214,10 +216,39 @@ export default function ExperienceDetailPage() {
       router.push("/cart"); // 編輯完成回購物車
     } else {
       // 一般新增模式
-      onAdd(productInfo, targetSessionId, targetQty, targetSessionName);
+      await onAdd(productInfo, targetSessionId, targetQty, targetSessionName);
       alert("已加入購物車！");
     }
+
+    } catch (error) {
+      console.error("購物車同步失敗:", error);
+      alert("加入失敗，請確認選擇的場次是否正確！");
+    }
   };
+
+  // 🚀 做法 B：立即預訂（跳過購物車，直接帶參數去結帳頁）
+  const handleDirectBook = (
+    targetSessionId: number,
+    targetQty: number,
+    targetSessionName?: string,
+  ) => {
+    if (!experience) return;
+
+    // 💡 把結帳需要的行程 ID、場次 ID、人數，以及場次名稱，通通打包成網址參數
+    const queryParams = new URLSearchParams({
+      experienceId: experience.id.toString(),
+      sessionId: targetSessionId.toString(),
+      quantity: targetQty.toString(),
+    });
+
+    if (targetSessionName) {
+      queryParams.append("sessionName", targetSessionName);
+    }
+
+    // 直接導向結帳頁，網址會變成 /checkout?experienceId=2&sessionId=1&quantity=2...
+    router.push(`/checkout?${queryParams.toString()}`);
+  };
+
 
   if (isLoading) {
     return <div className="px-6 py-20 text-center">載入中...</div>;
@@ -447,7 +478,8 @@ export default function ExperienceDetailPage() {
               isEditMode={isEditMode}
               oldSessionId={oldSessionId}
               oldQty={oldQty}
-              onSubmit={handleCartSubmit} // 💡 讓 BookingCard 直接執行統一處理函式
+              onSubmit={handleCartSubmit}
+              onDirectBook={handleDirectBook}
             />
           </div>
         </div>
@@ -497,6 +529,7 @@ export default function ExperienceDetailPage() {
               <>
                 <button
                   type="button"
+                  onClick={() => handleCartSubmit(selectedSessionId, selectedQty, selectedSessionName)}
                   className="flex-1 rounded-xl bg-[#FF9224] py-4 text-center text-sm font-black text-white transition-transform active:scale-[0.98]"
                 >
                   加入購物車
@@ -505,6 +538,7 @@ export default function ExperienceDetailPage() {
                 {/* 藍綠色按鈕：立即預訂 */}
                 <button
                   type="button"
+                  onClick={() => handleDirectBook(selectedSessionId, selectedQty, selectedSessionName)}
                   className="flex-1 rounded-xl bg-[#68BBC3] py-4 text-center text-sm font-black text-white transition-transform active:scale-[0.98]"
                 >
                   立即預訂

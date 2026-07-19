@@ -36,15 +36,17 @@ export default function CartPage() {
     onDecrease,
     onRemove,
   } = useCart();
-  
-  //記錄全選勾選
+
+  // 進入購物車載入中(轉圈圈)
+  const [pageLoading, setPageLoading] = useState(true);
+  // 記錄全選勾選
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
-  //宣告用來存推薦商品的state
+  // 存推薦商品的state
   const [recommendProducts, setRecommendProducts] = useState<
     RecommendProduct[]
   >([]);
 
-  //刪除選中活動
+  // 刪除選中活動
   const handleRemoveSelected = async () => {
     if (selectedKeys.length === 0) {
       alert("請先勾選要刪除的商品！");
@@ -132,9 +134,29 @@ export default function CartPage() {
         if (resData.success) {
           setRecommendProducts(resData.data);
         }
+        // 資料成功載入後，過一小段時間關閉載入畫面
+        setTimeout(() => {
+          setPageLoading(false);
+        }, 600);
       })
-      .catch((err) => console.error("無法取得推薦商品:", err));
+      .catch((err) => {
+        console.error("無法取得推薦商品:", err);
+        setPageLoading(false); //即使失敗也要關掉，不然使用者會永遠卡在轉圈圈
+      });
   }, []);
+
+  // ==========================================
+  // 載入畫面中
+  if (pageLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] w-full gap-4">
+        {/* DaisyUI 經典轉圈圈 */}
+        <span className="loading loading-spinner loading-lg text-secondary"></span>
+        <p className="text-gray-500 font-medium animate-pulse">正在為您準備購物車...</p>
+      </div>
+    );
+  }
+
   return (
     <>
       {/* ======= 三元運算 判斷購物車有無商品====== */}
@@ -176,7 +198,7 @@ export default function CartPage() {
                     <div className="flex flex-1 items-start gap-4">
                       <input
                         type="checkbox"
-                        className="checkbox checkbox-primary checkbox-sm mt-1 md:mt-0 md:self-center"
+                        className="checkbox checkbox-sm mt-1 md:mt-0 md:self-center"
                         checked={selectedKeys.includes(
                           `${item.experienceId}-${item.sessionId}`,
                         )}
@@ -202,7 +224,7 @@ export default function CartPage() {
                         <div className="flex justify-center gap-2">
                           <Link
                             href={`/experiences/${item.experienceId}?edit=true&oldSession=${item.sessionId}&oldQty=${item.quantity}`}
-                            className="btn btn-sm text-gray-600 hover:bg-gray-100"
+                            className="btn btn-sm btn-ghost text-gray-600 hover:bg-gray-100"
                           >
                             編輯
                           </Link>
@@ -291,7 +313,7 @@ export default function CartPage() {
                   </button>
                 </Link>
                 <p className="mt-2 text-center text-xs text-cyan-500">
-                  你可獲得 10 M幣
+                  你可獲得 {totalAmount.toLocaleString()} M幣
                 </p>
               </div>
             </div>

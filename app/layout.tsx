@@ -26,8 +26,8 @@ export default function RootLayout({
       <body suppressHydrationWarning className={`flex min-h-full flex-col ${besley.variable}`}>
         
         <AuthContextProvider>
-          <Header />
           <CartProvider>
+          <Header />
             {children}
           </CartProvider>
         </AuthContextProvider>

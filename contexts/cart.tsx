@@ -10,7 +10,7 @@ export interface ProductItem {
   name: string;
   price: number;
   spec?: string;
-  image?: string;
+  image_url?: string;
 }
 
 //定義購買的商品項目的型別
@@ -69,15 +69,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   //新增useEffect,在 Provider 第一次渲染時，去後端拿真實的購物車商品
   useEffect(() => {
-    fetch(`${API_SERVER}/api/cart/cart`)
-      .then((res) => res.json())
-      .then((resData) => {
-        if (resData.success) {
-          // 將後端回傳的購物車陣列存進 state 中
-          setItems(resData.data);
-        }
+    fetch(`${API_SERVER}/api/cart/cart`,{
+        method: "GET",
+        credentials: "include"
       })
-      .catch((err) => console.error("無法取得購物車資料:", err));
+        .then((res) => res.json())
+        .then((resData) => {
+          if (resData.success) {
+            // 將後端回傳的購物車陣列存進 state 中
+            setItems(resData.data);
+          }
+        })
+        .catch((err) => console.error("無法取得購物車資料:", err));
   }, []); // 空陣列代表只在網頁開啟時拿一次
 
   //處理遞增: 增加指定行程與場次的數量
@@ -108,6 +111,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     try {
       await fetch(`http://localhost:3001/api/cart/update`, {
         method: "PUT",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: 1, // 暫時寫死的會員 ID
@@ -151,9 +155,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     try {
       await fetch("http://localhost:3001/api/cart/update", {
         method: "PUT",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: 1, // 暫時寫死的會員 ID
           experienceId,
           sessionId,
           quantity: targetQty, // 告訴後端最新數量
@@ -171,6 +175,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       `${API_SERVER}/api/cart/cart-items?experienceId=${experienceId}&sessionId=${sessionId}`,
       {
         method: "DELETE",
+        credentials: "include",
       },
     )
       .then((res) => res.json())
@@ -192,7 +197,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   //處理新增商品到購物車中
-  const onAdd = (
+  const onAdd = async (
     product: ProductItem,
     sessionId: number,
     quantity = 1,
@@ -228,6 +233,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       // 讓新加入的商品在最上面
       const nextItems = [newItem, ...items];
       setItems(nextItems);
+    }
+    try {
+      await fetch("http://localhost:3001/api/cart/add", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          experienceId: product.experienceId || product.id,
+          sessionId: sessionId,
+          quantity: quantity,
+        }),
+      });
+    } catch (error) {
+      console.error("同步後端新增購物車失敗:", error);
     }
   };
 
@@ -278,6 +297,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     try {
       await fetch("http://localhost:3001/api/cart/edit", {
         method: "PUT",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           // 冒號左邊是「後端收的名字」，冒號右邊是「前端本函式擁有的變數」

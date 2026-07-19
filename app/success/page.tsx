@@ -90,7 +90,7 @@ export default function SuccessPage() {
                     </h4>
                     <p className="mt-2 text-xs leading-relaxed text-gray-500">
                       感謝使用
-                      Klook！訂單正在處理中，訂單確認後，將傳送訂單詳情及憑證至
+                      MeetLocals！訂單正在處理中，訂單確認後，將傳送訂單詳情及憑證至
                       <span className="ml-1 font-medium text-gray-700">
                         a55******@gmail.com
                       </span>

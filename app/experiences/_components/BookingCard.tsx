@@ -48,7 +48,8 @@ interface BookingCardProps {
   isEditMode?: boolean;
   oldSessionId?: number | null;
   oldQty?: number | null;
-  onSubmit: (sessionId: number, quantity: number, sessionName?: string) => void; // 💡 統一處理函式
+  onSubmit: (sessionId: number, quantity: number, sessionName?: string) => void;
+  onDirectBook?: (sessionId: number, quantity: number, sessionName?: string) => void;
 }
 
 export default function BookingCard({
@@ -57,16 +58,17 @@ export default function BookingCard({
   oldSessionId = null,
   oldQty = null,
   onSubmit,
+  onDirectBook,
 }: BookingCardProps) {
   //  初始化人數：如果有帶 oldQty (編輯模式) 就用舊的，沒有就預設 2 人
   const [adults, setAdults] = useState(oldQty??2);
   const [children, setChildren] = useState(0);
 
-  // 💡 模擬場次與選擇狀態 (實務上可以根據你的下拉選單 selected index 去更換 sessionId)
-  const [sessionId, setSessionId] = useState<number>(oldSessionId ?? 101); 
+  // 💡 1. 調整預設值：把原本寫死的 101 改成你們 sessions 資料表裡真正存在的場次 ID (例如 1)
+  const [sessionId, setSessionId] = useState<number>(oldSessionId ?? 1);
   const [sessionName, setSessionName] = useState<string>("17:00 - 20:30");
 
-  const unitPrice = 1960;
+  const unitPrice = experience.adult_price || 1;
   const total = adults * unitPrice;
 
   return (
@@ -126,6 +128,7 @@ export default function BookingCard({
           
         <button
           type="button"
+          onClick={() => onDirectBook?.(sessionId, adults, sessionName)}
           className="h-12 rounded-xl bg-[#68BBC3] text-[16px] font-extrabold text-white transition-colors hover:bg-[#55AAB2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#68BBC3]"
         >
           立即預訂

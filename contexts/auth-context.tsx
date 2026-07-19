@@ -11,6 +11,9 @@ export type Auth = {
   id: number;
   name: string;
   email: string;
+  member_level?: string;     // 💡 新增：等級中文名稱 (例如 '金牌會員 (享95折優惠)')
+  current_points?: number;   // 💡 新增：會員現有的 M 幣存量
+
 };
 
 // 初始值
@@ -18,6 +21,8 @@ export const emptyAuth: Auth = {
   id: 0,
   name: "",
   email: "",
+  member_level: "一般會員 (無折扣)",
+  current_points: 0, // 沒登入時預設為 0
 };
 
 
