@@ -14,8 +14,10 @@ export default function HeroSwiper() {
   // 可以將資料抽出來做成陣列，方便後續擴充
   const slides = [
     { id: 1, title: "PARIS", image: "/images/banner/carousel1.avif" },
-    { id: 2, title: "LONDON", image: "/images/carousel2.jpeg" },
-    { id: 3, title: "TOKYO", image: "/images/carousel3.jpeg" },
+    { id: 2, title: "PARIS", image: "/images/banner/carousel2.avif" },
+    { id: 3, title: "PARIS", image: "/images/banner/carousel3.jpg" },
+    { id: 4, title: "PARIS", image: "/images/banner/carousel4.webp" },
+    { id: 5, title: "PARIS", image: "/images/banner/carousel5.jpeg" },
   ];
 
   return (
