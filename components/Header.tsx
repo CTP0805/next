@@ -1,19 +1,23 @@
 "use client";
-import React, { useState, useRef, useEffect, ReactNode } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { FaSearch } from "react-icons/fa";
+import { FaCartShopping } from "react-icons/fa6";
+
+import { useAuth } from "@/contexts/auth-context"; // 引入你建立的 Context
 
 export default function Navbar() {
+  const { auth, isAuthenticated, logout } = useAuth(); // 直接使用 Context 提供的狀態與方法
+
   const navLinks = [
-    { name: "登入", href: "/auth/login" },
-    { name: "註冊", href: "/auth/register" },
     { name: "部落格", href: "/blog" },
     { name: "體驗分類", href: "/categories" },
     { name: "品牌介紹", href: "/about" },
     { name: "聯絡我們", href: "/contact" },
   ];
+
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -26,27 +30,22 @@ export default function Navbar() {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [setIsOpen]);
+  }, []);
+
   const pathname = usePathname();
   const isHomePage = pathname === "/";
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    // 只有在首頁時才需要監聽捲動事件
     if (!isHomePage) return;
-
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 0.1); // 捲動後變色
+      setIsScrolled(window.scrollY > 0.1);
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isHomePage]);
 
-  // 設定樣式邏輯
-  // 若是首頁且未捲動，使用透明；其他情況（非首頁 或 已捲動）使用固定背景色 (例如 bg-black)
   const navStyle = isHomePage && !isScrolled ? "bg-white/20" : "bg-[#45cad5]";
-
   const navPosition = isHomePage ? "fixed" : "sticky";
 
   return (
@@ -90,78 +89,135 @@ export default function Navbar() {
       </div>
 
       {/* 右側功能區 */}
-      <ul className="flex items-center">
-        <div className="group relative px-2">
-          {" "}
-          <Link href="/cart" className="flex shrink-0 items-center gap-2">
-            <Image
-              src="/icon/cart.svg"
-              alt="Logo"
-              width={20}
-              height={20}
-              className="h-auto w-auto"
-            />
-          </Link>
-          {/* 2. 中間這層透明的區塊 (橋樑) */}
-          {/* 只要 top-full 加上一點高度，讓它與下方的視窗重疊即可 */}
-          <div className="absolute top-full right-0 h-4 w-full bg-transparent"></div>
-          {/* 3. 購物車視窗 */}
-          {/* 注意：這裡的 top 設定為 top-[calc(100%+16px)] 以避開那 16px 的透明區塊，或者直接讓它緊貼透明區塊 */}
-          <div className="absolute top-[calc(100%+1rem)] right-0 z-50 hidden w-64 rounded-md border bg-white p-4 shadow-lg group-hover:block">
-            {" "}
-            <div className="relative mx-auto mb-4 h-48 w-48">
-              <Image
-                src="/icon/cart.svg"
-                alt="購物車空空的"
-                fill
-                className="bg-amber-400 object-contain text-black" // 確保圖片維持比例並在容器內顯示
-              />
+      <ul className="hidden items-center md:flex">
+        {isAuthenticated ? (
+          <div className="flex items-center gap-2">
+            <Link href="/member/profile" className="hover:text-gray-300">
+              {auth.name} 會員中心
+            </Link>
+            <button onClick={logout} className="hover:text-gray-300">
+              登出
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="px-2">
+              <Link href="/auth/login" className="hover:text-gray-300">
+                登入
+              </Link>
             </div>
-            <h3 className="mb-2 text-2xl font-bold text-gray-700">
-              購物車暫無商品{" "}
-            </h3>
-            <p className="mb-8 cursor-pointer text-[12px] text-[#45cad5]">
-              您的購物車目前是空的，快去尋找下一 個冒險目的地吧！{" "}
-            </p>
-            <button className="bg-[#45cad5]">進入購物車</button>
-          </div>
-        </div>
-        <div className="px-2">
-          <Link href="/auth/login" className="hover:text-a">
-            登入
-          </Link>
-        </div>
-        <span>/</span>
-        <div className="px-2">
-          <Link href="/auth/register" className="hover:text-gray-300">
-            註冊
-          </Link>
-        </div>
-      </ul>
-      <div className="relative md:hidden" ref={menuRef}>
-        {/* 按鈕 */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="h-[20px] w-[20px]"
-        >
-          <img src="/icon/bars.svg" alt="Menu" />
-        </button>
-
-        {/* 選單容器 */}
-        {isOpen && (
-          <div className="bg-base-100 absolute top-full right-0 z-50 mt-2 w-[430px] p-2 shadow-xl">
-            {navLinks.map((link) => (
-              <div
-                key={link.name}
-                className="border-b border-gray-100 px-4 py-2 last:border-0"
-              >
-                <Link href={link.href} className="block hover:text-gray-300">
-                  {link.name}
-                </Link>
-              </div>
-            ))}
-          </div>
+            <span>/</span>
+            <div className="px-2">
+              <Link href="/auth/register" className="hover:text-gray-300">
+                註冊
+              </Link>
+            </div>
+          </>
         )}
+      </ul>
+      {/* 在父容器中直接放置 dropdown，不被 relative md:hidden 限制 */}
+      <div className="gap-1">
+        {isAuthenticated ? (
+          <div className="dropdown dropdown-end">
+            <div
+              tabIndex={0}
+              role="button"
+              className="btn btn-ghost btn-circle"
+            >
+              <FaCartShopping />
+            </div>
+            <ul
+              tabIndex={0}
+              className="menu dropdown-content fixed right-0 z-50 w-screen bg-white p-4 text-black shadow"
+            >
+              <li>
+                <a>12</a>
+              </li>
+              <li>
+                <a>22</a>
+              </li>
+              <li>
+                <a>About</a>
+              </li>
+            </ul>
+          </div>
+        ) : null}
+        <div className="dropdown dropdown-end md:hidden">
+          <div
+            tabIndex={0}
+            role="button"
+            className="btn btn-ghost btn-circle md:hidden"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M4 6h16M4 12h16M4 18h7"
+              />
+            </svg>
+          </div>
+
+          {/* 使用 fixed 讓它直接脫離文檔流，實現滿版 */}
+          <ul
+            tabIndex={0}
+            className="menu dropdown-content fixed right-0 z-50 w-screen bg-white p-4 text-black"
+          >
+            <li>
+              <a>333</a>
+            </li>
+            <li>
+              <a>Portfolio</a>
+            </li>
+            <li>
+              <a>About</a>
+            </li>
+          </ul>
+        </div>
+        <div className="dropdown dropdown-end md:hidden">
+          <div
+            tabIndex={0}
+            role="button"
+            className="btn btn-ghost btn-circle md:hidden"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M4 6h16M4 12h16M4 18h7"
+              />
+            </svg>
+          </div>
+
+          {/* 使用 fixed 讓它直接脫離文檔流，實現滿版 */}
+          <ul
+            tabIndex={0}
+            className="menu dropdown-content fixed right-0 z-50 w-screen bg-white p-4 text-black"
+          >
+            <li>
+              <a>Homepage</a>
+            </li>
+            <li>
+              <a>Portfolio</a>
+            </li>
+            <li>
+              <a>About</a>
+            </li>
+          </ul>
+        </div>
       </div>
     </nav>
   );
