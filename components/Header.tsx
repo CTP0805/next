@@ -129,7 +129,7 @@ export default function Navbar() {
       {/* 右側功能區 */}
       <ul className="hidden items-center md:flex">
         {isAuthenticated ? (
-          <div className="dropdown dropdown-end">
+          <div className="dropdown dropdown-end dropdown-hover">
             <div
               tabIndex={0}
               role="button"
@@ -139,7 +139,7 @@ export default function Navbar() {
             </div>
             <ul
               tabIndex={0}
-              className="dropdown-content fixed right-0 z-50 w-[50px] bg-white p-4 text-black shadow"
+              className="dropdown-content menu rounded-box z-[60] mt-2 w-56 bg-gray-700 p-2 shadow-xl"
             >
               <li className="relative h-32 w-full">
                 <Image src="/cat-cart.jpg" alt="123" fill />
@@ -148,24 +148,67 @@ export default function Navbar() {
           </div>
         ) : null}
         {isAuthenticated ? (
-          <div className="flex items-center gap-2">
-            <Link
-              href="/member/profile"
-              className="flex items-center gap-2 hover:text-gray-300"
+          <div className="dropdown dropdown-end dropdown-hover relative">
+            {/* 觸發區域 */}
+            <div
+              tabIndex={0}
+              className="hover:bg-base-200 flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2"
             >
-              {/* 使用 w-auto h-[1em] 讓圖片高度自動跟隨文字行高 */}
               <Image
                 src="/images/avatar-test.png"
                 alt={auth.name}
-                className="h-[1em] w-[1em] rounded-full object-cover"
-                width={16}
-                height={16}
+                className="h-8 w-8 rounded-full object-cover"
+                width={32}
+                height={32}
               />
-              <span>{auth.name} 你好～</span>
-            </Link>
-            <button onClick={logout} className="hover:text-gray-300">
-              登出
-            </button>
+              <span className="text-sm">{auth.name} 你好～</span>
+            </div>
+
+            {/* 下拉選單 */}
+            <ul
+              tabIndex={0}
+              className="dropdown-content menu rounded-box z-[60] mt-2 w-56 bg-gray-700 p-2 shadow-xl"
+            >
+              {/* 用戶資訊區 */}
+              <li className="mb-2">
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <img
+                    src="/images/avatar-test.png"
+                    alt="用戶頭像"
+                    className="h-12 w-12 flex-shrink-0 rounded-full object-cover"
+                  />
+                  <div>
+                    <div className="font-semibold">王大明</div>
+                    <div className="flex items-center gap-1.5 text-sm text-orange-400">
+                      Lv.3 鑽石會員 <span>👑</span>
+                    </div>
+                  </div>
+                </div>
+              </li>
+
+              {/* 其他選單 */}
+              {memberLists.map((v, i) => (
+                <li key={i}>
+                  <a
+                    href={v.href}
+                    className="flex items-center gap-3 rounded-lg px-4 py-3 hover:bg-blue-600 hover:text-white"
+                  >
+                    {v.icon}
+                    <span>{v.label}</span>
+                  </a>
+                </li>
+              ))}
+
+              <li className="mt-2 border-t border-gray-600 pt-2">
+                <button
+                  onClick={logout}
+                  className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-red-400 hover:bg-red-600 hover:text-white"
+                >
+                  <TbLogout />
+                  <span>登出</span>
+                </button>
+              </li>
+            </ul>
           </div>
         ) : (
           <>
@@ -186,7 +229,7 @@ export default function Navbar() {
       {/* 在父容器中直接放置 dropdown，不被 relative md:hidden 限制 */}
       <div className="gap-1 md:hidden">
         {isAuthenticated ? (
-          <div className="dropdown dropdown-end">
+          <div className="dropdown dropdown-end dropdown-hover">
             <div
               tabIndex={0}
               role="button"
@@ -196,7 +239,7 @@ export default function Navbar() {
             </div>
             <ul
               tabIndex={0}
-              className="menu dropdown-content fixed right-0 z-50 w-screen bg-white p-4 text-black shadow"
+              className="menu dropdown-content dropdown-hover fixed right-0 z-50 w-screen bg-white p-4 text-black shadow"
             ></ul>
           </div>
         ) : null}
