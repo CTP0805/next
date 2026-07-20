@@ -16,6 +16,7 @@ import {
   FaHeart,
   FaClockRotateLeft,
 } from "react-icons/fa6";
+import { TbLogout } from "react-icons/tb";
 
 type MemberList = {
   label: string;
@@ -138,10 +139,11 @@ export default function Navbar() {
             </div>
             <ul
               tabIndex={0}
-              className="menu dropdown-content fixed right-0 z-50 w-screen bg-white p-4 text-black shadow"
+              className="dropdown-content fixed right-0 z-50 w-[50px] bg-white p-4 text-black shadow"
             >
-              123
-              <button className="border">456 </button>
+              <li className="relative h-32 w-full">
+                <Image src="/cat-cart.jpg" alt="123" fill />
+              </li>
             </ul>
           </div>
         ) : null}
@@ -214,7 +216,28 @@ export default function Navbar() {
           >
             {isAuthenticated ? (
               <>
-                {" "}
+                <li className="w-full">
+                  <button
+                    onClick={() => {
+                      /* 點擊後要執行的動作，例如跳到個人資料 */
+                    }}
+                    className="flex w-full items-center gap-3 px-6 py-4 transition-colors duration-200 hover:bg-blue-500 hover:text-white focus:bg-blue-600 focus:text-white active:bg-blue-700 active:text-white"
+                  >
+                    <img
+                      src="/images/avatar-test.png"
+                      alt="用戶頭像"
+                      className="h-10 w-10 flex-shrink-0 rounded-full object-cover"
+                    />
+
+                    <div className="flex flex-col text-left">
+                      <span className="font-semibold">王大明</span>
+                      <div className="flex items-center gap-1.5 text-sm text-orange-400">
+                        Lv.3 鑽石會員
+                        <span>👑</span>
+                      </div>
+                    </div>
+                  </button>
+                </li>
                 {memberLists.map((v, i) => {
                   return (
                     <li key={i} className="w-full">
@@ -228,12 +251,14 @@ export default function Navbar() {
                     </li>
                   );
                 })}
-                <li>
-                  <div>
-                    <button onClick={logout} className="items-center">
-                      登出
-                    </button>
-                  </div>
+                <li className="w-full">
+                  <button
+                    onClick={logout}
+                    className="flex w-full items-center gap-3 px-6 py-4 transition-colors duration-200 hover:bg-blue-500 hover:text-white focus:bg-blue-600 focus:text-white active:bg-blue-700 active:text-white"
+                  >
+                    <TbLogout />
+                    <span>登出</span>
+                  </button>
                 </li>
               </>
             ) : (
