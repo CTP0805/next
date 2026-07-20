@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/contexts/auth-context"; // 引入你建立的 Context
@@ -15,6 +16,12 @@ import {
   FaHeart,
   FaClockRotateLeft,
 } from "react-icons/fa6";
+
+type MemberList = {
+  label: string;
+  icon: ReactNode;
+  href: string;
+};
 
 export default function Navbar() {
   const { auth, isAuthenticated, logout } = useAuth(); // 直接使用 Context 提供的狀態與方法
@@ -84,25 +91,24 @@ export default function Navbar() {
       className={`${navPosition} top-0 left-0 z-50 flex h-[60px] w-full items-center justify-between p-2 text-white xl:px-37.5 ${navStyle}`}
     >
       {/* 左側 Logo */}
-      <div className="items-left relative flex aspect-square w-[20px] shrink-0 md:w-[40px]">
-        <Link href="/">
+      <div className="items-left relative flex aspect-square h-[40px] w-[40px] shrink-0">
+        <Link href="/" className="absolute inset-0">
           <Image
             src="/icon/logo.svg"
             alt="Logo"
             fill
-            className="h-auto w-auto"
             priority
             sizes="(max-width: 768px) 20px, 40px"
           />
         </Link>
       </div>
-      <div className="relative w-40 md:w-80">
+      <div className="relative w-60 md:w-80">
         <FaSearch className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />
 
         <input
           type="text"
           placeholder="搜尋景點、地區或城市"
-          className="h-[40px] w-full rounded-[25px] bg-gray-300/20 pr-4 pl-10 text-[16px] placeholder:text-white/70"
+          className="h-[40px] rounded-[25px] bg-gray-300/20 pr-4 pl-10 text-[16px] placeholder:text-white/70"
         />
       </div>
       {/* 中間導覽 */}
@@ -134,15 +140,8 @@ export default function Navbar() {
               tabIndex={0}
               className="menu dropdown-content fixed right-0 z-50 w-screen bg-white p-4 text-black shadow"
             >
-              <li>
-                <a>12</a>
-              </li>
-              <li>
-                <a>22</a>
-              </li>
-              <li>
-                <a>About</a>
-              </li>
+              123
+              <button className="border">456 </button>
             </ul>
           </div>
         ) : null}
@@ -211,22 +210,46 @@ export default function Navbar() {
           {/* 使用 fixed 讓它直接脫離文檔流，實現滿版 */}
           <ul
             tabIndex={0}
-            className="menu dropdown-content fixed right-0 z-50 w-screen bg-white p-4 text-black"
+            className="dropdown-content fixed right-0 flex w-screen flex-col bg-white p-0 text-black shadow-lg"
           >
-            {memberLists.map((v, i) => {
-              return (
-                <li key={i} className="items-center">
-                  <Link href={v.href}>{v.label}</Link>
-                </li>
-              );
-            })}
             {isAuthenticated ? (
-              <li>
-                <button onClick={logout} className="">
-                  登出
-                </button>
-              </li>
-            ) : null}
+              <>
+                {" "}
+                {memberLists.map((v, i) => {
+                  return (
+                    <li key={i} className="w-full">
+                      <a
+                        href={v.href}
+                        className="flex w-full items-center gap-3 px-6 py-4 transition-colors duration-200 hover:bg-blue-500 hover:text-white focus:bg-blue-600 focus:text-white active:bg-blue-700 active:text-white"
+                      >
+                        {v.icon}
+                        <span>{v.label}</span>
+                      </a>
+                    </li>
+                  );
+                })}
+                <li>
+                  <div>
+                    <button onClick={logout} className="items-center">
+                      登出
+                    </button>
+                  </div>
+                </li>
+              </>
+            ) : (
+              <>
+                <li className="">
+                  <Link href="/auth/login" className="hover:text-gray-300">
+                    登入
+                  </Link>
+                </li>
+                <li className="">
+                  <Link href="/auth/register" className="hover:text-gray-300">
+                    註冊
+                  </Link>
+                </li>
+              </>
+            )}
           </ul>
         </div>
         <div className="dropdown dropdown-end md:hidden">
