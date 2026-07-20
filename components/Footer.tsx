@@ -8,9 +8,10 @@ export default function Footer() {
     <footer className="relative flex min-h-[150px] w-full items-center justify-center md:min-h-[698px]">
       <Image
         src="/images/footer.webp"
-        alt="Hero Background"
+        alt="頁尾背景"
         className="z-1 h-full w-full object-fill"
         fill
+        loading="eager"
       />
       {/* 2. 內層容器：限制最大寬度、水平置中並設定間距 */}
       <div className="z-2 mx-auto hidden max-w-7xl gap-30 text-white md:flex">
@@ -65,15 +66,7 @@ export default function Footer() {
         <nav className="flex flex-col gap-2">
           <h6 className="text-2xl">聯絡我們</h6>
 
-          <a className="link link-hover">
-            <Image
-              src="/icon/location.svg"
-              alt="Hero Background"
-              width={20}
-              height={20}
-            />
-            Piazza Napoleone, Lucca, Tuscany
-          </a>
+          <a className="link link-hover">Piazza Napoleone, Lucca, Tuscany</a>
           <a href="tel:+393463685708" className="link link-hover">
             +39 346 368 5708
           </a>
