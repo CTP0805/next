@@ -122,14 +122,18 @@ export default function Navbar() {
                 <h4 className="mb-2 text-2xl font-bold text-gray-700">
                   購物車暫無商品{" "}
                 </h4>
+                <Link
+                href="/experiences/search/1"
+                >
                 <p className="mb-8 cursor-pointer text-[12px] text-[#45cad5]">
                   您的購物車目前是空的，<br/>快去尋找下一個冒險目的地吧！
                 </p>
+                </Link>
                 <Link
-                  href="/experiences/search/1"
+                  href="/cart"
                   className="block w-full rounded-lg bg-[#45cad5] py-2 text-center text-xs font-bold text-white transition-colors hover:bg-[#39b4bf]"
                 >
-                  去逛逛熱門行程
+                  前往購物車
                 </Link>
               </div>
             ) : (

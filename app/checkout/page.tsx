@@ -7,12 +7,13 @@ import { useCart } from "@/contexts/cart";
 import { useAuth } from "@/contexts/auth-context";
 import { HiOutlineTicket, HiCurrencyDollar, HiUser } from "react-icons/hi";
 
-
-const MOCK_COUPONS = [
-  { id: "c1", title: "新會員註冊禮 - 折$100", value: 100 },
-  { id: "c2", title: "夏季消暑大禮包 - 折$50", value: 50 },
-  { id: "c3", title: "全站滿千折$150", value: 150 },
-];
+// 在元件最上方定義後端傳過來的真實優惠券型別
+type CouponType = {
+  coupon_id: number;
+  coupon_name: string;
+  min_spent: number;
+  discount_amount: number;
+};
 
 export default function CheckPage() {
   const router = useRouter();
@@ -31,6 +32,10 @@ export default function CheckPage() {
 
   // 是否顯示"新增/編輯聯絡資料"表單
   const [showForm, setShowForm] = useState(false);
+
+  // 優惠卷狀態(預設為空陣列)
+  const [coupons, setCoupons] = useState<CouponType[]>([]);
+
   // 優惠折扣狀態 , 單選優惠券 (通常一筆訂單只能用一張)
   const [selectedCouponId, setSelectedCouponId] = useState<string | null>(null);
   const [useLevelDiscount, setUseLevelDiscount] = useState(true); // 是否套用會員等級折扣 Checkbox
@@ -41,7 +46,6 @@ export default function CheckPage() {
   const [couponDiscountAmount, setCouponDiscountAmount] = useState(0);
   const [finalPrice, setFinalPrice] = useState(0);
 
-
   // 歷史資料安全攔截：當登入狀態確認完畢 (authInit === true)
   // 發現這個人根本沒有登入 (isAuthenticated === false)，直接把他踢回登入頁
   useEffect(() => {
@@ -51,14 +55,52 @@ export default function CheckPage() {
     }
   }, [authInit, isAuthenticated, router]);
 
+  //當會員確認登入後，立刻向後端動態撈取專屬優惠券
+  useEffect(() => {
+    if (isAuthenticated) {
+      const fetchAvailableCoupons = async () => {
+        try {
+          const response = await fetch(
+            `http://localhost:3001/api/checkout/coupons`,
+            {
+              method: "GET",
+              credentials: "include", // 確保帶上憑證讓後端能辨識會員
+            },
+          );
+          const result = await response.json();
+          if (result.success) {
+            setCoupons(result.coupons); // 將真實優惠券塞入狀態
+          }
+        } catch (error) {
+          console.error("撈取優惠券發生錯誤:", error);
+        }
+      };
+
+      fetchAvailableCoupons();
+    }
+  }, [isAuthenticated]);
+
   // --- 點擊常用聯絡人，自動帶入表單並打開 ---
   const handleQuickInput = () => {
+    const fullName = auth.name || "";
+    const nameParts = fullName.trim().split(/\s+/); // 以空格拆分
+
+    let autoLastName = "";
+    let autoFirstName = "";
+
+    if (nameParts.length > 1) {
+      autoLastName = nameParts[0]; // 例如: YANG
+      autoFirstName = nameParts.slice(1).join(" "); // 例如: POWEI
+    } else {
+      autoFirstName = fullName; // 如果只有一個字 (例如 POWEI)，就直接當作名字
+    }
+
     setFormData({
-      lastName: "",
-      firstName: "",
+      lastName: autoLastName.toUpperCase(),
+      firstName: autoFirstName.toUpperCase(),
       phoneCode: "+886",
-      phone: "0912345678",
-      email: auth.email,
+      phone: "0919123456", //資料庫沒欄位先寫死
+      email: auth.email || "",
     });
     setShowForm(true);
   };
@@ -67,7 +109,7 @@ export default function CheckPage() {
   const getDiscountRate = (level: string | undefined) => {
     if (level === "金") return 0.95; // 金牌享 95 折
     if (level === "銀") return 0.98; // 銀牌享 98 折
-    return 1.0;                      // 資料庫預設是 "銅" 牌，即無折扣 (1.0)
+    return 1.0; // 資料庫預設是 "銅" 牌，即無折扣 (1.0)
   };
 
   // --- 精準動態折扣計算 useEffect (隨購物車與折扣動態變更) ---
@@ -88,9 +130,11 @@ export default function CheckPage() {
 
     // B. 再算優惠券折抵
     if (selectedCouponId) {
-      const activeCoupon = MOCK_COUPONS.find((c) => c.id === selectedCouponId);
+      const activeCoupon = coupons.find(
+        (c) => String(c.coupon_id) === String(selectedCouponId),
+      );
       if (activeCoupon) {
-        couponDiscount = activeCoupon.value;
+        couponDiscount = Number(activeCoupon.discount_amount);
         currentPrice -= couponDiscount;
       }
     }
@@ -106,7 +150,14 @@ export default function CheckPage() {
     setLevelDiscountAmount(levelDiscount);
     setCouponDiscountAmount(couponDiscount);
     setFinalPrice(currentPrice);
-  }, [totalAmount, useLevelDiscount, selectedCouponId, mCoinsInput, auth.member_level]);
+  }, [
+    totalAmount,
+    useLevelDiscount,
+    selectedCouponId,
+    mCoinsInput,
+    auth.member_level,
+    coupons,
+  ]);
 
   // --- M 幣輸入防呆機制 ---
   const handleMCoinsChange = (val: number) => {
@@ -115,7 +166,7 @@ export default function CheckPage() {
     // 限制：不能是負數
     if (val < 0) val = 0;
     // 限制：不能超過會員手頭擁有的最大上限
-    if (val > maxCoins) val =maxCoins;
+    if (val > maxCoins) val = maxCoins;
 
     // 計算出在扣除會員折和優惠券後的剩餘可折抵最大金額
     const currentMaxAllowed =
@@ -126,8 +177,53 @@ export default function CheckPage() {
     setMCoinsInput(val);
   };
 
+  // 前端送出結帳訂單的處理函式
+  const handleSubmitOrder = async () => {
+    if (!formData.lastName || !formData.firstName || !formData.phone) {
+      alert("請填寫完整的聯絡人英文姓名與手機號碼！");
+      setShowForm(true);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:3001/api/checkout/submit`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include", // 自動帶上登入 Cookie
+          body: JSON.stringify({
+            contact_name: `${formData.lastName} ${formData.firstName}`,
+            contact_phone: formData.phone,
+            contact_email: formData.email || auth.email,
+            coupon_id: selectedCouponId ? Number(selectedCouponId) : null, // 選中的券 ID
+            points_redeemed: mCoinsInput, // 扣除的點數
+            payment_method: "credit_card", // 預設付款方式
+          }),
+        },
+      );
+
+      const result = await response.json();
+
+      if (result.success) {
+        // 🚀 建立訂單成功！後端此時已清空購物車與扣點數。
+        // 立刻將使用者引導至下一步的付款畫面
+        router.push(`/payment?order_id=${result.order_id}`);
+      } else {
+        alert(result.message || "建立訂單失敗，請稍後再試");
+      }
+    } catch (error) {
+      console.error("提交訂單發生錯誤:", error);
+      alert("系統連線錯誤，請確認網路或後端服務是否正常。");
+    }
+  };
+
   if (!authInit) {
-    return <div className="py-20 text-center text-gray-400">正在確認會員安全憑證...</div>;
+    return (
+      <div className="py-20 text-center text-gray-400">
+        正在確認會員安全憑證...
+      </div>
+    );
   }
 
   return (
@@ -219,23 +315,45 @@ export default function CheckPage() {
                   <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                     <div>
                       <span className="mr-2 text-gray-400">姓氏(英) :</span>{" "}
-                      <strong>
-                        {formData.lastName || "—"}
+                      <strong className="text-gray-800">
+                        {formData.lastName || (
+                          <span className="font-normal text-gray-300">
+                            未填寫
+                          </span>
+                        )}
                       </strong>
                     </div>
                     <div>
                       <span className="mr-2 text-gray-400">名 (英) :</span>{" "}
-                      <strong>
-                        {formData.firstName || "—"}
+                      <strong className="text-gray-800">
+                        {formData.firstName || (
+                          <span className="font-normal text-gray-300">
+                            未填寫
+                          </span>
+                        )}
                       </strong>
                     </div>
                     <div className="col-span-2">
                       <span className="mr-2 text-gray-400">聯絡電話:</span>{" "}
-                      <strong>{formData.phone || "—"}</strong>
+                      <strong className="text-gray-800">
+                        {formData.phone ? (
+                          `${formData.phoneCode} ${formData.phone}`
+                        ) : (
+                          <span className="font-normal text-gray-300">
+                            未填寫手機號碼
+                          </span>
+                        )}
+                      </strong>
                     </div>
                     <div className="col-span-2">
                       <span className="mr-2 text-gray-400">電子郵件:</span>{" "}
-                      <strong>{formData.email || auth.email}</strong>
+                      <strong className="text-gray-800">
+                        {formData.email || auth.email || (
+                          <span className="font-normal text-gray-300">
+                            未填寫信箱
+                          </span>
+                        )}
+                      </strong>
                     </div>
                   </div>
                   <button
@@ -336,15 +454,17 @@ export default function CheckPage() {
 
                 {/* 1. 會員階級特惠折抵 */}
                 <div className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-3.5 text-sm">
-                    <div>
-                      <span className="flex items-center gap-1 font-bold text-gray-700">
-                        <HiUser className="size-4 text-gray-400" />{" "}
-                        已套用尊榮會員階級折扣
-                      </span>
-                      <p className="text-[11px] text-gray-400">
-                        {auth.member_level ? `${auth.member_level}牌會員特權` : "一般會員權益"}
-                      </p>
-                    </div>
+                  <div>
+                    <span className="flex items-center gap-1 font-bold text-gray-700">
+                      <HiUser className="size-4 text-gray-400" />{" "}
+                      已套用尊榮會員階級折扣
+                    </span>
+                    <p className="text-[11px] text-gray-400">
+                      {auth.member_level
+                        ? `${auth.member_level}牌會員特權`
+                        : "一般會員權益"}
+                    </p>
+                  </div>
                   <span className="font-bold text-emerald-600">
                     {useLevelDiscount
                       ? `-NT$ ${levelDiscountAmount}`
@@ -360,11 +480,11 @@ export default function CheckPage() {
                   </span>
 
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                    {MOCK_COUPONS.map((coupon) => (
+                    {coupons.map((coupon) => (
                       <label
-                        key={coupon.id}
+                        key={coupon.coupon_id}
                         className={`flex cursor-pointer flex-col justify-between rounded-xl border p-3.5 text-left transition-all ${
-                          selectedCouponId === coupon.id
+                          selectedCouponId === String(coupon.coupon_id)
                             ? "border-[#45cad5] bg-[#45cad5]/5 ring-1 ring-[#45cad5]"
                             : "border-gray-200 bg-white hover:bg-gray-50"
                         }`}
@@ -374,15 +494,19 @@ export default function CheckPage() {
                             type="radio"
                             name="checkout-coupon"
                             className="radio radio-xs radio-accent mt-0.5"
-                            checked={selectedCouponId === coupon.id}
-                            onChange={() => setSelectedCouponId(coupon.id)}
+                            checked={
+                              selectedCouponId === String(coupon.coupon_id)
+                            }
+                            onChange={() =>
+                              setSelectedCouponId(String(coupon.coupon_id))
+                            }
                           />
                           <span className="text-xs leading-tight font-bold text-gray-700">
-                            {coupon.title}
+                            {coupon.coupon_name}
                           </span>
                         </div>
                         <span className="text-right text-sm font-black text-orange-500">
-                          -NT$ {coupon.value}
+                          -NT$ {coupon.discount_amount}
                         </span>
                       </label>
                     ))}
@@ -420,7 +544,7 @@ export default function CheckPage() {
                     <div className="flex flex-1 items-center gap-2">
                       <input
                         type="number"
-                        value={mCoinsInput === 0 ? "" : mCoinsInput}// 關鍵防護：如果值是 0 就給空字串，方便使用者直接打字，不用先刪除 0
+                        value={mCoinsInput === 0 ? "" : mCoinsInput} // 關鍵防護：如果值是 0 就給空字串，方便使用者直接打字，不用先刪除 0
                         placeholder="輸入折抵點數 (1M幣 = 1元)"
                         onChange={(e) =>
                           handleMCoinsChange(Number(e.target.value))
@@ -431,7 +555,7 @@ export default function CheckPage() {
                         onClick={() =>
                           handleMCoinsChange(auth.current_points ?? 0)
                         }
-                        className="btn btn-xs border-gray-300 bg-white px-2.5 text-[11px] font-bold text-gray-500 hover:border-[#45cad5] hover:bg-gray-50 transition-colors"
+                        className="btn btn-xs border-gray-300 bg-white px-2.5 text-[11px] font-bold text-gray-500 transition-colors hover:border-[#45cad5] hover:bg-gray-50"
                       >
                         全部折抵
                       </button>
@@ -448,11 +572,12 @@ export default function CheckPage() {
                 <span className="text-xs text-gray-500 sm:w-1/3 lg:w-2/3">
                   前往付款後，訂單即送出，請於下一步選擇付款方式
                 </span>
-                <Link href="/payment/">
-                  <button className="btn border-none bg-[#45cad5] whitespace-nowrap text-white hover:bg-[#36b3be] sm:px-10">
-                    前往付款
-                  </button>
-                </Link>
+                <button
+                  onClick={handleSubmitOrder}
+                  className="btn border-none bg-[#45cad5] whitespace-nowrap text-white hover:bg-[#36b3be] sm:px-10"
+                >
+                  前往付款
+                </button>
               </div>
             </div>
 
@@ -461,7 +586,6 @@ export default function CheckPage() {
               {/*  第一塊白卡片：商品名稱與基本資料 */}
               <div className="w-full rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
                 <h3 className="mb-1 text-sm leading-snug font-bold text-gray-900">
-                  
                   費用明細摘要
                 </h3>
                 {/* 明細折扣細目顯示 */}
@@ -482,12 +606,12 @@ export default function CheckPage() {
                       <span>-NT$ {couponDiscountAmount}</span>
                     </div>
                   )}
-                {mCoinsInput > 0 && (
-                  <div className="flex justify-between text-orange-600">
-                    <span>M 幣餘額折抵</span>
-                    <span>-NT$ {mCoinsInput}</span>
-                  </div>
-                )}
+                  {mCoinsInput > 0 && (
+                    <div className="flex justify-between text-orange-600">
+                      <span>M 幣餘額折抵</span>
+                      <span>-NT$ {mCoinsInput}</span>
+                    </div>
+                  )}
 
                   <div className="mt-2 flex items-baseline justify-between border-t border-dashed border-gray-100 pt-2">
                     <span className="text-xs font-medium text-gray-400">
