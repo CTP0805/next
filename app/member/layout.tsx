@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import Loading from "@/components/Loading";
+import toast from "react-hot-toast";
 
 export default function MemberLayout({
   children,
@@ -33,6 +34,7 @@ export default function MemberLayout({
 
     // 後端已確認未登入，導向登入頁。
     if (!isAuthenticated) {
+      toast.error("尚未登入 已為您重新導向");
       const loginUrl = `/auth/login?next=${encodeURIComponent(pathname)}`;
       router.replace(loginUrl);
     }
@@ -55,8 +57,8 @@ export default function MemberLayout({
   const isMemberHome = pathname === "/member";
 
   return (
-    <div className="min-h-screen bg-zinc-100 md:px-6 md:py-6">
-      <div className="mx-auto flex w-full max-w-[1280px] justify-center gap-6 md:items-start">
+    <div className="min-h-screen  bg-zinc-100 md:px-6 md:py-6">
+      <div className="mx-auto flex w-full max-w-[1280px]  justify-center gap-6 md:items-start md:w-[80%]">
         {/* 
           手機版：
           /member 顯示滿版選單
@@ -80,7 +82,7 @@ export default function MemberLayout({
           永遠顯示右側內容
         */}
         <section
-          className={` ${isMemberHome ? "hidden" : "block"} min-h-screen w-full bg-white px-4 py-4 md:block md:flex-1 md:overflow-hidden md:rounded-[12px] md:border md:border-zinc-200 md:px-16 md:py-10 md:shadow-xl`}
+          className={` ${isMemberHome ? "hidden" : "block"} min-h-screen w-full bg-white px-4 pb-4 md:block md:flex-1 md:overflow-hidden md:rounded-[12px] md:border md:border-zinc-200 md:px-16 md:py-10 md:shadow-xl`}
         >
           {!isMemberHome && <MemberMobileHeader />}
 

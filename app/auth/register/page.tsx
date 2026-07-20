@@ -7,7 +7,7 @@ import Link from "next/link";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { API_SERVER } from "@/config/api-path";
 
 /* 還不確定用不用的到
@@ -123,7 +123,7 @@ export default function RegisterPage() {
         */
 
         // 之後你可以改成 router.push("/")
-        router.push("/member/profile");
+        router.push("/auth/login");
         return;
       }
 
@@ -139,10 +139,6 @@ export default function RegisterPage() {
 
   return (
     <main className="min-h-screen bg-[url('/images/register-bg.jpg')] bg-cover bg-[position:33%_center] xl:bg-left text-white">
-      <div>
-        <Toaster />
-      </div>
-
       {/* 背景遮罩 */}
       <div className="min-h-screen bg-black/10 backdrop-brightness-75">
         {/* 外層 container：負責控制整體寬度與 RWD 留白 */}

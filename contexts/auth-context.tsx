@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { API_SERVER } from "../config/api-path";
 import { z } from "zod";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // 接收進來的資料類型
 export type Auth = {
@@ -53,6 +53,7 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
   const [auth, setAuth] = useState(emptyAuth);
   const [authInit, setAuthInit] = useState(false); // true：後端已經回答，目前可安全判斷是否登入 false：還在問後端登入狀態
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // 這個函式負責向後端確認目前 Cookie 對應哪位使用者。
   const refreshAuth = useCallback(async (): Promise<void> => {
@@ -112,6 +113,7 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
     }
 
     // step2. 送資料到後端
+    const next = searchParams.get("next");
     try {
       const response = await fetch(`${API_SERVER}/api/auth/login`, {
         method: "POST",
@@ -126,6 +128,21 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
       });
       const result = (await response.json()) as AuthApiResponse;
 
+      // TODO 特殊情況 : 使用者尚未進行信箱驗證
+      if(response.status === 403){
+        toast((t) => (
+          <>
+            <p>
+              {result.message}
+            </p>
+            <button onClick={() => toast.dismiss(t.id)}>
+                重新發送驗證信
+            </button>
+          </>
+        ));
+        return false;
+      }
+
       // 如果後端說登入失敗
       if (!response.ok) {
         toast.error(result.message || "登入失敗(前端)");
@@ -133,10 +150,11 @@ export function AuthContextProvider({ children }: { children: React.ReactNode })
       }
 
       if (response.ok) {
+        
         setAuth(result.data); 
         setAuthInit(true);
         toast.success(result.message || "登入成功(前端)");
-        router.push("/"); // 登入成功後跳轉到首頁(💡看有沒有要換成其他的)
+        router.replace(next ?? "/"); // 登入成功後跳轉到首頁(💡看有沒有要換成其他的)
         return true; // ❓❓❓為什麼要回傳 true 目的是甚麼?
       }
     } catch (error) {

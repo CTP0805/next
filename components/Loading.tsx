@@ -8,7 +8,7 @@ type LoadingProps = {
 };
 
 export default function Loading({
-  size = 48,
+  size = 100,
   showText = true,
   text = "載入中...",
 }: LoadingProps) {

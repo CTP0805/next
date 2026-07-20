@@ -5,9 +5,9 @@ import { Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { API_SERVER } from "@/config/api-path";
 import useFirebase, {
   type GoogleProviderData,
@@ -38,6 +38,8 @@ export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const { loginGoogle } = useFirebase(); // 第三方登入
+  const searchParams = useSearchParams();
+  
 
   // 使用者按下「登入」按鈕時會執行這個函式
   async function handleLogin(
@@ -105,6 +107,7 @@ export default function LoginPage() {
 
   // google 第三方登入
   async function handleGoogleLogin(providerData: GoogleProviderData) {
+    const next = searchParams.get("next");
     try {
       setIsLoading(true);
 
@@ -130,9 +133,7 @@ export default function LoginPage() {
       }
 
       toast.success(result.message || "Google 登入成功");
-
-      // 登入成功後導回首頁
-      router.push("/");
+      router.replace(next ?? "/"); // 登入後跳轉回上一個畫面 或首頁
     } catch (error) {
       console.warn(error);
       toast.error("Google 登入時發生錯誤，請稍後再試");
@@ -144,10 +145,6 @@ export default function LoginPage() {
   return (
     <>
       <main className="min-h-screen bg-[url('/images/login-bg.jpg')] bg-cover bg-[position:48%_center] xl:bg-left text-white">
-        <div>
-          <Toaster />
-        </div>
-
         {/* 背景遮罩 */}
         <div className="min-h-screen bg-black/10 backdrop-brightness-75">
           {/* 外層 container：負責控制整體寬度與 RWD 留白 */}
