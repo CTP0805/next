@@ -129,7 +129,7 @@ export default function Navbar() {
       {/* 右側功能區 */}
       <ul className="hidden items-center md:flex">
         {isAuthenticated ? (
-          <div className="dropdown dropdown-end dropdown-hover">
+          <div className="dropdown dropdown-end dropdown-hover p-5">
             <div
               tabIndex={0}
               role="button"
@@ -139,7 +139,7 @@ export default function Navbar() {
             </div>
             <ul
               tabIndex={0}
-              className="dropdown-content menu rounded-box z-[60] mt-2 w-56 bg-gray-700 p-2 shadow-xl"
+              className="dropdown-content menu rounded-box z-[60] mt-4 w-56 bg-gray-700 p-2 shadow-xl"
             >
               <li className="relative h-32 w-full">
                 <Image src="/cat-cart.jpg" alt="123" fill />
@@ -148,11 +148,11 @@ export default function Navbar() {
           </div>
         ) : null}
         {isAuthenticated ? (
-          <div className="dropdown dropdown-end dropdown-hover relative">
+          <div className="dropdown dropdown-end dropdown-hover relative p-5">
             {/* 觸發區域 */}
             <div
               tabIndex={0}
-              className="hover:bg-base-200 flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2"
+              className="hover:bg-base-200 flex cursor-pointer items-center gap-2 rounded-lg"
             >
               <Image
                 src="/images/avatar-test.png"
@@ -167,7 +167,7 @@ export default function Navbar() {
             {/* 下拉選單 */}
             <ul
               tabIndex={0}
-              className="dropdown-content menu rounded-box z-[60] mt-2 w-56 bg-gray-700 p-2 shadow-xl"
+              className="dropdown-content menu rounded-box z-[60] mt-4 w-56 bg-gray-700 p-2 shadow-xl"
             >
               {/* 用戶資訊區 */}
               <li className="mb-2">
@@ -244,81 +244,11 @@ export default function Navbar() {
           </div>
         ) : null}
         <div className="dropdown dropdown-end md:hidden">
-          <div
-            tabIndex={0}
-            role="button"
-            className="btn btn-ghost btn-circle md:hidden"
-          >
-            <FaUser />
+          <div role="button" className="btn btn-ghost btn-circle md:hidden">
+            <Link href="/member">
+              <FaUser />
+            </Link>
           </div>
-
-          {/* 使用 fixed 讓它直接脫離文檔流，實現滿版 */}
-          <ul
-            tabIndex={0}
-            className="dropdown-content fixed right-0 flex w-screen flex-col bg-white p-0 text-black shadow-lg"
-          >
-            {isAuthenticated ? (
-              <>
-                <li className="w-full">
-                  <button
-                    onClick={() => {
-                      /* 點擊後要執行的動作，例如跳到個人資料 */
-                    }}
-                    className="flex w-full items-center gap-3 px-6 py-4 transition-colors duration-200 hover:bg-blue-500 hover:text-white focus:bg-blue-600 focus:text-white active:bg-blue-700 active:text-white"
-                  >
-                    <img
-                      src="/images/avatar-test.png"
-                      alt="用戶頭像"
-                      className="h-10 w-10 flex-shrink-0 rounded-full object-cover"
-                    />
-
-                    <div className="flex flex-col text-left">
-                      <span className="font-semibold">王大明</span>
-                      <div className="flex items-center gap-1.5 text-sm text-orange-400">
-                        Lv.3 鑽石會員
-                        <span>👑</span>
-                      </div>
-                    </div>
-                  </button>
-                </li>
-                {memberLists.map((v, i) => {
-                  return (
-                    <li key={i} className="w-full">
-                      <a
-                        href={v.href}
-                        className="flex w-full items-center gap-3 px-6 py-4 transition-colors duration-200 hover:bg-blue-500 hover:text-white focus:bg-blue-600 focus:text-white active:bg-blue-700 active:text-white"
-                      >
-                        {v.icon}
-                        <span>{v.label}</span>
-                      </a>
-                    </li>
-                  );
-                })}
-                <li className="w-full">
-                  <button
-                    onClick={logout}
-                    className="flex w-full items-center gap-3 px-6 py-4 transition-colors duration-200 hover:bg-blue-500 hover:text-white focus:bg-blue-600 focus:text-white active:bg-blue-700 active:text-white"
-                  >
-                    <TbLogout />
-                    <span>登出</span>
-                  </button>
-                </li>
-              </>
-            ) : (
-              <>
-                <li className="">
-                  <Link href="/auth/login" className="hover:text-gray-300">
-                    登入
-                  </Link>
-                </li>
-                <li className="">
-                  <Link href="/auth/register" className="hover:text-gray-300">
-                    註冊
-                  </Link>
-                </li>
-              </>
-            )}
-          </ul>
         </div>
         <div className="dropdown dropdown-end md:hidden">
           <div
