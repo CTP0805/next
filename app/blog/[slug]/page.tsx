@@ -1,27 +1,34 @@
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
-import RichTextContent from "@/components/RichTextContent";
 import BlogCommentSection from "../_components/BlogCommentSection";
-import { getAllPosts, getPostBySlug } from "../_lib/blog-store";
+import BlogMediaImage from "../_components/BlogMediaImage";
+import BlogOwnerEditLink from "../_components/BlogOwnerEditLink";
+import BlogRichTextContent from "../_components/BlogRichTextContent";
+import { fetchBlogPostBySlug, fetchBlogPosts } from "../_lib/api";
 import { BLOG_CATEGORY_MAP, BLOG_STATUS_LABEL } from "../_lib/types";
-
-const PLACEHOLDER = "/images/carousel1.jpg";
+import type { BlogPost } from "../_lib/types";
 
 export default async function BlogDetail({
   params,
-  searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ preview?: string }>;
 }) {
   const { slug } = await params;
-  const { preview } = await searchParams;
-  const isPreview = preview === "1";
-  const allPosts = await getAllPosts();
-  const post = isPreview
-    ? (allPosts.find((item) => item.slug === slug) ?? null)
-    : await getPostBySlug(slug);
+
+  let allPosts: BlogPost[] = [];
+  let post: BlogPost | null = null;
+
+  try {
+    allPosts = await fetchBlogPosts();
+    try {
+      post = await fetchBlogPostBySlug(slug);
+    } catch {
+      post = null;
+    }
+  } catch {
+    allPosts = [];
+    post = null;
+  }
 
   if (!post) {
     return (
@@ -50,12 +57,14 @@ export default async function BlogDetail({
       (p) =>
         p.status === "published" &&
         p.slug !== post.slug &&
-        (post.region ? p.region === post.region : true),
+        (post.category_id != null
+          ? p.category_id === post.category_id
+          : true),
     )
     .slice(0, 5);
 
-  const cover = post.cover_image || PLACEHOLDER;
-  const contentTopImage = post.content_image;
+  /** 詳情頁只顯示文章上方圖（content_image，與 cover 同值） */
+  const topImage = post.content_image || post.cover_image;
   const publishedLabel = post.published_at
     ? new Date(post.published_at).toLocaleDateString("zh-TW", {
         year: "numeric",
@@ -63,59 +72,12 @@ export default async function BlogDetail({
         day: "numeric",
       })
     : null;
-
-  // 預覽模式只保留文章主要閱讀範圍，不顯示留言與推薦內容。
-  if (isPreview) {
-    return (
-      <main className="min-h-screen bg-gray-50 px-4 py-8 sm:px-6 sm:py-12">
-        <article className="mx-auto max-w-3xl overflow-hidden rounded-[12px] border border-gray-100 bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3 text-sm sm:px-8">
-            <span className="font-medium text-amber-700">預覽模式</span>
-            <Link
-              href={`/blog/${slug}/edit`}
-              className="text-teal-700 hover:underline"
-            >
-              回到編輯
-            </Link>
-          </div>
-          <div className="relative aspect-[16/9] w-full bg-gray-100">
-            <Image
-              src={cover}
-              alt={post.title}
-              fill
-              className="object-cover object-center"
-              sizes="(max-width: 768px) 100vw, 768px"
-              priority
-            />
-          </div>
-          <div className="px-5 py-8 sm:px-8 sm:py-10">
-            <h1 className="mb-5 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              {post.title}
-            </h1>
-            {contentTopImage ? (
-              <div className="relative mb-8 aspect-[21/9] w-full overflow-hidden rounded-[12px] bg-gray-100">
-                <Image
-                  src={contentTopImage}
-                  alt=""
-                  fill
-                  className="object-cover object-center"
-                  sizes="(max-width: 768px) 100vw, 768px"
-                />
-              </div>
-            ) : null}
-            <div className="prose prose-lg prose-headings:font-bold prose-a:text-teal-600 max-w-none text-gray-800">
-              <RichTextContent content={post.content} />
-            </div>
-          </div>
-        </article>
-      </main>
-    );
-  }
+  const categoryLabel =
+    BLOG_CATEGORY_MAP[post.category_id ?? 0] || "其他";
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-        {/* 麵包屑 */}
         <nav
           aria-label="麵包屑"
           className="mb-6 flex flex-wrap items-center gap-2 text-sm text-gray-500"
@@ -126,14 +88,6 @@ export default async function BlogDetail({
           >
             部落格
           </Link>
-          {post.region ? (
-            <>
-              <span className="text-gray-300" aria-hidden>
-                /
-              </span>
-              <span>{post.region}</span>
-            </>
-          ) : null}
           <span className="text-gray-300" aria-hidden>
             /
           </span>
@@ -145,39 +99,23 @@ export default async function BlogDetail({
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
           <div className="lg:col-span-8">
             <article className="overflow-hidden rounded-[12px] border border-gray-100 bg-white shadow-sm">
-              {/* 封面 */}
-              <div className="relative aspect-[16/9] w-full bg-gray-100">
-                <Image
-                  src={cover}
-                  alt={post.title}
-                  fill
-                  className="object-cover object-center"
-                  sizes="(max-width: 1024px) 100vw, 66vw"
-                  priority
-                />
-              </div>
-
               <div className="px-5 py-8 sm:px-8 sm:py-10 md:px-10">
                 <div className="mb-5 flex flex-wrap items-center gap-2">
-                  {post.region ? (
-                    <span className="rounded-[12px] bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700 sm:text-sm">
-                      {post.region}
-                    </span>
-                  ) : null}
                   <span className="rounded-[12px] bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 sm:text-sm">
-                    {BLOG_CATEGORY_MAP[post.category_id] || "其他"}
+                    {categoryLabel}
                   </span>
                   {post.status !== "published" ? (
                     <span className="rounded-[12px] bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
                       {BLOG_STATUS_LABEL[post.status]}
                     </span>
                   ) : null}
-                  <Link
+                  <BlogOwnerEditLink
+                    authorId={post.author_id}
                     href={`/blog/${post.slug}/edit`}
                     className="ml-auto text-sm font-medium text-teal-600 hover:underline"
                   >
                     編輯此文
-                  </Link>
+                  </BlogOwnerEditLink>
                 </div>
 
                 <h1 className="mb-5 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl md:text-[2.5rem] md:leading-tight">
@@ -202,20 +140,21 @@ export default async function BlogDetail({
                   </span>
                 </div>
 
-                {contentTopImage ? (
+                {topImage ? (
                   <div className="relative mb-8 aspect-[21/9] w-full overflow-hidden rounded-[12px] bg-gray-100">
-                    <Image
-                      src={contentTopImage}
-                      alt=""
+                    <BlogMediaImage
+                      src={topImage}
+                      alt={post.title}
                       fill
                       className="object-cover object-center"
                       sizes="(max-width: 1024px) 100vw, 66vw"
+                      priority
                     />
                   </div>
                 ) : null}
 
                 <div className="prose prose-lg prose-headings:font-bold prose-a:text-teal-600 max-w-none text-gray-800">
-                  <RichTextContent content={post.content} />
+                  <BlogRichTextContent content={post.content} />
                 </div>
               </div>
             </article>
@@ -225,7 +164,6 @@ export default async function BlogDetail({
             </div>
           </div>
 
-          {/* 側欄推薦 */}
           <aside className="lg:col-span-4">
             <div className="sticky top-28 rounded-[12px] border border-gray-100 bg-white p-6 shadow-sm">
               <h2 className="mb-6 flex items-center gap-3 text-xl font-bold text-gray-900">
@@ -245,8 +183,8 @@ export default async function BlogDetail({
                       className="group block"
                     >
                       <div className="relative mb-3 aspect-[16/10] overflow-hidden rounded-[12px] bg-gray-100">
-                        <Image
-                          src={rec.cover_image || PLACEHOLDER}
+                        <BlogMediaImage
+                          src={rec.content_image || rec.cover_image}
                           alt={rec.title}
                           fill
                           className="object-cover object-center transition duration-500 group-hover:scale-105"
@@ -254,14 +192,8 @@ export default async function BlogDetail({
                         />
                       </div>
                       <div className="mb-1 flex flex-wrap items-center gap-1.5 text-xs">
-                        {rec.region ? (
-                          <span className="font-medium text-teal-600">
-                            {rec.region}
-                          </span>
-                        ) : null}
                         <span className="text-amber-600">
-                          {rec.region ? "・" : ""}
-                          {BLOG_CATEGORY_MAP[rec.category_id] || "其他"}
+                          {BLOG_CATEGORY_MAP[rec.category_id ?? 0] || "其他"}
                         </span>
                       </div>
                       <h3 className="line-clamp-2 text-base leading-snug font-semibold text-gray-900 transition-colors group-hover:text-teal-600">

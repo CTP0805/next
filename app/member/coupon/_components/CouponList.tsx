@@ -5,8 +5,6 @@ import type { MemberCouponView } from "../types";
 import {
   calcCouponDiscount,
   copyText,
-  couponCategoryLabel,
-  couponCategoryTone,
   couponStatusLabel,
   formatCurrency,
   formatDate,
@@ -70,9 +68,7 @@ export default function CouponList({
                 <span className="text-lg font-bold leading-tight">
                   {formatDiscount(coupon)}
                 </span>
-                <span className="mt-1 text-[10px] opacity-90">
-                  {coupon.discount_type === "percent" ? "折扣" : "折抵"}
-                </span>
+                <span className="mt-1 text-[10px] opacity-90">折抵</span>
               </div>
 
               <div className="flex min-w-0 flex-1 flex-col justify-between gap-2 p-4">
@@ -93,11 +89,6 @@ export default function CouponList({
                       }`}
                     >
                       {couponStatusLabel(coupon.status)}
-                    </span>
-                    <span
-                      className={`rounded-[12px] px-2 py-0.5 text-[10px] font-medium ${couponCategoryTone(coupon.category)}`}
-                    >
-                      {couponCategoryLabel(coupon.category)}
                     </span>
                     {isSelected ? (
                       <span className="rounded-[12px] bg-cyan-50 px-2 py-0.5 text-[10px] font-medium text-cyan-700">
@@ -122,22 +113,10 @@ export default function CouponList({
                       有效期限：{formatDate(coupon.starts_at)} ~{" "}
                       {formatDate(coupon.expires_at)}
                     </p>
-                    <p>適用：{coupon.scope_label}</p>
-                    {coupon.min_order_amount != null ? (
-                      <p>
-                        低消 {formatCurrency(coupon.min_order_amount)}
-                        {coupon.max_discount != null
-                          ? ` · 最高折 ${formatCurrency(coupon.max_discount)}`
-                          : ""}
-                      </p>
-                    ) : (
-                      <p>
-                        無最低消費
-                        {coupon.max_discount != null
-                          ? ` · 最高折 ${formatCurrency(coupon.max_discount)}`
-                          : ""}
-                      </p>
-                    )}
+                    <p>
+                      低消 {formatCurrency(coupon.min_order_amount)} · 折抵{" "}
+                      {formatCurrency(coupon.discount_value)}
+                    </p>
                     {coupon.order_id ? (
                       <p>使用訂單：{coupon.order_id}</p>
                     ) : null}
@@ -213,10 +192,6 @@ export default function CouponList({
                       {previewDiscount === 0 && coupon.min_order_amount
                         ? `（未達低消 ${formatCurrency(coupon.min_order_amount)}）`
                         : ""}
-                    </p>
-                    <p className="text-gray-400">
-                      member_coupons.id = {coupon.member_coupon_id} · coupon_id
-                      = {coupon.coupon_id}
                     </p>
                   </div>
                 ) : null}

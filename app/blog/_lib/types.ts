@@ -1,26 +1,28 @@
 import { pinyin } from "pinyin-pro";
 
 /**
- * 部落格文章 — 對齊 DB posts 表
+ * 部落格文章 — 對齊 DB posts 表（express/databases/schema.sql）
  *
- * id            INT PK 自動遞增
- * author_id     INT FK → 會員 member.id
- * category_id   INT FK → 商品／文章類型
- * title         VARCHAR(20) 必填
- * slug          TEXT 必填、唯一
- * content       TEXT 必填（Markdown）
- * excerpt       TEXT 可空（列表摘要）
- * cover_image   TEXT 可空（封面圖）
- * content_image TEXT 可空（內文最上方圖）
- * published_at  DATETIME 可空（審核通過／上架時填入）
- * updated_at    DATETIME 必填
+ * id            BIGINT PK 自動遞增
+ * author_id     INT FK → member.id
+ * category_id   INT（邏輯對應 experience_categories）
+ * title         VARCHAR(20)
+ * slug          VARCHAR(255) UNIQUE
+ * content       LONGTEXT
+ * excerpt       TEXT NULL
+ * cover_image   TEXT NULL
+ * content_image TEXT NULL
  * status        VARCHAR(20) draft | pending_review | published | rejected
- *
- * region：前端列表篩選用（非 DB 規格，可選）
+ * published_at  DATETIME NULL
+ * updated_at    DATETIME
+ * created_at    DATETIME
  */
 
 export type BlogPostStatus =
-  "draft" | "pending_review" | "published" | "rejected";
+  | "draft"
+  | "pending_review"
+  | "published"
+  | "rejected";
 
 export const BLOG_STATUS_LABEL: Record<BlogPostStatus, string> = {
   draft: "草稿",
@@ -34,32 +36,18 @@ export const BLOG_TITLE_MAX = 20;
 
 export interface BlogPost {
   id: number;
-  /** FK 會員 member.id */
   author_id: number;
-  /** FK 商品／文章類型 */
-  category_id: number;
+  category_id: number | null;
   title: string;
   slug: string;
-  /** Markdown 內文 */
   content: string;
   excerpt: string | null;
   cover_image: string | null;
-  /** 內文最上方圖片 */
   content_image: string | null;
-  /** 上架時間；未上架為 null */
   published_at: string | null;
   updated_at: string;
+  created_at?: string;
   status: BlogPostStatus;
-  /** 已上架文章的待審查修訂版本，會指向原文章 ID。 */
-  review_of_id?: number | null;
-  /**
-   * 列表地區篩選（前端用；正式 DB 若無此欄可之後移除）
-   */
-  region?: string | null;
-}
-
-export interface BlogPostsFile {
-  posts: BlogPost[];
 }
 
 export const BLOG_REGIONS = [
@@ -71,6 +59,7 @@ export const BLOG_REGIONS = [
   "巴賽隆納",
 ] as const;
 
+/** 對齊 experience_categories seed */
 export const BLOG_CATEGORY_MAP: Record<number, string> = {
   1: "古蹟巡禮",
   2: "藝文導覽",
@@ -87,7 +76,6 @@ export type BlogPostInput = {
   excerpt?: string | null;
   cover_image?: string | null;
   content_image?: string | null;
-  region?: string | null;
   category_id: number;
   status?: BlogPostStatus;
   author_id?: number;
@@ -97,9 +85,8 @@ const HAS_CJK = /[\u4e00-\u9fff]/;
 
 /**
  * 標題 → 網址別名
- * - 含中文：轉無聲調羅馬拼音（例：大英博物館 → da-ying-bo-wu-guan）
- * - 拼音結果為空時：用 percent-encoding 後備（% 符號會保留於別名中）
- * - 英文／數字：正規化為 kebab-case
+ * - 含中文：轉無聲調羅馬拼音
+ * - 英文／數字：kebab-case
  */
 export function slugifyTitle(title: string): string {
   const trimmed = title.trim();
@@ -120,7 +107,6 @@ export function slugifyTitle(title: string): string {
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
 
-  // 拼音無法產生有效別名時，改用 percent-encoding
   if (!base && HAS_CJK.test(trimmed)) {
     base = encodeURIComponent(trimmed)
       .toLowerCase()
@@ -130,16 +116,4 @@ export function slugifyTitle(title: string): string {
   }
 
   return base || `post-${Date.now()}`;
-}
-
-/** 上架才寫 published_at */
-export function resolvePublishedAt(
-  status: BlogPostStatus,
-  previous: string | null | undefined,
-  nowIso: string,
-): string | null {
-  if (status === "published") {
-    return previous ?? nowIso;
-  }
-  return null;
 }

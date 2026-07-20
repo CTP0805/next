@@ -22,7 +22,7 @@ export default function TransactionList({ items }: TransactionListProps) {
   if (items.length === 0) {
     return (
       <div className="bg-white px-5 py-16 text-center text-sm text-gray-400">
-        目前沒有符合條件的酷幣紀錄
+        目前沒有符合條件的 M幣紀錄
       </div>
     );
   }

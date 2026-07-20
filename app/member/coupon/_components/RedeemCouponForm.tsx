@@ -39,7 +39,7 @@ export default function RedeemCouponForm({
         type="text"
         value={code}
         onChange={(e) => setCode(e.target.value.toUpperCase())}
-        placeholder="輸入優惠券代碼，例如 SUMMER80"
+        placeholder="輸入優惠券代碼，例如 C1"
         disabled={disabled || submitting}
         className="input input-bordered input-sm h-10 w-full flex-1 bg-white text-sm text-gray-800"
         autoComplete="off"

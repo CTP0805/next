@@ -9,36 +9,31 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import type { MemberLevelPayload } from "./api";
 
 interface MemberLevelRightPanelProps {
+  data: MemberLevelPayload;
   onOpenDetail: () => void;
 }
 
 const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
+  data,
   onOpenDetail,
 }) => {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
 
-  const faqs = [
-    {
-      question: "如何維持黃金會員資格？",
-      answer:
-        "會員資格有效期為一年。您只需要在一年內完成至少三次體驗預訂，或累積消費滿 NT$ 5,000，即可自動續期一年的黃金會員資格。",
-    },
-    {
-      question: "晉升白金會員的具體條件是什麼？",
-      answer:
-        "目前為黃金會員，需再完成 3 筆訂單或累積消費 NT$ 12,000 即可升級為白金會員。",
-    },
-    {
-      question: "黃金優惠碼可以與優惠券同時使用嗎？",
-      answer: "可以！黃金會員的專屬優惠碼可與平台其他優惠券、折扣碼同時併用。",
-    },
-  ];
+  const faqs = data.faqs.slice(0, 3).map((f) => ({
+    question: f.q,
+    answer: f.a,
+  }));
 
   const toggleFAQ = (index: number) => {
     setOpenFAQ(openFAQ === index ? null : index);
   };
+
+  const progress = Math.min(100, Math.max(0, data.progress_percent));
+  const nextLabel = data.next_level ?? "已達最高等級";
+  const remainingSpendText = `NT$ ${data.remaining_spend.toLocaleString("zh-TW")}`;
 
   return (
     <div className="w-full min-w-0">
@@ -52,10 +47,11 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
                 ELITE STATUS
               </span>
             </div>
-            <h2 className="text-4xl font-bold tracking-tight">黃金會員</h2>
+            <h2 className="text-4xl font-bold tracking-tight">
+              {data.current_level}級會員
+            </h2>
           </div>
 
-          {/* 會員詳情按鈕：type=button + 足夠觸控區，避免被表單/外層攔截 */}
           <button
             type="button"
             onClick={(e) => {
@@ -69,38 +65,53 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
           </button>
         </div>
 
-        {/* 進度 */}
         <div className="mt-8">
           <div className="mb-2 flex justify-between text-sm">
             <span>尚需進度</span>
             <span>
-              下一級：<span className="font-semibold">白金會員</span>
+              下一級：
+              <span className="font-semibold">
+                {data.next_level ? `${data.next_level}級會員` : nextLabel}
+              </span>
             </span>
           </div>
           <div className="mb-3 h-2.5 overflow-hidden rounded-[12px] bg-white/30">
             <div
               className="h-full rounded-[12px] bg-white transition-all"
-              style={{ width: "65%" }}
+              style={{ width: `${progress}%` }}
             />
           </div>
           <p className="text-sm text-white/90">
-            再完成 <span className="font-semibold">3 筆訂單</span> 或消費{" "}
-            <span className="font-semibold">NT$ 12,000</span> 即可升級。
+            {data.next_level ? (
+              <>
+                再完成{" "}
+                <span className="font-semibold">
+                  {data.remaining_orders} 筆訂單
+                </span>{" "}
+                或消費{" "}
+                <span className="font-semibold">{remainingSpendText}</span>{" "}
+                即可升級。
+              </>
+            ) : (
+              <>您已達到最高等級，感謝支持。</>
+            )}
           </p>
         </div>
       </div>
 
-      {/* 黃金會員權益 */}
+      {/* 權益摘要（維持三欄版面） */}
       <div className="mb-8">
-        <h3 className="mb-5 text-xl font-bold text-gray-900">黃金會員權益</h3>
+        <h3 className="mb-5 text-xl font-bold text-gray-900">
+          {data.current_level}級會員權益
+        </h3>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="rounded-[12px] border border-gray-200 p-5 transition-all hover:shadow-md">
             <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-[12px] bg-teal-100">
               <Gift className="h-5 w-5 text-teal-600" />
             </div>
-            <h4 className="mb-1 font-semibold">黃金專屬優惠</h4>
+            <h4 className="mb-1 font-semibold">專屬回饋</h4>
             <p className="text-sm text-gray-600">
-              精選體驗享自享額外 3% 折扣，不定期發送專屬折扣碼
+              {data.benefit_rows[0]?.values[data.current_level] ?? "會員回饋"}
             </p>
           </div>
 
@@ -110,7 +121,8 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
             </div>
             <h4 className="mb-1 font-semibold">會員專屬優惠券</h4>
             <p className="text-sm text-gray-600">
-              升等禮 $200 優惠券 + 每月專屬優惠券
+              {data.benefit_rows[3]?.values[data.current_level] ??
+                "升等禮優惠券"}
             </p>
           </div>
 
@@ -120,9 +132,7 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
             </div>
             <h4 className="mb-1 font-semibold">專屬會員折扣</h4>
             <p className="text-sm text-gray-600">
-              獨享黃金會員價（95折）
-              <br />
-              多項熱門體驗享優先預訂權
+              {data.benefit_rows[2]?.values[data.current_level] ?? "會員價"}
             </p>
           </div>
         </div>

@@ -1,22 +1,19 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import type { BlogPost } from "../_lib/types";
 import { BLOG_CATEGORY_MAP, BLOG_STATUS_LABEL } from "../_lib/types";
+import BlogMediaImage from "./BlogMediaImage";
 
 interface BlogPostCardProps {
   post: BlogPost;
   footer?: ReactNode;
 }
 
-const PLACEHOLDER = "/images/carousel1.jpg";
-
 /**
  * 等高校牌：固定圖片比例 + 標題/摘要固定行數 + 底部標籤貼底
  */
 export default function BlogPostCard({ post, footer }: BlogPostCardProps) {
-  const category = BLOG_CATEGORY_MAP[post.category_id] || "其他";
-  const cover = post.cover_image || PLACEHOLDER;
+  const category = BLOG_CATEGORY_MAP[post.category_id ?? 0] || "其他";
   const dateLabel = post.published_at
     ? new Date(post.published_at).toLocaleDateString("zh-TW")
     : BLOG_STATUS_LABEL[post.status];
@@ -28,23 +25,21 @@ export default function BlogPostCard({ post, footer }: BlogPostCardProps) {
         className="group flex min-h-0 flex-1 flex-col"
       >
         <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-gray-100">
-          <Image
-            src={cover}
+          <BlogMediaImage
+            src={post.content_image || post.cover_image}
             alt={post.title}
             fill
             className="object-cover object-center transition duration-700 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-          {post.region ? (
-            <span className="absolute bottom-3 left-3 rounded-[12px] bg-white/95 px-3 py-1 text-xs font-semibold text-teal-700 shadow-sm backdrop-blur">
-              {post.region}
-            </span>
-          ) : null}
+          <span className="absolute bottom-3 left-3 rounded-[12px] bg-white/95 px-3 py-1 text-xs font-semibold text-teal-700 shadow-sm backdrop-blur">
+            {category}
+          </span>
         </div>
 
         <div className="flex flex-1 flex-col p-5 sm:p-6">
-          <h3 className="mb-2 line-clamp-2 min-h-[3.25rem] text-lg font-semibold leading-snug text-gray-900 transition-colors group-hover:text-teal-600 sm:min-h-[3.5rem] sm:text-xl">
+          <h3 className="mb-2 line-clamp-2 min-h-[3.25rem] text-lg leading-snug font-semibold text-gray-900 transition-colors group-hover:text-teal-600 sm:min-h-[3.5rem] sm:text-xl">
             {post.title}
           </h3>
 
