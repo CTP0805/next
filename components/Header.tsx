@@ -85,6 +85,7 @@ export default function Navbar() {
 
   const navStyle = isHomePage && !isScrolled ? "bg-white/20" : "bg-[#45cad5]";
   const navPosition = isHomePage ? "fixed" : "sticky";
+  console.log(auth);
 
   return (
     <nav
@@ -170,12 +171,11 @@ export default function Navbar() {
             >
               {/* 用戶資訊區 */}
               <li className="mb-2 border-b">
-                <div className="relative flex items-center gap-3 px-4 py-3">
-                  <Image
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <img
                     src="/images/avatar-test.png"
                     alt="用戶頭像"
                     className="h-12 w-12 flex-shrink-0 rounded-full object-cover"
-                    fill
                   />
                   <div>
                     <div className="font-semibold">王大明</div>
