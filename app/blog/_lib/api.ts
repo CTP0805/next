@@ -1,9 +1,13 @@
 /**
  * 部落格 — 前端 API 層（對應 Express /api/blog）
- * 一律用 getApiServer()，避免 SSR／打包時 API_SERVER 被寫死成錯誤位址
+ * 寫法參考 member/profile：credentials include + success/data 解析
  */
 import { getApiServer } from "@/config/api-path";
-import type { BlogPost, BlogPostInput } from "./types";
+import type {
+  BlogEligibleOrder,
+  BlogPost,
+  BlogPostInput,
+} from "./types";
 
 type ListResponse = {
   success?: boolean;
@@ -15,6 +19,12 @@ type OneResponse = {
   success?: boolean;
   message?: string;
   post?: BlogPost;
+};
+
+type OrdersResponse = {
+  success?: boolean;
+  message?: string;
+  orders?: BlogEligibleOrder[];
 };
 
 async function readJson<T>(response: Response): Promise<T> {
@@ -43,7 +53,7 @@ function apiBase(): string {
   return getApiServer();
 }
 
-/** GET /api/blog */
+/** GET /api/blog — 公開已上架 */
 export async function fetchBlogPosts(params?: {
   status?: string;
   category_id?: number;
@@ -76,7 +86,54 @@ export async function fetchBlogPosts(params?: {
   return data.posts ?? [];
 }
 
-/** GET /api/blog/:id */
+/** GET /api/blog/mine */
+export async function fetchMyBlogPosts(): Promise<BlogPost[]> {
+  const response = await fetch(`${apiBase()}/api/blog/mine`, {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+  const data = await readJson<ListResponse>(response);
+  if (!response.ok) {
+    throw new Error(data.message || "讀取我的文章失敗");
+  }
+  return data.posts ?? [];
+}
+
+/** GET /api/blog/pending-review */
+export async function fetchPendingReviewPosts(
+  status = "pending_review",
+): Promise<BlogPost[]> {
+  const qs = new URLSearchParams({ status });
+  const response = await fetch(
+    `${apiBase()}/api/blog/pending-review?${qs}`,
+    {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    },
+  );
+  const data = await readJson<ListResponse>(response);
+  if (!response.ok) {
+    throw new Error(data.message || "讀取審查佇列失敗");
+  }
+  return data.posts ?? [];
+}
+
+/** GET /api/blog/eligible-orders */
+export async function fetchEligibleOrders(): Promise<BlogEligibleOrder[]> {
+  const response = await fetch(`${apiBase()}/api/blog/eligible-orders`, {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+  const data = await readJson<OrdersResponse>(response);
+  if (!response.ok) {
+    throw new Error(data.message || "讀取可撰寫訂單失敗");
+  }
+  return data.orders ?? [];
+}
+
 export async function fetchBlogPostById(id: number): Promise<BlogPost> {
   let response: Response;
   try {
@@ -95,7 +152,6 @@ export async function fetchBlogPostById(id: number): Promise<BlogPost> {
   return data.post;
 }
 
-/** GET /api/blog/slug/:slug — 已上架文章 */
 export async function fetchBlogPostBySlug(slug: string): Promise<BlogPost> {
   let response: Response;
   try {
@@ -117,7 +173,6 @@ export async function fetchBlogPostBySlug(slug: string): Promise<BlogPost> {
   return data.post;
 }
 
-/** POST /api/blog（需登入 Cookie） */
 export async function createBlogPost(
   input: BlogPostInput,
 ): Promise<BlogPost> {
@@ -145,7 +200,6 @@ export async function createBlogPost(
   return data.post;
 }
 
-/** PUT /api/blog/:id（需登入） */
 export async function updateBlogPost(
   id: number,
   input: BlogPostInput,
@@ -174,7 +228,25 @@ export async function updateBlogPost(
   return data.post;
 }
 
-/** DELETE /api/blog/:id（需登入） */
+/** POST /api/blog/:id/review — 管理者通過／駁回 */
+export async function reviewBlogPost(
+  id: number,
+  action: "approve" | "reject",
+  note?: string,
+): Promise<BlogPost> {
+  const response = await fetch(`${apiBase()}/api/blog/${id}/review`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, note: note ?? "" }),
+  });
+  const data = await readJson<OneResponse>(response);
+  if (!response.ok || !data.post) {
+    throw new Error(data.message || "審查操作失敗");
+  }
+  return data.post;
+}
+
 export async function deleteBlogPost(id: number): Promise<void> {
   let response: Response;
   try {
@@ -203,7 +275,6 @@ type UploadResponse = {
   url?: string;
 };
 
-/** POST /api/blog/upload — multipart field: image */
 export async function uploadBlogImage(file: File): Promise<string> {
   const form = new FormData();
   form.append("image", file);

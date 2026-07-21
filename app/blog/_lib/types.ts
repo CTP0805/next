@@ -1,21 +1,8 @@
 import { pinyin } from "pinyin-pro";
 
 /**
- * 部落格文章 — 對齊 DB posts 表（express/databases/schema.sql）
- *
- * id            BIGINT PK 自動遞增
- * author_id     INT FK → member.id
- * category_id   INT（邏輯對應 experience_categories）
- * title         VARCHAR(20)
- * slug          VARCHAR(255) UNIQUE
- * content       LONGTEXT
- * excerpt       TEXT NULL
- * cover_image   TEXT NULL
- * content_image TEXT NULL
- * status        VARCHAR(20) draft | pending_review | published | rejected
- * published_at  DATETIME NULL
- * updated_at    DATETIME
- * created_at    DATETIME
+ * 部落格文章 — 對齊 DB posts 表
+ * ⭐ 阿偉：order_id／order_title 綁已完成訂單；review_note 管理者註解
  */
 
 export type BlogPostStatus =
@@ -48,6 +35,13 @@ export interface BlogPost {
   updated_at: string;
   created_at?: string;
   status: BlogPostStatus;
+  /** 綁定 order_main.id */
+  order_id?: string | null;
+  /** 訂單／體驗名稱（分類顯示，不可改） */
+  order_title?: string | null;
+  /** 管理者審查註解 */
+  review_note?: string | null;
+  author_name?: string | null;
 }
 
 export const BLOG_REGIONS = [
@@ -59,7 +53,7 @@ export const BLOG_REGIONS = [
   "巴賽隆納",
 ] as const;
 
-/** 對齊 experience_categories seed */
+/** 舊分類（相容顯示） */
 export const BLOG_CATEGORY_MAP: Record<number, string> = {
   1: "古蹟巡禮",
   2: "藝文導覽",
@@ -69,6 +63,14 @@ export const BLOG_CATEGORY_MAP: Record<number, string> = {
   6: "娛樂與夜生活",
 };
 
+export type BlogEligibleOrder = {
+  order_id: string;
+  order_title: string;
+  final_amount: number;
+  created_at: string | null;
+  order_status: string;
+};
+
 export type BlogPostInput = {
   title: string;
   slug?: string;
@@ -76,18 +78,15 @@ export type BlogPostInput = {
   excerpt?: string | null;
   cover_image?: string | null;
   content_image?: string | null;
-  category_id: number;
+  /** 新建必填：已完成訂單 */
+  order_id?: string;
+  category_id?: number | null;
   status?: BlogPostStatus;
   author_id?: number;
 };
 
 const HAS_CJK = /[\u4e00-\u9fff]/;
 
-/**
- * 標題 → 網址別名
- * - 含中文：轉無聲調羅馬拼音
- * - 英文／數字：kebab-case
- */
 export function slugifyTitle(title: string): string {
   const trimmed = title.trim();
   if (!trimmed) return `post-${Date.now()}`;
@@ -116,4 +115,10 @@ export function slugifyTitle(title: string): string {
   }
 
   return base || `post-${Date.now()}`;
+}
+
+/** 顯示分類：優先訂單名稱 */
+export function blogCategoryLabel(post: BlogPost): string {
+  if (post.order_title?.trim()) return post.order_title.trim();
+  return BLOG_CATEGORY_MAP[post.category_id ?? 0] || "其他";
 }

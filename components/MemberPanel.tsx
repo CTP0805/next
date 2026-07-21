@@ -18,10 +18,11 @@ import {
   FaUser,
   FaXmark,
 } from "react-icons/fa6";
-import { FaEdit } from "react-icons/fa";
+import { FaEdit, FaClipboardCheck } from "react-icons/fa";
 import { API_SERVER } from "@/config/api-path";
 import toast from "react-hot-toast";
 import { resumeToPipeableStream } from "react-dom/server";
+import { useAuth } from "@/contexts/auth-context";
 
 interface MemberList {
   label: string;
@@ -29,9 +30,8 @@ interface MemberList {
   href: string;
 }
 
-
-
-const memberLists: MemberList[] = [
+/** ⭐ 阿偉：基礎選單；文章管理／審查依 role 在元件內追加 */
+const memberListsBase: MemberList[] = [
   {
     label: "會員資料",
     icon: <FaUser />,
@@ -67,12 +67,6 @@ const memberLists: MemberList[] = [
     icon: <FaClockRotateLeft />,
     href: "/member/recently-viewed",
   },
-  {
-    label: "管理文章",
-    icon: <FaEdit />,
-    href: "/member/edit-post",
-  },
-
 ];
 
 interface AvatarUploadResponse {
@@ -154,6 +148,27 @@ function createCroppedImage(imageSrc: string, crop: Area): Promise<File> {
 
 export default function MemberPanel() {
   const pathname = usePathname();
+  const { auth } = useAuth();
+
+  // ⭐ 阿偉：依 role 顯示「管理文章」或「文章審查」
+  const memberLists: MemberList[] = [
+    ...memberListsBase,
+    ...(auth.role === "管理者"
+      ? [
+          {
+            label: "文章審查",
+            icon: <FaClipboardCheck />,
+            href: "/member/blog-review",
+          } satisfies MemberList,
+        ]
+      : [
+          {
+            label: "管理文章",
+            icon: <FaEdit />,
+            href: "/member/edit-post",
+          } satisfies MemberList,
+        ]),
+  ];
 
   // 真正的 input 檔案上傳框被隱藏 改用 fileInputRef 控制
   const fileInputRef = useRef<HTMLInputElement>(null);

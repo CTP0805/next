@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
-import BlogPostForm from "../../_components/BlogPostForm";
-import { fetchBlogPosts } from "../../_lib/api";
+import BlogPostEditor from "../../_components/BlogPostEditor";
+import { fetchMyBlogPosts } from "../../_lib/api";
 import type { BlogPost } from "../../_lib/types";
 
 export default function BlogEditPage() {
@@ -36,7 +36,17 @@ export default function BlogEditPage() {
           return;
         }
 
-        const posts = await fetchBlogPosts();
+        // ⭐ 只從「我的文章」載入（含草稿／待審／退回）
+        if (auth.role === "管理者") {
+          if (!cancelled) {
+            setForbidden(true);
+            setError("管理者不可編輯文章內容，請至文章審查");
+            setPost(null);
+          }
+          return;
+        }
+
+        const posts = await fetchMyBlogPosts();
         const found = posts.find((p) => p.slug === slug) ?? null;
         if (cancelled) return;
         if (!found) {
@@ -61,7 +71,7 @@ export default function BlogEditPage() {
     return () => {
       cancelled = true;
     };
-  }, [slug, authInit, isAuthenticated, auth.id]);
+  }, [slug, authInit, isAuthenticated, auth.id, auth.role]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -129,15 +139,16 @@ export default function BlogEditPage() {
               </Link>
             </div>
           ) : (
-            <BlogPostForm
+            <BlogPostEditor
               key={post.id}
               mode="edit"
+              variant="standalone"
               initial={post}
               onSuccess={(updated) => {
                 router.push(
                   updated.status === "published"
                     ? `/blog/${updated.slug}`
-                    : "/blog/manage",
+                    : "/member/edit-post",
                 );
                 router.refresh();
               }}

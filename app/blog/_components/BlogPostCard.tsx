@@ -1,7 +1,10 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import type { BlogPost } from "../_lib/types";
-import { BLOG_CATEGORY_MAP, BLOG_STATUS_LABEL } from "../_lib/types";
+import {
+  BLOG_STATUS_LABEL,
+  blogCategoryLabel,
+} from "../_lib/types";
 import BlogMediaImage from "./BlogMediaImage";
 
 interface BlogPostCardProps {
@@ -13,7 +16,7 @@ interface BlogPostCardProps {
  * 等高校牌：固定圖片比例 + 標題/摘要固定行數 + 底部標籤貼底
  */
 export default function BlogPostCard({ post, footer }: BlogPostCardProps) {
-  const category = BLOG_CATEGORY_MAP[post.category_id ?? 0] || "其他";
+  const category = blogCategoryLabel(post);
   const dateLabel = post.published_at
     ? new Date(post.published_at).toLocaleDateString("zh-TW")
     : BLOG_STATUS_LABEL[post.status];

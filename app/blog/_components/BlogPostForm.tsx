@@ -6,17 +6,20 @@ import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "@/contexts/auth-context";
 import {
   createBlogPost,
+  fetchEligibleOrders,
   updateBlogPost,
   uploadBlogImage,
 } from "../_lib/api";
 import { persistContentImagesInHtml } from "../_lib/content-images";
 import { resolveBlogMediaUrl } from "../_lib/media";
-import type { BlogPost, BlogPostInput, BlogPostStatus } from "../_lib/types";
-import {
-  BLOG_CATEGORY_MAP,
-  BLOG_TITLE_MAX,
-  slugifyTitle,
+import type {
+  BlogEligibleOrder,
+  BlogPost,
+  BlogPostInput,
+  BlogPostStatus,
 } from "../_lib/types";
+import { BLOG_TITLE_MAX, slugifyTitle } from "../_lib/types";
+import BlogCoverCropDialog from "./BlogCoverCropDialog";
 
 const CKEditorWrapper = dynamic(() => import("@/components/CKEditorWrapper"), {
   ssr: false,
@@ -27,10 +30,17 @@ const CKEditorWrapper = dynamic(() => import("@/components/CKEditorWrapper"), {
   ),
 });
 
-interface BlogPostFormProps {
+export interface BlogPostFormProps {
   mode: "create" | "edit";
   initial?: BlogPost;
   onSuccess?: (post: BlogPost) => void;
+  /**
+   * member：嵌在會員中心框內（不重複 Toaster 可選）
+   * standalone：部落格獨立頁
+   */
+  variant?: "member" | "standalone";
+  /** 嵌在會員中心時不渲染第二個 Toaster */
+  hideToaster?: boolean;
 }
 
 const fieldClass =
@@ -58,15 +68,17 @@ function hasMeaningfulContent(html: string): boolean {
 }
 
 /**
- * 部落格文章表單
- * - 選圖：本機預覽
- * - 儲存草稿／送出審查：都會寫入 Express → MySQL posts
- * - 本機封面檔：送出審查時上傳；草稿沿用舊圖或略過
+ * 部落格文章編輯表單（共用）
+ * - 掛載於 member/edit-post（會員中心內嵌）與 blog/new（獨立頁）
+ * - 封面：選圖 → 裁切／縮放（react-easy-crop）→ 預覽
+ * - 儲存草稿／送出審查 → Express posts
  */
 export default function BlogPostForm({
   mode,
   initial,
   onSuccess,
+  variant = "standalone",
+  hideToaster = false,
 }: BlogPostFormProps) {
   const { auth, isAuthenticated, authInit } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -78,27 +90,63 @@ export default function BlogPostForm({
   );
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string>("");
-  const [categoryId, setCategoryId] = useState(
-    () => Number(initial?.category_id) || 1,
+  /** 裁切用：原始本機圖 object URL */
+  const [cropSourceUrl, setCropSourceUrl] = useState<string | null>(null);
+  /** ⭐ 分類改為訂單名稱（create 可選；edit 鎖定） */
+  const [orderId, setOrderId] = useState(initial?.order_id ?? "");
+  const [orderTitle, setOrderTitle] = useState(initial?.order_title ?? "");
+  const [eligibleOrders, setEligibleOrders] = useState<BlogEligibleOrder[]>(
+    [],
   );
+  const [ordersLoading, setOrdersLoading] = useState(mode === "create");
   const [content, setContent] = useState(initial?.content ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
-
-  const categoryOptions = useMemo(
-    () =>
-      Object.entries(BLOG_CATEGORY_MAP).map(([id, label]) => ({
-        id: Number(id),
-        label,
-      })),
-    [],
-  );
 
   useEffect(() => {
     return () => {
       if (localPreviewUrl) URL.revokeObjectURL(localPreviewUrl);
     };
   }, [localPreviewUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (cropSourceUrl) URL.revokeObjectURL(cropSourceUrl);
+    };
+  }, [cropSourceUrl]);
+
+  useEffect(() => {
+    if (mode !== "create" || !authInit || !isAuthenticated) {
+      setOrdersLoading(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setOrdersLoading(true);
+      try {
+        const list = await fetchEligibleOrders();
+        if (!cancelled) setEligibleOrders(list);
+      } catch (e) {
+        if (!cancelled) {
+          setEligibleOrders([]);
+          toast.error(
+            e instanceof Error ? e.message : "無法載入可撰寫訂單",
+          );
+        }
+      } finally {
+        if (!cancelled) setOrdersLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [mode, authInit, isAuthenticated]);
+
+  const selectedOrderLabel = useMemo(() => {
+    if (mode === "edit") return orderTitle || orderId || "（未綁定訂單）";
+    const found = eligibleOrders.find((o) => o.order_id === orderId);
+    return found?.order_title ?? "";
+  }, [mode, orderId, orderTitle, eligibleOrders]);
 
   const previewSrc = localPreviewUrl
     ? localPreviewUrl
@@ -125,11 +173,28 @@ export default function BlogPostForm({
       return;
     }
 
+    // 進入裁切：先釋放上一張裁切來源
+    if (cropSourceUrl) URL.revokeObjectURL(cropSourceUrl);
+    setCropSourceUrl(URL.createObjectURL(image));
+  }
+
+  function handleCropConfirm(file: File) {
+    if (cropSourceUrl) {
+      URL.revokeObjectURL(cropSourceUrl);
+      setCropSourceUrl(null);
+    }
     revokeLocalPreview();
-    setLocalPreviewUrl(URL.createObjectURL(image));
-    setPendingFile(image);
+    setLocalPreviewUrl(URL.createObjectURL(file));
+    setPendingFile(file);
     setSavedImageRef("");
-    toast.success("已預覽圖片（送出審查時上傳封面）");
+    toast.success("封面已裁切預覽（送出審查時上傳）");
+  }
+
+  function handleCropCancel() {
+    if (cropSourceUrl) {
+      URL.revokeObjectURL(cropSourceUrl);
+      setCropSourceUrl(null);
+    }
   }
 
   function clearImage() {
@@ -211,9 +276,8 @@ export default function BlogPostForm({
       return;
     }
 
-    const catId = Number(categoryId);
-    if (!Number.isFinite(catId) || catId <= 0) {
-      toast.error("請選擇分類");
+    if (mode === "create" && !orderId.trim()) {
+      toast.error("請選擇訂單（作為文章分類，選定後不可改）");
       return;
     }
 
@@ -246,7 +310,7 @@ export default function BlogPostForm({
         excerpt: excerpt.trim() || null,
         cover_image: imageValue,
         content_image: imageValue,
-        category_id: catId,
+        order_id: mode === "create" ? orderId.trim() : undefined,
         author_id: auth.id,
         status,
       };
@@ -281,7 +345,16 @@ export default function BlogPostForm({
       }}
       className="space-y-6"
     >
-      <Toaster position="top-center" />
+      {!hideToaster ? <Toaster position="top-center" /> : null}
+
+      {cropSourceUrl ? (
+        <BlogCoverCropDialog
+          open
+          imageSrc={cropSourceUrl}
+          onCancel={handleCropCancel}
+          onConfirm={handleCropConfirm}
+        />
+      ) : null}
 
       {!authInit ? (
         <p className="rounded-[12px] bg-slate-50 px-4 py-3 text-sm text-gray-500">
@@ -289,14 +362,13 @@ export default function BlogPostForm({
         </p>
       ) : !isAuthenticated ? (
         <p className="rounded-[12px] bg-red-50 px-4 py-3 text-sm text-red-700">
-          尚未登入：儲存文章需要登入（Cookie 會送到 Express :3001）。請先到登入頁登入。
+          尚未登入：儲存文章需要登入。請先到登入頁登入。
         </p>
-      ) : (
+      ) : variant === "standalone" ? (
         <p className="rounded-[12px] bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          已登入：{auth.name || auth.email}（ID {auth.id}），儲存將寫入後端
-          posts 資料表。
+          已登入：{auth.name || auth.email}（ID {auth.id}）
         </p>
-      )}
+      ) : null}
 
       {mode === "edit" && initial?.status === "published" ? (
         <p className="rounded-[12px] bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -339,21 +411,49 @@ export default function BlogPostForm({
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
-          <label htmlFor="blog-category" className={labelClass}>
-            分類
+          <label htmlFor="blog-order" className={labelClass}>
+            分類（訂單名稱） <span className="text-red-500">*</span>
           </label>
-          <select
-            id="blog-category"
-            className={fieldClass}
-            value={categoryId}
-            onChange={(event) => setCategoryId(Number(event.target.value))}
-          >
-            {categoryOptions.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.label}
+          {mode === "edit" ? (
+            <input
+              id="blog-order"
+              type="text"
+              className={fieldClass}
+              value={selectedOrderLabel}
+              disabled
+              readOnly
+            />
+          ) : (
+            <select
+              id="blog-order"
+              className={fieldClass}
+              value={orderId}
+              onChange={(event) => {
+                const id = event.target.value;
+                setOrderId(id);
+                const found = eligibleOrders.find((o) => o.order_id === id);
+                setOrderTitle(found?.order_title ?? "");
+              }}
+              disabled={ordersLoading || busy || !isAuthenticated}
+              required
+            >
+              <option value="">
+                {ordersLoading
+                  ? "載入可撰寫訂單…"
+                  : eligibleOrders.length === 0
+                    ? "目前沒有可撰寫的已完成訂單"
+                    : "請選擇訂單"}
               </option>
-            ))}
-          </select>
+              {eligibleOrders.map((order) => (
+                <option key={order.order_id} value={order.order_id}>
+                  {order.order_title}（{order.order_id}）
+                </option>
+              ))}
+            </select>
+          )}
+          <p className="mt-1 text-xs text-gray-400">
+            僅已完成訂單且尚未撰寫的文章可選；選定後不可修改。
+          </p>
         </div>
         <div>
           <label className={labelClass}>作者</label>
@@ -362,7 +462,7 @@ export default function BlogPostForm({
             className={fieldClass}
             value={
               isAuthenticated
-                ? `${auth.name || "會員"}（ID ${auth.id}）`
+                ? `${auth.name || "會員"}（ID ${auth.id} · ${auth.role ?? "會員"}）`
                 : "未登入"
             }
             disabled
@@ -375,7 +475,7 @@ export default function BlogPostForm({
         <div>
           <p className={labelClass}>內文頂圖／封面縮圖</p>
           <p className="text-xs text-gray-400">
-            選圖後僅預覽；「送出審查」時上傳封面。也可貼 https 外連（草稿即可寫入 DB）。
+            選圖後可裁切與縮放（21:9）；「送出審查」時上傳。也可貼 https 外連。
           </p>
         </div>
 
@@ -389,7 +489,7 @@ export default function BlogPostForm({
             />
             {hasPendingLocal ? (
               <span className="absolute top-3 left-3 rounded-[12px] bg-amber-500/90 px-2.5 py-1 text-[11px] font-medium text-white shadow">
-                僅預覽 · 尚未上傳
+                已裁切 · 尚未上傳
               </span>
             ) : null}
             <button
@@ -408,14 +508,19 @@ export default function BlogPostForm({
         )}
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={ACCEPT_TYPES.join(",")}
-            onChange={handleImagePick}
-            disabled={busy}
-            className="block w-full text-sm text-gray-600 file:mr-4 file:rounded-[12px] file:border-0 file:bg-teal-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-teal-700 disabled:opacity-50"
-          />
+          <div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ACCEPT_TYPES.join(",")}
+              onChange={handleImagePick}
+              disabled={busy}
+              className="block w-full text-sm text-gray-600 file:mr-4 file:rounded-[12px] file:border-0 file:bg-teal-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-teal-700 disabled:opacity-50"
+            />
+            <p className="mt-1 text-[11px] text-gray-400">
+              支援裁切／縮放（react-easy-crop）
+            </p>
+          </div>
           <input
             id="blog-content-image"
             type="text"

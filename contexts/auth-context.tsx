@@ -13,6 +13,9 @@ import toast from "react-hot-toast";
 import { useRouter, useSearchParams } from "next/navigation";
 import { IoIosWarning } from "react-icons/io";
 
+/** 對齊 DB member.role enum：'管理者' | '客服' | '會員'（UI 管理員＝管理者） */
+export type MemberRole = "會員" | "管理者" | "客服";
+
 // 接收進來的資料類型
 export type Auth = {
   id: number;
@@ -20,6 +23,7 @@ export type Auth = {
   email: string;
   member_level?: string;     // 💡 新增：等級中文名稱 (例如 '金牌會員 (享95折優惠)')
   current_points?: number;   // 💡 新增：會員現有的 M 幣存量
+  role?: MemberRole; // ⭐ 阿偉：身分角色（會員／管理者／客服）；部落格管理與審查依此分流，來源 member.role，禁止寫死權限
 
 };
 
@@ -30,6 +34,7 @@ export const emptyAuth: Auth = {
   email: "",
   member_level: "一般會員 (無折扣)",
   current_points: 0, // 沒登入時預設為 0
+  role: "會員", // ⭐ 阿偉：未登入預設會員；登入後以 /api/auth/me 的 role 覆寫
 };
 
 type AuthApiResponse = {

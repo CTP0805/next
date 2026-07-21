@@ -5,7 +5,10 @@ import BlogMediaImage from "../_components/BlogMediaImage";
 import BlogOwnerEditLink from "../_components/BlogOwnerEditLink";
 import BlogRichTextContent from "../_components/BlogRichTextContent";
 import { fetchBlogPostBySlug, fetchBlogPosts } from "../_lib/api";
-import { BLOG_CATEGORY_MAP, BLOG_STATUS_LABEL } from "../_lib/types";
+import {
+  BLOG_STATUS_LABEL,
+  blogCategoryLabel,
+} from "../_lib/types";
 import type { BlogPost } from "../_lib/types";
 
 export default async function BlogDetail({
@@ -72,8 +75,7 @@ export default async function BlogDetail({
         day: "numeric",
       })
     : null;
-  const categoryLabel =
-    BLOG_CATEGORY_MAP[post.category_id ?? 0] || "其他";
+  const categoryLabel = blogCategoryLabel(post);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -193,7 +195,7 @@ export default async function BlogDetail({
                       </div>
                       <div className="mb-1 flex flex-wrap items-center gap-1.5 text-xs">
                         <span className="text-amber-600">
-                          {BLOG_CATEGORY_MAP[rec.category_id ?? 0] || "其他"}
+                          {blogCategoryLabel(rec)}
                         </span>
                       </div>
                       <h3 className="line-clamp-2 text-base leading-snug font-semibold text-gray-900 transition-colors group-hover:text-teal-600">
