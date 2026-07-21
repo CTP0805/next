@@ -39,7 +39,6 @@ export default function LoginPage() {
   const { login } = useAuth();
   const { loginGoogle } = useFirebase(); // 第三方登入
   const searchParams = useSearchParams();
-  
 
   // 使用者按下「登入」按鈕時會執行這個函式
   async function handleLogin(
@@ -144,7 +143,8 @@ export default function LoginPage() {
 
   return (
     <>
-      <main className="min-h-screen bg-[url('/images/login-bg.jpg')] bg-cover bg-[position:48%_center] xl:bg-left text-white">
+      <main className="min-h-screen bg-[url('/images/login-bg.jpg')] bg-cover bg-[position:48%_center] text-white xl:bg-left">
+        
         {/* 背景遮罩 */}
         <div className="min-h-screen bg-black/10 backdrop-brightness-75">
           {/* 外層 container：負責控制整體寬度與 RWD 留白 */}
@@ -190,9 +190,9 @@ export default function LoginPage() {
                         className="absolute top-1/2 right-4 -translate-y-1/2 text-white hover:cursor-pointer hover:text-[#68BBC3]"
                       >
                         {showPassword ? (
-                          <EyeOff size={25} />
+                          <EyeOff size={20} />
                         ) : (
-                          <Eye size={25} />
+                          <Eye size={20} />
                         )}
                       </button>
                     </div>
@@ -235,7 +235,9 @@ export default function LoginPage() {
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-2xl font-bold sm:h-9 sm:w-9">
                       <FcGoogle />
                     </span>
-                    <span>{isLoading ? "Google 登入中..." : "使用 Google 登入"}</span>
+                    <span>
+                      {isLoading ? "Google 登入中..." : "使用 Google 登入"}
+                    </span>
                   </button>
 
                   <p className="mt-6 text-center text-[16px]">

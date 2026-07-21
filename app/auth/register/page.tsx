@@ -205,7 +205,7 @@ export default function RegisterPage() {
                       aria-label="顯示或隱藏密碼"
                       className="absolute top-1/2 right-4 -translate-y-1/2 text-white hover:cursor-pointer hover:text-[#68BBC3]"
                     >
-                      {showPassword ? <EyeOff size={25} /> : <Eye size={25} />}
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
                 </div>
@@ -231,9 +231,9 @@ export default function RegisterPage() {
                       className="absolute top-1/2 right-4 -translate-y-1/2 text-white hover:cursor-pointer hover:text-[#68BBC3]"
                     >
                       {showConfirmPassword ? (
-                        <EyeOff size={25} />
+                        <EyeOff size={20} />
                       ) : (
-                        <Eye size={25} />
+                        <Eye size={20} />
                       )}
                     </button>
                   </div>

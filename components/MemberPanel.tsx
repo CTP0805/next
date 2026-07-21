@@ -18,14 +18,18 @@ import {
   FaUser,
   FaXmark,
 } from "react-icons/fa6";
+import { FaEdit } from "react-icons/fa";
 import { API_SERVER } from "@/config/api-path";
 import toast from "react-hot-toast";
+import { resumeToPipeableStream } from "react-dom/server";
 
 interface MemberList {
   label: string;
   icon: ReactNode;
   href: string;
 }
+
+
 
 const memberLists: MemberList[] = [
   {
@@ -63,6 +67,12 @@ const memberLists: MemberList[] = [
     icon: <FaClockRotateLeft />,
     href: "/member/recently-viewed",
   },
+  {
+    label: "管理文章",
+    icon: <FaEdit />,
+    href: "/member/edit-post",
+  },
+
 ];
 
 interface AvatarUploadResponse {

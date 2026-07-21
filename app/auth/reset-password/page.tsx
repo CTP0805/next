@@ -74,12 +74,12 @@ function ResetPasswordError() {
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
 
-  const valid = searchParams.get("valid");
+  const success = searchParams.get("success");
   const token = searchParams.get("token");
   const router = useRouter();
 
-  // 只有 valid=true 才能顯示重設密碼畫面
-  if (valid !== "true") {
+  // 只有 success=true 才能顯示重設密碼畫面
+  if (success !== "true") {
     return <ResetPasswordError />;
   }
 

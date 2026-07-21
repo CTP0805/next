@@ -5,7 +5,7 @@ import { API_SERVER } from "@/config/api-path";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
-
+import { Eye, EyeOff } from "lucide-react";
 
 type ProfileData = {
   name: string;
@@ -57,6 +57,10 @@ export default function ProfileFormTabs() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const router = useRouter();
 
   // step1-1. 先取得使用者資料
@@ -104,8 +108,7 @@ export default function ProfileFormTabs() {
       birthday !== originalProfile.birthday);
 
   // step1-3. 前端格式驗證
-  
-  
+
   // step1-4. fetch [基本資料] 修改到後端
 
   const handleProfile = async (e) => {
@@ -158,16 +161,14 @@ export default function ProfileFormTabs() {
     }
   };
 
-
-
-  
   const handlePassword = async (e) => {
     e.preventDefault();
-    
+
     // step2-1. 前端格式驗證
     const zodResult = changePasswordSchema.safeParse({
-      newPassword,confirmPassword
-    })
+      newPassword,
+      confirmPassword,
+    });
 
     if (!zodResult.success) {
       if (zodResult.error?.issues?.length) {
@@ -186,7 +187,7 @@ export default function ProfileFormTabs() {
         },
         body: JSON.stringify({
           oldPassword,
-          newPassword
+          newPassword,
         }),
       });
 
@@ -293,7 +294,7 @@ export default function ProfileFormTabs() {
                   id="gender"
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
-                  className="profile-input h-[45px] w-full rounded-[12px] bg-transparent px-5  text-lg transition outline-none placeholder:text-white/40 focus:border-white focus:ring-2 focus:ring-sky-200/30"
+                  className="profile-input h-[45px] w-full rounded-[12px] bg-transparent px-5 text-lg transition outline-none placeholder:text-white/40 focus:border-white focus:ring-2 focus:ring-sky-200/30"
                 >
                   <option value="">請選擇...</option>
                   <option value="男">男</option>
@@ -319,43 +320,70 @@ export default function ProfileFormTabs() {
 
           {activeTab === "password" && (
             <div className="w-full max-w-[352px] space-y-9">
-              <div>
+              <div className="relative">
                 <label htmlFor="oldPassword" className="profile-label">
                   輸入舊密碼 <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="oldPassword"
-                  type="password"
+                  type={showOldPassword ? "text" : "password"}
                   className="profile-input"
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowOldPassword(!showOldPassword)}
+                  aria-label="顯示或隱藏密碼"
+                  className="absolute top-3/4 right-4 -translate-y-1/2 text-zinc-400 hover:cursor-pointer hover:text-[#68BBC3]"
+                >
+                  {showOldPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
 
-              <div>
+              <div className="relative">
                 <label htmlFor="newPassword" className="profile-label">
-                  新密碼 <span className="text-red-500">*</span><span className="text-black-900 text-[14px]">（ 請輸入8位以上包含英文、數字 ）</span>
+                  新密碼 <span className="text-red-500">*</span>
+                  <span className="text-black-900 text-[14px]">
+                    （ 請輸入8位以上包含英文、數字 ）
+                  </span>
                 </label>
                 <input
                   id="newPassword"
-                  type="password"
+                  type={showNewPassword ? "text" : "password"}
                   className="profile-input"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  aria-label="顯示或隱藏密碼"
+                  className="absolute top-3/4 right-4 -translate-y-1/2 text-zinc-400 hover:cursor-pointer hover:text-[#68BBC3]"
+                >
+                  {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
 
-              <div>
+              <div className="relative">
                 <label htmlFor="confirmPassword" className="profile-label">
                   再次輸入新密碼 <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="confirmPassword"
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   className="profile-input"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  aria-label="顯示或隱藏密碼"
+                  className="absolute top-3/4 right-4 -translate-y-1/2 text-zinc-400 hover:cursor-pointer hover:text-[#68BBC3]"
+                >
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
             </div>
           )}
