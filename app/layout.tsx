@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Besley } from "next/font/google";
 import { CartProvider } from "@/contexts/cart";
+import { FavoriteProvider } from "@/contexts/FavoriteContext";
 import { AuthContextProvider } from "@/contexts/auth-context";
 import Header from "@/components/Header";
 import FooterGuard from "@/components/FooterGuard";
-
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -23,15 +23,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body suppressHydrationWarning className={`flex min-h-full flex-col ${besley.variable}`}>
-        
+      <body
+        suppressHydrationWarning
+        className={`flex min-h-full flex-col ${besley.variable}`}
+      >
         <AuthContextProvider>
-          <Header />
-          <CartProvider>
-            {children}
-          </CartProvider>
+          <FavoriteProvider>
+            <CartProvider>
+              <Header />
+              {children}
+              <FooterGuard />
+            </CartProvider>
+          </FavoriteProvider>
         </AuthContextProvider>
-        <FooterGuard/>
       </body>
     </html>
   );

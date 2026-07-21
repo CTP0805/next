@@ -1,26 +1,107 @@
 "use client";
-import { useState } from "react";
 
-const experienceTypes = [
-  ["古蹟巡禮", "38"],
-  ["藝文導覽", "24"],
-  ["美食饗宴", "17"],
-  ["戶外探索", "14"],
-  ["專人攝影", "12"],
-  ["娛樂與夜生活", "9"],
-] as const;
+import { useRef, type PointerEvent } from "react";
+import { HiOutlineCalendar } from "react-icons/hi";
 
-export default function FilterPanel() {
-  const totalMaxLimit = 9999;
-  const [minPrice, setMinPrice] = useState(0);
-  const [maxPrice, setMaxPrice] = useState(3500);
+type Category = {
+  id: number;
+  label: string;
+  count: number;
+};
 
+type FilterPanelProps = {
+  categories: Category[];
+  categoryIds: number[];
+  onCategoryIdsChange: (categoryIds: number[]) => void;
+
+  minPrice: number;
+  maxPrice: number;
+  onMinPriceChange: (price: number) => void;
+  onMaxPriceChange: (price: number) => void;
+  maxPriceLimit: number;
+  selectedDate: string;
+  onSelectedDateChange: (date: string) => void;
+};
+
+export default function FilterPanel({
+  categories,
+  categoryIds,
+  onCategoryIdsChange,
+  minPrice,
+  maxPrice,
+  onMinPriceChange,
+  onMaxPriceChange,
+  maxPriceLimit,
+  selectedDate,
+  onSelectedDateChange,
+}: FilterPanelProps) {
+  const dateInputRef = useRef<HTMLInputElement>(null);
+  const isCustomDate =
+    selectedDate !== "" &&
+    selectedDate !== "today" &&
+    selectedDate !== "tomorrow";
+
+  const displayedDate = isCustomDate
+    ? selectedDate.slice(5).replace("-", "/")
+    : "全部日期";
+  const toggleCategory = (id: number) => {
+    const isChecked = categoryIds.includes(id);
+
+    if (isChecked) {
+      onCategoryIdsChange(
+        categoryIds.filter((categoryId) => categoryId !== id),
+      );
+    } else {
+      onCategoryIdsChange([...categoryIds, id]);
+    }
+  };
+  const getPriceFromPointer = (clientX: number, trackElement: HTMLElement) => {
+    const rect = trackElement.getBoundingClientRect();
+
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+
+    return Math.round(ratio * maxPriceLimit);
+  };
+
+  const handleThumbMove = (
+    event: PointerEvent<HTMLButtonElement>,
+    type: "min" | "max",
+  ) => {
+    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
+
+    const trackElement = event.currentTarget.parentElement;
+    if (!trackElement) return;
+
+    const price = getPriceFromPointer(event.clientX, trackElement);
+
+    if (type === "min") {
+      onMinPriceChange(Math.min(price, maxPrice));
+    } else {
+      onMaxPriceChange(Math.max(price, minPrice));
+    }
+  };
+
+  const handleTrackClick = (event: PointerEvent<HTMLDivElement>) => {
+    const clickedPrice = getPriceFromPointer(
+      event.clientX,
+      event.currentTarget,
+    );
+
+    const distanceFromMin = Math.abs(clickedPrice - minPrice);
+    const distanceFromMax = Math.abs(clickedPrice - maxPrice);
+
+    if (distanceFromMin <= distanceFromMax) {
+      onMinPriceChange(Math.min(clickedPrice, maxPrice));
+    } else {
+      onMaxPriceChange(Math.max(clickedPrice, minPrice));
+    }
+  };
   return (
     <aside className="h-fit overflow-hidden rounded-lg border border-[#E3E7E9] bg-white">
       <div className="border-b border-[#E7EAEC] bg-[#F7F8F8] px-5 py-3.5">
         <h5 className="font-extrabold text-[#30353A]">條件篩選</h5>
         <p className="p-text-14 mt-1 text-[#969CA1]">
-          快速找到有溫度的巴黎體驗
+          快速找到適合你的當地體驗
         </p>
       </div>
 
@@ -29,18 +110,22 @@ export default function FilterPanel() {
           <legend className="mb-2.5 text-[16px] font-extrabold text-[#34393E]">
             體驗類型
           </legend>
+
           <div className="space-y-3">
-            {experienceTypes.map(([label, count], index) => (
+            {categories.map(({ id, label, count }) => (
               <label
-                key={label}
+                key={id}
                 className="flex cursor-pointer items-center gap-3 text-sm text-[#565D63]"
               >
                 <input
                   type="checkbox"
-                  defaultChecked={index === 3}
+                  checked={categoryIds.includes(id)}
+                  onChange={() => toggleCategory(id)}
                   className="checkbox border-[#DDE2E4] bg-white checked:border-[#68BBC3] checked:bg-[#68BBC3] checked:text-white"
                 />
+
                 <span className="flex-1">{label}</span>
+
                 <span className="text-sm text-[#9AA0A5]">{count}</span>
               </label>
             ))}
@@ -51,16 +136,74 @@ export default function FilterPanel() {
           <legend className="mb-4 text-[16px] font-extrabold text-[#34393E]">
             日期
           </legend>
-          <div className="grid grid-cols-3 gap-2">
-            {["今天", "明天", "全部日期"].map((label) => (
+
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.7fr)] gap-3">
+            <button
+              type="button"
+              aria-pressed={selectedDate === "today"}
+              onClick={() => onSelectedDateChange("today")}
+              className={
+                selectedDate === "today"
+                  ? "h-10 w-full min-w-0 rounded-md border border-[#68BBC3] bg-white text-xs font-bold text-[#489DA5]"
+                  : "h-10 w-full min-w-0 rounded-md border border-[#E1E5E7] bg-white text-xs font-bold text-[#71787E] hover:border-[#68BBC3] hover:text-[#489DA5]"
+              }
+            >
+              今天
+            </button>
+
+            <button
+              type="button"
+              aria-pressed={selectedDate === "tomorrow"}
+              onClick={() => onSelectedDateChange("tomorrow")}
+              className={
+                selectedDate === "tomorrow"
+                  ? "h-10 w-full min-w-0 rounded-md border border-[#68BBC3] bg-white text-xs font-bold text-[#489DA5]"
+                  : "h-10 w-full min-w-0 rounded-md border border-[#E1E5E7] bg-white text-xs font-bold text-[#71787E] hover:border-[#68BBC3] hover:text-[#489DA5]"
+              }
+            >
+              明天
+            </button>
+
+            <div className="relative">
               <button
-                key={label}
                 type="button"
-                className="h-10 rounded-md border border-[#E1E5E7] bg-white text-xs font-bold text-[#71787E] transition-colors hover:border-[#68BBC3] hover:text-[#489DA5]"
+                onClick={() => {
+                  const input = dateInputRef.current;
+
+                  if (!input) return;
+
+                  if (typeof input.showPicker === "function") {
+                    input.showPicker();
+                  } else {
+                    input.click();
+                  }
+                }}
+                className={
+                  isCustomDate
+                    ? "flex h-10 w-full min-w-0 items-center justify-center gap-2 rounded-md border border-[#68BBC3] bg-white px-2 text-xs font-bold text-[#489DA5]"
+                    : "flex h-10 w-full min-w-0 items-center justify-center gap-2 rounded-md border border-[#E1E5E7] bg-white px-2 text-xs font-bold text-[#71787E] hover:border-[#68BBC3] hover:text-[#489DA5]"
+                }
               >
-                {label}
+                <HiOutlineCalendar className="size-4 shrink-0" />
+
+                <span className="whitespace-nowrap">{displayedDate}</span>
               </button>
-            ))}
+
+              <input
+                ref={dateInputRef}
+                type="date"
+                min={new Date().toLocaleDateString("en-CA")}
+                value={
+                  selectedDate !== "today" && selectedDate !== "tomorrow"
+                    ? selectedDate
+                    : ""
+                }
+                onChange={(event) => onSelectedDateChange(event.target.value)}
+                className="pointer-events-none absolute bottom-0 left-1/2 h-px w-px opacity-0"
+                tabIndex={-1}
+                aria-label="選擇日期"
+              />
+            </div>
           </div>
         </fieldset>
 
@@ -74,42 +217,61 @@ export default function FilterPanel() {
             {maxPrice.toLocaleString("zh-TW")}
           </p>
 
-          <div className="relative h-5 w-full">
-            {/* 灰色軌道 */}
-            <div className="absolute top-1/2 h-1.5 w-full -translate-y-1/2 rounded-full bg-[#DFE3E5]" />
+          <div
+            className="relative h-10 w-full cursor-pointer touch-none"
+            onPointerDown={handleTrackClick}
+          >
+            {/* 灰色底線 */}
+            <div className="pointer-events-none absolute top-1/2 h-1.5 w-full -translate-y-1/2 rounded-full bg-[#DFE3E5]" />
 
-            {/* 💡 藍綠色進度條：公式直接寫在 style 裡面了！ */}
+            {/* 選取範圍 */}
             <div
-              className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-[#68BBC3]"
+              className="pointer-events-none absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-[#68BBC3]"
               style={{
-                left: `${(minPrice / totalMaxLimit) * 100}%`,
-                right: `${100 - (maxPrice / totalMaxLimit) * 100}%`,
+                left: `${(minPrice / maxPriceLimit) * 100}%`,
+                right: `${100 - (maxPrice / maxPriceLimit) * 100}%`,
               }}
             />
 
-            {/* 左滑塊 (最低價) */}
-            <input
-              type="range"
-              min="0"
-              max={totalMaxLimit}
-              value={minPrice}
-              onChange={(e) =>
-                setMinPrice(Math.min(Number(e.target.value), maxPrice))
-              }
-              className="pointer-events-none absolute top-1/2 h-1.5 w-full -translate-y-1/2 appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-[#DCE2E4] [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-sm"
-            />
+            {/* 最低價格圓點 */}
+            <button
+              type="button"
+              aria-label="最低價格"
+              className="absolute top-1/2 z-20 grid size-7 -translate-x-1/2 -translate-y-1/2 cursor-grab touch-none place-items-center bg-transparent p-0 active:cursor-grabbing"
+              style={{
+                left: `${(minPrice / maxPriceLimit) * 100}%`,
+              }}
+              onPointerDown={(event) => {
+                event.stopPropagation();
+                event.currentTarget.setPointerCapture(event.pointerId);
+              }}
+              onPointerMove={(event) => handleThumbMove(event, "min")}
+              onPointerUp={(event) => {
+                event.currentTarget.releasePointerCapture(event.pointerId);
+              }}
+            >
+              <span className="size-5 rounded-full border border-[#DCE2E4] bg-white shadow-md" />
+            </button>
 
-            {/* 右滑塊 (最高價) */}
-            <input
-              type="range"
-              min="0"
-              max={totalMaxLimit}
-              value={maxPrice}
-              onChange={(e) =>
-                setMaxPrice(Math.max(Number(e.target.value), minPrice))
-              }
-              className="pointer-events-none absolute top-1/2 h-1.5 w-full -translate-y-1/2 appearance-none bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-[#DCE2E4] [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-sm"
-            />
+            {/* 最高價格圓點 */}
+            <button
+              type="button"
+              aria-label="最高價格"
+              className="absolute top-1/2 z-20 grid size-7 -translate-x-1/2 -translate-y-1/2 cursor-grab touch-none place-items-center bg-transparent p-0 active:cursor-grabbing"
+              style={{
+                left: `${(maxPrice / maxPriceLimit) * 100}%`,
+              }}
+              onPointerDown={(event) => {
+                event.stopPropagation();
+                event.currentTarget.setPointerCapture(event.pointerId);
+              }}
+              onPointerMove={(event) => handleThumbMove(event, "max")}
+              onPointerUp={(event) => {
+                event.currentTarget.releasePointerCapture(event.pointerId);
+              }}
+            >
+              <span className="size-5 rounded-full border border-[#DCE2E4] bg-white shadow-md" />
+            </button>
           </div>
         </fieldset>
       </div>

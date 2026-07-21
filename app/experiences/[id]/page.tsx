@@ -1,10 +1,13 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
+import { useFavorites } from "@/contexts/FavoriteContext";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation"; // 💡 引入 useParams 獲取網址 ID
 import {
   HiStar,
+  HiHeart,
   HiOutlineHeart,
   HiChevronLeft,
   HiOutlineShoppingCart,
@@ -22,6 +25,28 @@ import BookingCard from "@/app/experiences/_components/BookingCard";
 type ExperienceNote = {
   title: string;
   content: string;
+};
+
+type ExperienceSession = {
+  id: number;
+  start_time: string;
+  end_time: string;
+  adult_price: number;
+  child_price: number;
+  min_participants: number;
+  max_participants: number;
+};
+
+type ExperienceReview = {
+  id: number;
+  member_id: number;
+  rating: number;
+  comment: string;
+  created_at: string;
+  image_url: string | null;
+  member_name: string | null;
+  member_avatar: string | null;
+  departure_date: string | null;
 };
 
 type Experience = {
@@ -56,6 +81,8 @@ type Experience = {
   review_count: number;
 
   notes: ExperienceNote[];
+  sessions: ExperienceSession[];
+  reviews: ExperienceReview[];
 };
 const gallery = [
   {
@@ -83,14 +110,20 @@ const gallery = [
 function IconButton({
   label,
   children,
+  onClick,
+  pressed,
 }: {
   label: string;
   children: React.ReactNode;
+  onClick?: () => void | Promise<void>;
+  pressed?: boolean;
 }) {
   return (
     <button
       type="button"
       aria-label={label}
+      aria-pressed={pressed}
+      onClick={onClick}
       className="grid size-10 place-items-center rounded-md border border-[#DDE3E5] bg-white text-lg text-[#5C666C] transition-colors hover:border-[#68BBC3] hover:text-[#419AA2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#68BBC3]"
     >
       {children}
@@ -110,6 +143,7 @@ const formatDuration = (minutes: number) => {
 
 export default function ExperienceDetailPage() {
   const params = useParams();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const id = params.id as string;
   const [experience, setExperience] = useState<Experience | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -117,6 +151,19 @@ export default function ExperienceDetailPage() {
   const [activeHash, setActiveHash] = useState("overview");
   // 1. 控制回到頂端按鈕的顯示狀態
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const favorite = experience ? isFavorite(experience.id) : false;
+
+  const handleFavoriteClick = async () => {
+    if (!experience) return;
+
+    try {
+      await toggleFavorite(experience.id);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "收藏操作失敗";
+
+      alert(message);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -184,22 +231,28 @@ export default function ExperienceDetailPage() {
           className="hidden text-sm font-medium sm:block"
           aria-label="麵包屑"
         >
-          <span className="cursor-pointer font-bold text-[#68BBC3] hover:underline">
+          <Link
+            href="/"
+            className="cursor-pointer font-bold text-[#68BBC3] hover:underline"
+          >
             首頁
-          </span>
+          </Link>
           <span className="mx-2 text-[#7B8388]">›</span>
-          <span className="cursor-pointer text-[#68BBC3] hover:underline">
-            義大利
-          </span>
+          <Link
+            href={`/experiences/search?city=${encodeURIComponent(experience.city)}`}
+          >
+            <span className="cursor-pointer text-[#68BBC3] hover:underline">
+              {experience.city}
+            </span>
+          </Link>
           <span className="mx-2 text-[#7B8388]">›</span>
-          <span className="cursor-pointer text-[#68BBC3] hover:underline">
-            {experience.city}
-          </span>
-          <span className="mx-2 text-[#7B8388]">›</span>
-          <span className="cursor-pointer text-[#68BBC3] hover:underline">
-            {experience.category_name}
-          </span>
-
+          <Link
+            href={`/experiences/search?category_ids=${experience.category_id}`}
+          >
+            <span className="cursor-pointer text-[#68BBC3] hover:underline">
+              {experience.category_name}
+            </span>
+          </Link>
           <span className="mx-2 text-[#7B8388]">›</span>
           <span className="inline-block max-w-[200px] truncate align-bottom text-[#7B8388]">
             {experience.title}
@@ -235,10 +288,16 @@ export default function ExperienceDetailPage() {
               {/* 愛心按鈕 */}
               <button
                 type="button"
+                onClick={handleFavoriteClick}
+                aria-label={favorite ? "取消收藏" : "加入我的最愛"}
+                aria-pressed={favorite}
                 className="flex size-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-transform active:scale-90"
-                aria-label="加入我的最愛"
               >
-                <HiOutlineHeart className="size-5" />
+                {favorite ? (
+                  <HiHeart className="size-5 text-red-500" />
+                ) : (
+                  <HiOutlineHeart className="size-5" />
+                )}
               </button>
               {/* 購物車按鈕 */}
               <button
@@ -314,8 +373,16 @@ export default function ExperienceDetailPage() {
           </div>
           <div className="flex shrink-0 gap-2 max-sm:hidden">
             <IconButton label="分享體驗">↗</IconButton>
-            <IconButton label="加入我的最愛">
-              <HiOutlineHeart className="size-5" />
+            <IconButton
+              label={favorite ? "取消收藏" : "加入我的最愛"}
+              pressed={favorite}
+              onClick={handleFavoriteClick}
+            >
+              {favorite ? (
+                <HiHeart className="size-5 text-red-500" />
+              ) : (
+                <HiOutlineHeart className="size-5" />
+              )}
             </IconButton>
           </div>
         </section>
@@ -383,12 +450,16 @@ export default function ExperienceDetailPage() {
               longitude={experience.longitude}
               latitude={experience.latitude}
             />
-            <ReviewsSection />
+            <ReviewsSection
+              rating={experience.rating}
+              reviewCount={experience.review_count}
+              reviews={experience.reviews}
+            />
             <NotesSection notes={experience.notes} />
           </div>
 
           <div className="hidden lg:sticky lg:top-20 lg:block">
-            <BookingCard />
+            <BookingCard sessions={experience.sessions} />
           </div>
         </div>
         {/* 📱 手機版專屬：右下角圓形回到頂端按鈕（避開底部浮動條，改用 bottom-36 飄在它上方） */}
