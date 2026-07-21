@@ -1,6 +1,5 @@
 import type {
   Coupon,
-  CouponCategory,
   CouponFilter,
   MemberCoupon,
   MemberCouponStatus,
@@ -56,9 +55,6 @@ export function filterCoupons(
 export function formatDiscount(
   coupon: Pick<Coupon, "discount_type" | "discount_value">,
 ): string {
-  if (coupon.discount_type === "percent") {
-    return `${coupon.discount_value}%`;
-  }
   return `$${coupon.discount_value}`;
 }
 
@@ -75,51 +71,9 @@ export function couponStatusLabel(status: MemberCouponStatus): string {
   }
 }
 
-export function couponCategoryLabel(category: CouponCategory): string {
-  switch (category) {
-    case "member":
-      return "會員禮";
-    case "welcome":
-      return "新會員";
-    case "seasonal":
-      return "季節活動";
-    case "flash":
-      return "限時";
-    case "experience":
-      return "體驗限定";
-    case "shipping":
-      return "運費／雜費";
-  }
-}
-
-export function couponCategoryTone(category: CouponCategory): string {
-  switch (category) {
-    case "member":
-      return "bg-amber-50 text-amber-700";
-    case "welcome":
-      return "bg-sky-50 text-sky-700";
-    case "seasonal":
-      return "bg-emerald-50 text-emerald-700";
-    case "flash":
-      return "bg-rose-50 text-rose-600";
-    case "experience":
-      return "bg-violet-50 text-violet-700";
-    case "shipping":
-      return "bg-slate-100 text-slate-600";
-  }
-}
-
-/**
- * 計算券對訂單可折抵金額
- * percent：original * value/100，受 max_discount 限制
- * fixed：min(discount_value, original)
- * 未達低消 → 0
- */
+/** 固定金額折抵（對齊 DB discount_amount） */
 export function calcCouponDiscount(
-  coupon: Pick<
-    Coupon,
-    "discount_type" | "discount_value" | "max_discount" | "min_order_amount"
-  >,
+  coupon: Pick<Coupon, "discount_value" | "min_order_amount">,
   originalAmount: number,
 ): number {
   if (originalAmount <= 0) return 0;
@@ -129,19 +83,9 @@ export function calcCouponDiscount(
   ) {
     return 0;
   }
-
-  if (coupon.discount_type === "percent") {
-    const raw = Math.floor((originalAmount * coupon.discount_value) / 100);
-    if (coupon.max_discount != null) {
-      return Math.min(raw, coupon.max_discount, originalAmount);
-    }
-    return Math.min(raw, originalAmount);
-  }
-
   return Math.min(coupon.discount_value, originalAmount);
 }
 
-/** final = original - coupon_discount - points_redeemed（不低於 0） */
 export function calcFinalAmount(
   originalAmount: number,
   couponDiscount: number,
@@ -158,7 +102,7 @@ export function toSelectedCouponPayload(
     coupon_id: coupon.coupon_id,
     code: coupon.code,
     title: coupon.title,
-    discount_type: coupon.discount_type,
+    discount_type: "fixed",
     discount_value: coupon.discount_value,
     max_discount: coupon.max_discount,
     min_order_amount: coupon.min_order_amount,
@@ -221,10 +165,12 @@ export function normalizeRedeemCode(code: string): string {
   return code.trim().toUpperCase();
 }
 
-/** 列表分頁：每頁筆數 */
 export const LIST_PAGE_SIZE = 10;
 
-export function getTotalPages(totalItems: number, pageSize = LIST_PAGE_SIZE): number {
+export function getTotalPages(
+  totalItems: number,
+  pageSize = LIST_PAGE_SIZE,
+): number {
   if (totalItems <= 0) return 1;
   return Math.ceil(totalItems / pageSize);
 }

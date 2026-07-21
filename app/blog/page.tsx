@@ -3,11 +3,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import BlogMediaImage from "./_components/BlogMediaImage";
+import BlogOwnerEditLink from "./_components/BlogOwnerEditLink";
 import BlogPostCard from "./_components/BlogPostCard";
+import { fetchBlogPosts } from "./_lib/api";
 import type { BlogPost } from "./_lib/types";
 import { BLOG_CATEGORY_MAP, BLOG_REGIONS } from "./_lib/types";
-
-const PLACEHOLDER = "/images/carousel1.jpg";
 
 function isPublished(post: BlogPost) {
   return post.status === "published";
@@ -44,9 +45,8 @@ export default function BlogListPage() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/blog", { cache: "no-store" });
-        const data = (await res.json()) as { posts?: BlogPost[] };
-        if (!cancelled) setAllPosts(data.posts ?? []);
+        const posts = await fetchBlogPosts();
+        if (!cancelled) setAllPosts(posts);
       } catch {
         if (!cancelled) setAllPosts([]);
       } finally {
@@ -64,29 +64,25 @@ export default function BlogListPage() {
     [allPosts],
   );
 
+  /** 地區篩選：DB 無 region 欄，改以標題／摘要／內文關鍵字比對 */
   const filteredPosts = useMemo(() => {
-    const base = selectedCountry
-      ? allPosts.filter((post) => post.region === selectedCountry)
-      : publishedPosts;
-    return base;
-  }, [allPosts, publishedPosts, selectedCountry]);
+    if (!selectedCountry) return publishedPosts;
+    return publishedPosts.filter((post) => {
+      const hay = `${post.title}\n${post.excerpt ?? ""}\n${post.content}`;
+      return hay.includes(selectedCountry);
+    });
+  }, [publishedPosts, selectedCountry]);
 
-  /** 精選：六個地區各取一篇最新已上架文章 */
+  /** 精選：最新已上架文章（最多 6 篇）；有地區篩選時用篩選結果 */
   const featuredPosts = useMemo(() => {
     if (selectedCountry) return filteredPosts;
-
-    return BLOG_REGIONS.map((region) => {
-      const regionPosts = publishedPosts.filter(
-        (post) => post.region === region,
-      );
-      if (regionPosts.length === 0) return null;
-
-      return [...regionPosts].sort(
+    return [...publishedPosts]
+      .sort(
         (a, b) =>
           new Date(b.published_at ?? b.updated_at).getTime() -
           new Date(a.published_at ?? a.updated_at).getTime(),
-      )[0];
-    }).filter((post): post is BlogPost => post !== null);
+      )
+      .slice(0, 6);
   }, [filteredPosts, publishedPosts, selectedCountry]);
 
   const latestPosts = useMemo(() => {
@@ -125,7 +121,7 @@ export default function BlogListPage() {
       {/* Hero */}
       <header className="relative h-[360px] overflow-hidden sm:h-[400px] md:h-[440px]">
         <Image
-          src="/images/carousel1.jpg"
+          src="/images/carousel1.jpeg"
           alt="全球旅遊攻略"
           fill
           priority
@@ -237,12 +233,13 @@ export default function BlogListPage() {
                   <BlogPostCard
                     post={post}
                     footer={
-                      <Link
+                      <BlogOwnerEditLink
+                        authorId={post.author_id}
                         href={`/blog/${post.slug}/edit`}
                         className="text-xs font-medium text-teal-600 hover:underline"
                       >
                         編輯文章
-                      </Link>
+                      </BlogOwnerEditLink>
                     }
                   />
                 </div>
@@ -289,8 +286,8 @@ export default function BlogListPage() {
                   >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch sm:gap-6">
                       <div className="relative h-44 w-full shrink-0 overflow-hidden rounded-[12px] bg-gray-100 sm:h-auto sm:min-h-[9.5rem] sm:w-52 md:w-60">
-                        <Image
-                          src={post.cover_image || PLACEHOLDER}
+                        <BlogMediaImage
+                          src={post.cover_image}
                           alt={post.title}
                           fill
                           className="object-cover object-center transition duration-500 group-hover:scale-105"
@@ -299,13 +296,8 @@ export default function BlogListPage() {
                       </div>
                       <div className="flex min-w-0 flex-1 flex-col py-0.5 sm:py-1">
                         <div className="mb-2 flex flex-wrap items-center gap-2">
-                          {post.region ? (
-                            <span className="rounded-[12px] bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
-                              {post.region}
-                            </span>
-                          ) : null}
                           <span className="rounded-[12px] bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
-                            {BLOG_CATEGORY_MAP[post.category_id] || "其他"}
+                            {BLOG_CATEGORY_MAP[post.category_id ?? 0] || "其他"}
                           </span>
                           <span className="text-xs text-gray-400 sm:ml-auto">
                             {formatDate(post.published_at)}
@@ -350,14 +342,8 @@ export default function BlogListPage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="mb-1 flex flex-wrap items-center gap-1.5 text-xs">
-                          {post.region ? (
-                            <span className="font-medium text-teal-600">
-                              {post.region}
-                            </span>
-                          ) : null}
                           <span className="text-amber-600">
-                            {post.region ? "・" : ""}
-                            {BLOG_CATEGORY_MAP[post.category_id] || "其他"}
+                            {BLOG_CATEGORY_MAP[post.category_id ?? 0] || "其他"}
                           </span>
                         </div>
                         <h4 className="line-clamp-2 text-base leading-snug font-medium text-gray-900 transition-colors group-hover:text-teal-600">

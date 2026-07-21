@@ -11,9 +11,9 @@ import type {
   MemberCouponView,
   PointFilter,
 } from "../types";
+import { redeemCouponCode } from "../api";
 import {
   clearSelectedCoupon,
-  deriveCouponStatus,
   filterCoupons,
   filterTransactions,
   getTotalPages,
@@ -31,9 +31,13 @@ import ListPagination from "./ListPagination";
 
 interface CouponPageClientProps {
   data: MemberBenefitsPayload;
+  onReload?: () => Promise<void> | void;
 }
 
-export default function CouponPageClient({ data }: CouponPageClientProps) {
+export default function CouponPageClient({
+  data,
+  onReload,
+}: CouponPageClientProps) {
   const router = useRouter();
   const [mainTab, setMainTab] = useState<CouponPageTab>("coupons");
   const [pointFilter, setPointFilter] = useState<PointFilter>("all");
@@ -42,15 +46,12 @@ export default function CouponPageClient({ data }: CouponPageClientProps) {
   const [couponPage, setCouponPage] = useState(1);
   const [coupons, setCoupons] = useState<MemberCouponView[]>(data.coupons);
   const [redeemPool, setRedeemPool] = useState<Coupon[]>(data.redeemable_codes);
-  /** 僅本次停留在此頁時的暫選；不從 localStorage 還原，避免跳轉後殘留「已選用」 */
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [nextLocalId, setNextLocalId] = useState(() => {
-    const maxId = data.coupons.reduce(
-      (max, c) => Math.max(max, c.member_coupon_id),
-      0,
-    );
-    return maxId + 1;
-  });
+
+  useEffect(() => {
+    setCoupons(data.coupons);
+    setRedeemPool(data.redeemable_codes);
+  }, [data]);
 
   // 回到優惠頁時清掉上次跳轉／未完成結帳的選用狀態
   useEffect(() => {
@@ -123,7 +124,6 @@ export default function CouponPageClient({ data }: CouponPageClientProps) {
       return;
     }
 
-    // 再點同一張 = 取消選用
     if (selectedId === coupon.member_coupon_id) {
       clearSelectedCoupon();
       setSelectedId(null);
@@ -134,61 +134,33 @@ export default function CouponPageClient({ data }: CouponPageClientProps) {
     saveSelectedCoupon(coupon);
     setSelectedId(coupon.member_coupon_id);
     toast.success(`已選用「${coupon.title}」，前往購物車結帳時可套用`);
-    // 跳轉後此頁 unmount；回來時 effect 會清掉選用狀態
     router.push("/cart");
   }
 
-  function handleRedeem(rawCode: string) {
+  async function handleRedeem(rawCode: string) {
     const code = normalizeRedeemCode(rawCode);
     if (!code) {
       toast.error("請輸入優惠券代碼");
       return;
     }
 
-    if (coupons.some((c) => c.code.toUpperCase() === code)) {
-      toast.error("您已擁有此優惠券");
-      return;
+    try {
+      const coupon = await redeemCouponCode(code);
+      setCoupons((prev) =>
+        [coupon, ...prev.filter((c) => c.coupon_id !== coupon.coupon_id)].sort(
+          (a, b) =>
+            new Date(b.expires_at).getTime() - new Date(a.expires_at).getTime(),
+        ),
+      );
+      setRedeemPool((prev) => prev.filter((c) => c.id !== coupon.coupon_id));
+      setMainTab("coupons");
+      setCouponFilter("all");
+      setCouponPage(1);
+      toast.success(`成功領取「${coupon.title}」`);
+      await onReload?.();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "兌換失敗");
     }
-
-    const catalogItem = redeemPool.find((c) => c.code.toUpperCase() === code);
-    if (!catalogItem) {
-      toast.error("查無此優惠券代碼");
-      return;
-    }
-
-    if (new Date(catalogItem.expires_at).getTime() < Date.now()) {
-      toast.error("此優惠券已過期，無法領取");
-      return;
-    }
-
-    const now = new Date();
-    const memberCouponId = nextLocalId;
-    setNextLocalId((n) => n + 1);
-
-    const view: MemberCouponView = {
-      ...catalogItem,
-      id: catalogItem.id,
-      member_coupon_id: memberCouponId,
-      member_id: data.wallet.user_id,
-      coupon_id: catalogItem.id,
-      is_used: false,
-      received_at: now.toISOString(),
-      used_at: null,
-      status: deriveCouponStatus({ is_used: false }, catalogItem, now),
-      order_id: null,
-    };
-
-    setCoupons((prev) =>
-      [view, ...prev].sort(
-        (a, b) =>
-          new Date(b.expires_at).getTime() - new Date(a.expires_at).getTime(),
-      ),
-    );
-    setRedeemPool((prev) => prev.filter((c) => c.id !== catalogItem.id));
-    setMainTab("coupons");
-    setCouponFilter("all");
-    setCouponPage(1);
-    toast.success(`成功領取「${catalogItem.title}」`);
   }
 
   return (
@@ -200,7 +172,7 @@ export default function CouponPageClient({ data }: CouponPageClientProps) {
         value={mainTab}
         onChange={setMainTab}
         items={[
-          { key: "points", label: "酷幣紀錄", count: pointCounts.all },
+          { key: "points", label: "M幣紀錄", count: pointCounts.all },
           { key: "coupons", label: "優惠券", count: couponCounts.all },
         ]}
       />
@@ -231,7 +203,7 @@ export default function CouponPageClient({ data }: CouponPageClientProps) {
           <RedeemCouponForm onRedeem={handleRedeem} />
           {redeemPool.length > 0 ? (
             <p className="bg-slate-50/50 px-5 pb-2 text-[11px] text-gray-400">
-              可試用兌換碼：
+              可兌換代碼（格式 C+編號）：
               {redeemPool.map((c) => c.code).join("、")}
             </p>
           ) : (

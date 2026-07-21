@@ -3,111 +3,22 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, X, Crown } from "lucide-react";
+import type { MemberLevel, MemberLevelPayload } from "./api";
 
 interface MemberLevelDetailDrawerProps {
+  data: MemberLevelPayload;
   isOpen: boolean;
   onClose: () => void;
 }
 
-type LevelKey = "navigator" | "gold" | "platinum";
-
-interface MemberStatus {
-  currentLabel: string;
-  nextLabel: string;
-  progressPercent: number;
-  remainingOrders: number;
-  remainingSpend: string;
-}
-
-interface BenefitRow {
-  label: string;
-  values: Record<LevelKey, string>;
-}
-
-interface FaqItem {
-  q: string;
-  a: string;
-}
-
-const LEVELS: { key: LevelKey; label: string; headerClass: string }[] = [
-  { key: "navigator", label: "領航員", headerClass: "text-gray-600" },
-  { key: "gold", label: "黃金會員", headerClass: "text-amber-600" },
-  { key: "platinum", label: "白金會員", headerClass: "text-purple-600" },
-];
-
-const MEMBER_STATUS: MemberStatus = {
-  currentLabel: "黃金會員",
-  nextLabel: "白金會員",
-  progressPercent: 65,
-  remainingOrders: 3,
-  remainingSpend: "NT$ 12,000",
+const LEVEL_HEADER_CLASS: Record<MemberLevel, string> = {
+  銅: "text-amber-700",
+  銀: "text-slate-500",
+  金: "text-yellow-600",
 };
 
-const BENEFIT_ROWS: BenefitRow[] = [
-  {
-    label: "大使權益",
-    values: {
-      navigator: "1倍 (最高回饋1%)",
-      gold: "3倍 (最高回饋3%)",
-      platinum: "5倍 (最高回饋5%)",
-    },
-  },
-  {
-    label: "會員日",
-    values: {
-      navigator: "TWD 50 基礎會員日",
-      gold: "TWD 150 進階會員日",
-      platinum: "TWD 300 尊榮會員日",
-    },
-  },
-  {
-    label: "會員價",
-    values: {
-      navigator: "-",
-      gold: "Gold價",
-      platinum: "Platinum價",
-    },
-  },
-  {
-    label: "升等禮",
-    values: {
-      navigator: "-",
-      gold: "TWD 200 升等禮",
-      platinum: "TWD 500 升等禮",
-    },
-  },
-  {
-    label: "續會禮",
-    values: {
-      navigator: "-",
-      gold: "TWD 200 續會禮",
-      platinum: "TWD 500 續會禮",
-    },
-  },
-];
-
-const FAQS: FaqItem[] = [
-  {
-    q: "C級會員是什麼？",
-    a: "C級會員為本平台會員分級制度，包含領航員（基礎）、黃金會員、白金會員三個等級，依消費與活動參與度給予不同權益。",
-  },
-  {
-    q: "如何加入會員權益？",
-    a: "註冊帳號後自動成為領航員。累積消費或完成體驗預訂即可自動升等，無需額外申請。",
-  },
-  {
-    q: "有哪些優惠？我該如何升等？",
-    a: "請參考上方「C 級 會員權益」表格。升等條件為年度內完成指定訂單數或消費金額，詳見升級辦法說明。",
-  },
-  {
-    q: "哪裡可以查詢會員資格？",
-    a: "於個人檔案 > 會員等級 頁面，即可查看當前等級、進度條與剩餘升等條件。",
-  },
-];
-
-const CURRENT_LEVEL_KEY: LevelKey = "gold";
-
 export default function MemberLevelDetailDrawer({
+  data,
   isOpen,
   onClose,
 }: MemberLevelDetailDrawerProps) {
@@ -116,7 +27,6 @@ export default function MemberLevelDetailDrawer({
   const panelRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
 
-  // Portal 需等 client mount，避免 SSR/水合差異
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -126,7 +36,6 @@ export default function MemberLevelDetailDrawer({
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    // 延遲 focus，避免部分行動瀏覽器搶焦失敗
     const t = window.setTimeout(() => closeBtnRef.current?.focus(), 50);
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -141,13 +50,13 @@ export default function MemberLevelDetailDrawer({
     };
   }, [isOpen, onClose]);
 
-  const progressWidth = Math.min(100, Math.max(0, MEMBER_STATUS.progressPercent));
+  const progressWidth = Math.min(100, Math.max(0, data.progress_percent));
+  const remainingSpendText = `NT$ ${data.remaining_spend.toLocaleString("zh-TW")}`;
 
   if (!mounted) return null;
 
   return createPortal(
     <>
-      {/* Backdrop：關閉時完全不接收點擊，避免蓋住主頁按鈕 */}
       <div
         className={`fixed inset-0 z-[200] bg-black/50 transition-opacity duration-300 ${
           isOpen
@@ -158,7 +67,6 @@ export default function MemberLevelDetailDrawer({
         aria-hidden="true"
       />
 
-      {/* Slide-in Panel：portal 到 body，不受 member layout 層級／overflow 影響 */}
       <div
         ref={panelRef}
         role="dialog"
@@ -171,7 +79,6 @@ export default function MemberLevelDetailDrawer({
             : "pointer-events-none translate-x-full"
         }`}
       >
-        {/* Header */}
         <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 px-4 py-4 sm:px-6">
           <button
             type="button"
@@ -192,9 +99,7 @@ export default function MemberLevelDetailDrawer({
           </button>
         </div>
 
-        {/* Scrollable Content */}
         <div className="flex-1 space-y-10 overflow-y-auto overscroll-contain px-4 py-6 text-gray-800 sm:px-6 sm:py-8">
-          {/* ELITE STATUS */}
           <section>
             <div className="mb-2 flex items-center gap-2 text-teal-600">
               <Crown className="h-5 w-5" aria-hidden />
@@ -203,7 +108,7 @@ export default function MemberLevelDetailDrawer({
               </span>
             </div>
             <h2 id={titleId} className="mb-4 text-3xl font-bold tracking-tight">
-              {MEMBER_STATUS.currentLabel}
+              {data.current_level}級會員
             </h2>
 
             <div className="mb-2 flex justify-between text-sm">
@@ -211,7 +116,9 @@ export default function MemberLevelDetailDrawer({
               <span>
                 下一級：
                 <span className="font-semibold text-teal-600">
-                  {MEMBER_STATUS.nextLabel}
+                  {data.next_level
+                    ? `${data.next_level}級會員`
+                    : "已達最高等級"}
                 </span>
               </span>
             </div>
@@ -229,22 +136,25 @@ export default function MemberLevelDetailDrawer({
               />
             </div>
             <p className="text-sm text-gray-600">
-              再完成{" "}
-              <span className="font-semibold">
-                {MEMBER_STATUS.remainingOrders} 筆訂單
-              </span>{" "}
-              或消費{" "}
-              <span className="font-semibold">
-                {MEMBER_STATUS.remainingSpend}
-              </span>{" "}
-              即可升級。
+              {data.next_level ? (
+                <>
+                  再完成{" "}
+                  <span className="font-semibold">
+                    {data.remaining_orders} 筆訂單
+                  </span>{" "}
+                  或消費{" "}
+                  <span className="font-semibold">{remainingSpendText}</span>{" "}
+                  即可升級。
+                </>
+              ) : (
+                <>您已達到最高等級。</>
+              )}
             </p>
           </section>
 
-          {/* C 級 會員權益 */}
           <section>
             <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-              <h3 className="text-2xl font-bold">C 級 會員權益</h3>
+              <h3 className="text-2xl font-bold">銅銀金 會員權益</h3>
               <span className="rounded-[12px] bg-gray-100 px-3 py-1 text-xs text-gray-500">
                 會員分級權益懶人包
               </span>
@@ -257,15 +167,15 @@ export default function MemberLevelDetailDrawer({
                     <th className="px-3 py-3 text-left font-semibold text-gray-600">
                       等級/權益
                     </th>
-                    {LEVELS.map((level) => (
+                    {data.levels.map((level) => (
                       <th
-                        key={level.key}
-                        className={`px-3 py-3 text-center font-semibold ${level.headerClass} ${
-                          level.key === CURRENT_LEVEL_KEY ? "bg-amber-50" : ""
+                        key={level}
+                        className={`px-3 py-3 text-center font-semibold ${LEVEL_HEADER_CLASS[level]} ${
+                          level === data.current_level ? "bg-amber-50" : ""
                         }`}
                       >
-                        {level.label}
-                        {level.key === CURRENT_LEVEL_KEY ? (
+                        {level}
+                        {level === data.current_level ? (
                           <span className="mt-0.5 block text-[10px] font-medium text-amber-500">
                             目前等級
                           </span>
@@ -275,7 +185,7 @@ export default function MemberLevelDetailDrawer({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 text-center">
-                  {BENEFIT_ROWS.map((row, index) => (
+                  {data.benefit_rows.map((row, index) => (
                     <tr
                       key={row.label}
                       className={index % 2 === 1 ? "bg-gray-50/50" : undefined}
@@ -283,13 +193,13 @@ export default function MemberLevelDetailDrawer({
                       <td className="px-3 py-3 text-left font-medium">
                         {row.label}
                       </td>
-                      {LEVELS.map((level) => {
-                        const value = row.values[level.key];
+                      {data.levels.map((level) => {
+                        const value = row.values[level];
                         const isEmpty = value === "-";
-                        const isCurrent = level.key === CURRENT_LEVEL_KEY;
+                        const isCurrent = level === data.current_level;
                         return (
                           <td
-                            key={level.key}
+                            key={level}
                             className={`px-3 py-3 ${
                               isEmpty ? "text-gray-400" : ""
                             } ${isCurrent ? "bg-amber-50/70 font-medium" : ""}`}
@@ -305,34 +215,40 @@ export default function MemberLevelDetailDrawer({
             </div>
           </section>
 
-          {/* 會員升級辦法 */}
           <section>
             <h3 className="mb-4 text-2xl font-bold">會員升級辦法</h3>
             <div className="space-y-3 text-sm leading-relaxed text-gray-600">
               <p>會員等級資格以「完成參加訂單活動」為準計算。</p>
               <p>
-                升級條件：目前為{MEMBER_STATUS.currentLabel}，需再完成{" "}
-                <span className="font-semibold text-gray-900">
-                  {MEMBER_STATUS.remainingOrders} 筆訂單
-                </span>{" "}
-                或累積消費{" "}
-                <span className="font-semibold text-gray-900">
-                  {MEMBER_STATUS.remainingSpend}
-                </span>{" "}
-                即可升級為{MEMBER_STATUS.nextLabel}。
+                目前為{data.current_level}級會員
+                {data.next_level ? (
+                  <>
+                    ，需再完成{" "}
+                    <span className="font-semibold text-gray-900">
+                      {data.remaining_orders} 筆訂單
+                    </span>{" "}
+                    或累積消費{" "}
+                    <span className="font-semibold text-gray-900">
+                      {remainingSpendText}
+                    </span>{" "}
+                    即可升級為{data.next_level}級。
+                  </>
+                ) : (
+                  <>，已達最高等級。</>
+                )}
               </p>
               <p className="text-xs text-gray-500">
                 *
-                會員資格有效期為一年，系統將依據年度消費與訂單活動自動審核升降等。
+                銅→銀：3 筆訂單或 NT$5,000；銀→金：6 筆訂單或
+                NT$15,000。系統依 total_orders／total_spent 計算進度。
               </p>
             </div>
           </section>
 
-          {/* 常見問題 */}
           <section id="level-faq">
             <h3 className="mb-4 text-2xl font-bold">常見問題</h3>
             <div className="space-y-3">
-              {FAQS.map((item) => (
+              {data.faqs.map((item) => (
                 <details
                   key={item.q}
                   className="group rounded-[12px] border border-gray-200 px-5 py-4"
@@ -353,7 +269,6 @@ export default function MemberLevelDetailDrawer({
           </section>
         </div>
 
-        {/* Footer */}
         <div className="flex flex-shrink-0 gap-4 border-t border-gray-100 px-4 py-4 text-xs text-gray-400 sm:px-6">
           <a href="#" className="hover:text-gray-600">
             隱私權政策
@@ -367,7 +282,7 @@ export default function MemberLevelDetailDrawer({
             }}
             className="hover:text-gray-600"
           >
-            C級常見問題中心
+            會員常見問題中心
           </button>
         </div>
       </div>

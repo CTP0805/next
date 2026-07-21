@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import toast, { Toaster } from "react-hot-toast";
+import { useAuth } from "@/contexts/auth-context";
+import BlogMediaImage from "../_components/BlogMediaImage";
+import BlogOwnerEditLink from "../_components/BlogOwnerEditLink";
+import { fetchBlogPosts, updateBlogPost } from "../_lib/api";
 import type { BlogPost, BlogPostStatus } from "../_lib/types";
 import { BLOG_CATEGORY_MAP, BLOG_STATUS_LABEL } from "../_lib/types";
-
-const PLACEHOLDER = "/images/carousel1.jpg";
 
 type ReviewFilter = "pending_review" | "rejected" | "draft" | "all";
 
@@ -37,16 +38,20 @@ function formatDate(iso: string | null) {
 }
 
 export default function BlogReviewPage() {
+  const { auth, isAuthenticated } = useAuth();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<ReviewFilter>("pending_review");
   const [actingId, setActingId] = useState<number | null>(null);
 
+  function isOwner(post: BlogPost) {
+    return isAuthenticated && Number(post.author_id) === Number(auth.id);
+  }
+
   const loadPosts = useCallback(async () => {
     try {
-      const res = await fetch("/api/blog", { cache: "no-store" });
-      const data = (await res.json()) as { posts?: BlogPost[] };
-      setPosts(data.posts ?? []);
+      const list = await fetchBlogPosts();
+      setPosts(list);
     } catch {
       setPosts([]);
       toast.error("載入文章失敗");
@@ -78,39 +83,26 @@ export default function BlogReviewPage() {
   }, [posts, filter]);
 
   async function updateStatus(post: BlogPost, status: BlogPostStatus) {
+    if (!isOwner(post)) {
+      toast.error("只能修改自己的文章");
+      return;
+    }
     setActingId(post.id);
     try {
-      const res = await fetch(`/api/blog/${post.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: post.title,
-          slug: post.slug,
-          content: post.content,
-          excerpt: post.excerpt,
-          cover_image: post.cover_image,
-          content_image: post.content_image,
-          region: post.region,
-          category_id: post.category_id,
-          author_id: post.author_id,
-          status,
-        }),
+      const updated = await updateBlogPost(post.id, {
+        title: post.title,
+        slug: post.slug,
+        content: post.content,
+        excerpt: post.excerpt,
+        cover_image: post.cover_image,
+        content_image: post.content_image,
+        category_id: post.category_id ?? 1,
+        author_id: post.author_id,
+        status,
       });
-      const data = (await res.json()) as {
-        post?: BlogPost;
-        message?: string;
-      };
 
-      if (!res.ok || !data.post) {
-        toast.error(data.message || "更新失敗");
-        return;
-      }
-
-      // 修訂版核准後已由 API 覆蓋原文並刪除副本，清單也同步移除它。
       setPosts((prev) =>
-        status === "published" && post.review_of_id
-          ? prev.filter((item) => item.id !== post.id)
-          : prev.map((item) => (item.id === data.post.id ? data.post : item)),
+        prev.map((item) => (item.id === updated.id ? updated : item)),
       );
 
       if (status === "published") {
@@ -118,10 +110,10 @@ export default function BlogReviewPage() {
       } else if (status === "rejected") {
         toast.success(`「${post.title}」已退回`);
       } else {
-        toast.success(data.message || "已更新");
+        toast.success("已更新");
       }
-    } catch {
-      toast.error("網路錯誤，請稍後再試");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "網路錯誤，請稍後再試");
     } finally {
       setActingId(null);
     }
@@ -225,8 +217,8 @@ export default function BlogReviewPage() {
                 >
                   <div className="flex flex-col gap-4 p-4 sm:flex-row sm:p-5">
                     <div className="relative h-36 w-full shrink-0 overflow-hidden rounded-[12px] bg-gray-100 sm:h-28 sm:w-40">
-                      <Image
-                        src={post.cover_image || PLACEHOLDER}
+                      <BlogMediaImage
+                        src={post.cover_image}
                         alt={post.title}
                         fill
                         className="object-cover object-center"
@@ -241,13 +233,9 @@ export default function BlogReviewPage() {
                         >
                           {BLOG_STATUS_LABEL[post.status]}
                         </span>
-                        {post.region ? (
-                          <span className="rounded-[12px] bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
-                            {post.region}
-                          </span>
-                        ) : null}
+
                         <span className="rounded-[12px] bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
-                          {BLOG_CATEGORY_MAP[post.category_id] || "其他"}
+                          {BLOG_CATEGORY_MAP[post.category_id ?? 0] || "其他"}
                         </span>
                         <span className="text-xs text-gray-400">
                           更新 {formatDate(post.updated_at)}
@@ -266,20 +254,15 @@ export default function BlogReviewPage() {
                       </p>
 
                       <div className="mt-4 flex flex-wrap items-center gap-2">
-                        <Link
-                          href={`/blog/${post.slug}`}
-                          className="rounded-[12px] border border-gray-200 px-3.5 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50"
-                        >
-                          預覽
-                        </Link>
-                        <Link
+                        <BlogOwnerEditLink
+                          authorId={post.author_id}
                           href={`/blog/${post.slug}/edit`}
                           className="rounded-[12px] border border-gray-200 px-3.5 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50"
                         >
                           編輯
-                        </Link>
+                        </BlogOwnerEditLink>
 
-                        {post.status !== "published" ? (
+                        {isOwner(post) && post.status !== "published" ? (
                           <button
                             type="button"
                             disabled={busy}
@@ -290,7 +273,7 @@ export default function BlogReviewPage() {
                           </button>
                         ) : null}
 
-                        {post.status !== "rejected" ? (
+                        {isOwner(post) && post.status !== "rejected" ? (
                           <button
                             type="button"
                             disabled={busy}
@@ -301,7 +284,7 @@ export default function BlogReviewPage() {
                           </button>
                         ) : null}
 
-                        {post.status === "draft" ? (
+                        {isOwner(post) && post.status === "draft" ? (
                           <button
                             type="button"
                             disabled={busy}
