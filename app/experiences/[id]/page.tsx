@@ -1,10 +1,13 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
+import { useFavorites } from "@/contexts/FavoriteContext";
 import { useState, useEffect } from "react";
-import { useParams, useSearchParams, useRouter } from "next/navigation"; // 💡 引入 useParams 獲取網址 ID
+import { useParams, useRouter, useSearchParams } from "next/navigation"; // 💡 引入 useParams 獲取網址 ID
 import {
   HiStar,
+  HiHeart,
   HiOutlineHeart,
   HiChevronLeft,
   HiOutlineShoppingCart,
@@ -23,6 +26,28 @@ import { useCart } from "@/contexts/cart";
 type ExperienceNote = {
   title: string;
   content: string;
+};
+
+type ExperienceSession = {
+  id: number;
+  start_time: string;
+  end_time: string;
+  adult_price: number;
+  child_price: number;
+  min_participants: number;
+  max_participants: number;
+};
+
+type ExperienceReview = {
+  id: number;
+  member_id: number;
+  rating: number;
+  comment: string;
+  created_at: string;
+  image_url: string | null;
+  member_name: string | null;
+  member_avatar: string | null;
+  departure_date: string | null;
 };
 
 type Experience = {
@@ -57,6 +82,8 @@ type Experience = {
   review_count: number;
 
   notes: ExperienceNote[];
+  sessions: ExperienceSession[];
+  reviews: ExperienceReview[];
 };
 const gallery = [
   {
@@ -84,14 +111,20 @@ const gallery = [
 function IconButton({
   label,
   children,
+  onClick,
+  pressed,
 }: {
   label: string;
   children: React.ReactNode;
+  onClick?: () => void | Promise<void>;
+  pressed?: boolean;
 }) {
   return (
     <button
       type="button"
       aria-label={label}
+      aria-pressed={pressed}
+      onClick={onClick}
       className="grid size-10 place-items-center rounded-md border border-[#DDE3E5] bg-white text-lg text-[#5C666C] transition-colors hover:border-[#68BBC3] hover:text-[#419AA2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#68BBC3]"
     >
       {children}
@@ -111,10 +144,10 @@ const formatDuration = (minutes: number) => {
 
 export default function ExperienceDetailPage() {
   const params = useParams();
-  const searchParams = useSearchParams(); // 💡 獲取網址 Query 參數
-  const router = useRouter(); // 💡 獲取 Next.js 路由路由器
-  const { onAdd, onEdit } = useCart(); // 💡 從你的 Context 中引入這兩個好幫手
-
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { onAdd, onEdit } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const id = params.id as string;
   const [experience, setExperience] = useState<Experience | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -122,14 +155,6 @@ export default function ExperienceDetailPage() {
   const [activeHash, setActiveHash] = useState("overview");
   // 1. 控制回到頂端按鈕的顯示狀態
   const [showScrollTop, setShowScrollTop] = useState(false);
-
-  // 📱 手機版選擇場次與人的人數狀態（通常需要與 UI 的點擊綁定，這裡先提供 State 管理）
-  const [selectedSessionId, setSelectedSessionId] = useState<number>(101); // 預設某場次
-  const [selectedQty, setSelectedQty] = useState<number>(1); // 預設 1 人
-  const [selectedSessionName, setSelectedSessionName] =
-    useState<string>("2026-08-07 17:00");
-
-  // 💡 1. 網址參數解析：判斷當前是否處於「編輯模式」並記錄舊資料
   const isEditMode = searchParams.get("edit") === "true";
   const oldSessionId = searchParams.get("oldSession")
     ? Number(searchParams.get("oldSession"))
@@ -137,6 +162,19 @@ export default function ExperienceDetailPage() {
   const oldQty = searchParams.get("oldQty")
     ? Number(searchParams.get("oldQty"))
     : null;
+  const favorite = experience ? isFavorite(experience.id) : false;
+
+  const handleFavoriteClick = async () => {
+    if (!experience) return;
+
+    try {
+      await toggleFavorite(experience.id);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "收藏操作失敗";
+
+      alert(message);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -187,11 +225,10 @@ export default function ExperienceDetailPage() {
     });
   };
 
-  // 💡 統一的購物車提交處理函式（不管是手機版點擊、還是 BookingCard 點擊都用這一個！）
-  const handleCartSubmit =async (
-    targetSessionId: number,
-    targetQty: number,
-    targetSessionName?: string,
+  const handleCartSubmit = async (
+    sessionId: number,
+    quantity: number,
+    sessionName: string,
   ) => {
     if (!experience) return;
 
@@ -203,53 +240,42 @@ export default function ExperienceDetailPage() {
     };
 
     try {
-    if (isEditMode && oldSessionId !== null) {
-      // 編輯模式：呼叫 onEdit
-      onEdit(
-        experience.id,
-        oldSessionId,
-        productInfo,
-        targetSessionId,
-        targetQty,
-        targetSessionName,
-      );
-      router.push("/cart"); // 編輯完成回購物車
-    } else {
-      // 一般新增模式
-      await onAdd(productInfo, targetSessionId, targetQty, targetSessionName);
-      alert("已加入購物車！");
-    }
+      if (isEditMode && oldSessionId !== null) {
+        onEdit(
+          experience.id,
+          oldSessionId,
+          productInfo,
+          sessionId,
+          quantity,
+          sessionName,
+        );
+        router.push("/cart");
+        return;
+      }
 
+      await onAdd(productInfo, sessionId, quantity, sessionName);
+      alert("已加入購物車！");
     } catch (error) {
       console.error("購物車同步失敗:", error);
       alert("加入失敗，請確認選擇的場次是否正確！");
     }
   };
 
-  // 🚀 做法 B：立即預訂（跳過購物車，直接帶參數去結帳頁）
   const handleDirectBook = (
-    targetSessionId: number,
-    targetQty: number,
-    targetSessionName?: string,
+    sessionId: number,
+    quantity: number,
+    sessionName: string,
   ) => {
     if (!experience) return;
 
-    // 💡 把結帳需要的行程 ID、場次 ID、人數，以及場次名稱，通通打包成網址參數
     const queryParams = new URLSearchParams({
       experienceId: experience.id.toString(),
-      sessionId: targetSessionId.toString(),
-      quantity: targetQty.toString(),
+      sessionId: sessionId.toString(),
+      quantity: quantity.toString(),
+      sessionName,
     });
-
-    if (targetSessionName) {
-      queryParams.append("sessionName", targetSessionName);
-    }
-
-    // 直接導向結帳頁，網址會變成 /checkout?experienceId=2&sessionId=1&quantity=2...
     router.push(`/checkout?${queryParams.toString()}`);
   };
-
-
   if (isLoading) {
     return <div className="px-6 py-20 text-center">載入中...</div>;
   }
@@ -268,22 +294,28 @@ export default function ExperienceDetailPage() {
           className="hidden text-sm font-medium sm:block"
           aria-label="麵包屑"
         >
-          <span className="cursor-pointer font-bold text-[#68BBC3] hover:underline">
+          <Link
+            href="/"
+            className="cursor-pointer font-bold text-[#68BBC3] hover:underline"
+          >
             首頁
-          </span>
+          </Link>
           <span className="mx-2 text-[#7B8388]">›</span>
-          <span className="cursor-pointer text-[#68BBC3] hover:underline">
-            義大利
-          </span>
+          <Link
+            href={`/experiences/search?city=${encodeURIComponent(experience.city)}`}
+          >
+            <span className="cursor-pointer text-[#68BBC3] hover:underline">
+              {experience.city}
+            </span>
+          </Link>
           <span className="mx-2 text-[#7B8388]">›</span>
-          <span className="cursor-pointer text-[#68BBC3] hover:underline">
-            {experience.city}
-          </span>
-          <span className="mx-2 text-[#7B8388]">›</span>
-          <span className="cursor-pointer text-[#68BBC3] hover:underline">
-            {experience.category_name}
-          </span>
-
+          <Link
+            href={`/experiences/search?category_ids=${experience.category_id}`}
+          >
+            <span className="cursor-pointer text-[#68BBC3] hover:underline">
+              {experience.category_name}
+            </span>
+          </Link>
           <span className="mx-2 text-[#7B8388]">›</span>
           <span className="inline-block max-w-[200px] truncate align-bottom text-[#7B8388]">
             {experience.title}
@@ -319,10 +351,16 @@ export default function ExperienceDetailPage() {
               {/* 愛心按鈕 */}
               <button
                 type="button"
+                onClick={handleFavoriteClick}
+                aria-label={favorite ? "取消收藏" : "加入我的最愛"}
+                aria-pressed={favorite}
                 className="flex size-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-transform active:scale-90"
-                aria-label="加入我的最愛"
               >
-                <HiOutlineHeart className="size-5" />
+                {favorite ? (
+                  <HiHeart className="size-5 text-red-500" />
+                ) : (
+                  <HiOutlineHeart className="size-5" />
+                )}
               </button>
               {/* 購物車按鈕 */}
               <button
@@ -398,8 +436,16 @@ export default function ExperienceDetailPage() {
           </div>
           <div className="flex shrink-0 gap-2 max-sm:hidden">
             <IconButton label="分享體驗">↗</IconButton>
-            <IconButton label="加入我的最愛">
-              <HiOutlineHeart className="size-5" />
+            <IconButton
+              label={favorite ? "取消收藏" : "加入我的最愛"}
+              pressed={favorite}
+              onClick={handleFavoriteClick}
+            >
+              {favorite ? (
+                <HiHeart className="size-5 text-red-500" />
+              ) : (
+                <HiOutlineHeart className="size-5" />
+              )}
             </IconButton>
           </div>
         </section>
@@ -467,14 +513,17 @@ export default function ExperienceDetailPage() {
               longitude={experience.longitude}
               latitude={experience.latitude}
             />
-            <ReviewsSection />
+            <ReviewsSection
+              rating={experience.rating}
+              reviewCount={experience.review_count}
+              reviews={experience.reviews}
+            />
             <NotesSection notes={experience.notes} />
           </div>
 
-          {/* 💡 桌機版 BookingCard 修改：傳入 onSubmit (handleCartSubmit) 以及編輯預設參數 */}
           <div className="hidden lg:sticky lg:top-20 lg:block">
             <BookingCard
-              experience={experience}
+              sessions={experience.sessions}
               isEditMode={isEditMode}
               oldSessionId={oldSessionId}
               oldQty={oldQty}
@@ -510,41 +559,34 @@ export default function ExperienceDetailPage() {
           {/* 2. 下層：橫向滿版的雙按鈕 */}
           <div className="flex w-full gap-3">
             {/* 橘色按鈕：加入購物車 */}
-            {isEditMode ? (
-              <button
-                type="button"
-                onClick={() =>
-                  handleCartSubmit(
-                    selectedSessionId,
-                    selectedQty,
-                    selectedSessionName,
-                  )
+            <button
+              type="button"
+              onClick={() => {
+                const session = experience.sessions[0];
+                if (session) {
+                  handleCartSubmit(session.id, 1, session.start_time);
                 }
-                className="flex-1 rounded-xl bg-[#68BBC3] py-4 text-center text-sm font-black text-white transition-transform active:scale-[0.98]"
-              >
-                確認修改商品
-              </button>
-            ) : (
-              // 一般模式：維持原本的雙按鈕
-              <>
-                <button
-                  type="button"
-                  onClick={() => handleCartSubmit(selectedSessionId, selectedQty, selectedSessionName)}
-                  className="flex-1 rounded-xl bg-[#FF9224] py-4 text-center text-sm font-black text-white transition-transform active:scale-[0.98]"
-                >
-                  加入購物車
-                </button>
+              }}
+              disabled={experience.sessions.length === 0}
+              className="flex-1 rounded-xl bg-[#FF9224] py-4 text-center text-sm font-black text-white transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              加入購物車
+            </button>
 
-                {/* 藍綠色按鈕：立即預訂 */}
-                <button
-                  type="button"
-                  onClick={() => handleDirectBook(selectedSessionId, selectedQty, selectedSessionName)}
-                  className="flex-1 rounded-xl bg-[#68BBC3] py-4 text-center text-sm font-black text-white transition-transform active:scale-[0.98]"
-                >
-                  立即預訂
-                </button>
-              </>
-            )}
+            {/* 藍綠色按鈕：立即預訂 */}
+            <button
+              type="button"
+              onClick={() => {
+                const session = experience.sessions[0];
+                if (session) {
+                  handleDirectBook(session.id, 1, session.start_time);
+                }
+              }}
+              disabled={experience.sessions.length === 0}
+              className="flex-1 rounded-xl bg-[#68BBC3] py-4 text-center text-sm font-black text-white transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              立即預訂
+            </button>
           </div>
         </div>
       </main>

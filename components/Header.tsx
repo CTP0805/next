@@ -1,8 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import type { SubmitEventHandler } from "react";
 import { FaSearch } from "react-icons/fa";
 import { useCart } from "@/contexts/cart"; // 引入購物車 Context
 import { HiOutlineShoppingCart, HiTrash } from "react-icons/hi"; // 引入美化 Icon
@@ -17,10 +18,15 @@ export default function Navbar() {
     { name: "品牌介紹", href: "/about" },
     { name: "聯絡我們", href: "/contact" },
   ];
-
+  const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const isHomePage = pathname === "/";
+  const urlKeyword = searchParams.get("keyword") ?? "";
+
   const [isScrolled, setIsScrolled] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // 只有在首頁時才需要監聽捲動事件
@@ -39,7 +45,22 @@ export default function Navbar() {
   const navStyle = isHomePage && !isScrolled ? "bg-white/20" : "bg-[#45cad5]";
 
   const navPosition = isHomePage ? "fixed" : "sticky";
+  const handleSearch: SubmitEventHandler<HTMLFormElement> = (event) => {
+    event.preventDefault();
 
+    const trimmedKeyword = searchInputRef.current?.value.trim() ?? "";
+
+    if (!trimmedKeyword) {
+      router.push("/experiences/search");
+      return;
+    }
+
+    const params = new URLSearchParams({
+      keyword: trimmedKeyword,
+    });
+
+    router.push(`/experiences/search?${params.toString()}`);
+  };
   return (
     <nav
       className={`${navPosition} top-0 left-0 z-50 flex h-[60px] w-full items-center justify-between p-2 text-white xl:px-37.5 ${navStyle}`}
@@ -57,15 +78,28 @@ export default function Navbar() {
           />
         </Link>
       </div>
-      <div className="relative w-40 md:w-80">
-        <FaSearch className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />
+      <form
+        onSubmit={handleSearch}
+        role="search"
+        className="relative w-40 md:w-80"
+      >
+        <button
+          type="submit"
+          aria-label="搜尋"
+          className="absolute top-1/2 left-3 z-10 -translate-y-1/2 cursor-pointer text-gray-400"
+        >
+          <FaSearch />
+        </button>
 
         <input
-          type="text"
-          placeholder="搜尋景點、地區或城市"
+          key={urlKeyword}
+          ref={searchInputRef}
+          type="search"
+          defaultValue={urlKeyword}
+          placeholder="搜尋城市、分類或體驗"
           className="h-[40px] w-full rounded-[25px] bg-gray-300/20 pr-4 pl-10 text-[16px] placeholder:text-white/70"
         />
-      </div>
+      </form>
       {/* 中間導覽 */}
       <div className="hidden items-center md:flex">
         {navLinks.map((link, index) => (
