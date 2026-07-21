@@ -7,7 +7,7 @@ import { z } from "zod";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { API_SERVER } from "@/config/api-path";
 
 // 還不確定用不用的到
@@ -74,12 +74,12 @@ function ResetPasswordError() {
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
 
-  const valid = searchParams.get("valid");
+  const success = searchParams.get("success");
   const token = searchParams.get("token");
   const router = useRouter();
 
-  // 只有 valid=true 才能顯示重設密碼畫面
-  if (valid !== "true") {
+  // 只有 success=true 才能顯示重設密碼畫面
+  if (success !== "true") {
     return <ResetPasswordError />;
   }
 
@@ -155,10 +155,6 @@ export default function ResetPasswordPage() {
   return (
     <>
       <main className="min-h-screen bg-[url('/images/login-bg.jpg')] bg-cover bg-[position:48%_center] xl:bg-left text-white">
-        <div>
-          <Toaster />
-        </div>
-
         {/* 背景遮罩 */}
         <div className="min-h-screen bg-black/10 backdrop-brightness-75">
           {/* 外層 container：負責控制整體寬度與 RWD 留白 */}
