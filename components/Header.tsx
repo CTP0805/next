@@ -16,8 +16,7 @@ import {
   FaHeart,
   FaClockRotateLeft,
 } from "react-icons/fa6";
-import { TbLogout } from "react-icons/tb";
-
+import { FiLogOut } from "react-icons/fi";
 type MemberList = {
   label: string;
   icon: ReactNode;
@@ -167,10 +166,10 @@ export default function Navbar() {
             {/* 下拉選單 */}
             <ul
               tabIndex={0}
-              className="dropdown-content menu rounded-box z-[60] mt-4 w-56 bg-gray-700 p-2 shadow-xl"
+              className="dropdown-content menu rounded-box z-[60] mt-4 w-56 bg-white p-2 text-black shadow-xl"
             >
               {/* 用戶資訊區 */}
-              <li className="mb-2">
+              <li className="mb-2 border-b">
                 <div className="flex items-center gap-3 px-4 py-3">
                   <img
                     src="/images/avatar-test.png"
@@ -202,10 +201,9 @@ export default function Navbar() {
               <li className="mt-2 border-t border-gray-600 pt-2">
                 <button
                   onClick={logout}
-                  className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-red-400 hover:bg-red-600 hover:text-white"
+                  className="flex w-full items-center gap-3 rounded-lg px-4 py-3 hover:bg-red-600 hover:text-white"
                 >
-                  <TbLogout />
-                  <span>登出</span>
+                  <FiLogOut /> <span>登出</span>
                 </button>
               </li>
             </ul>
@@ -227,9 +225,9 @@ export default function Navbar() {
         )}
       </ul>
       {/* 在父容器中直接放置 dropdown，不被 relative md:hidden 限制 */}
-      <div className="gap-1 md:hidden">
+      <div className="flex gap-1 md:hidden">
         {isAuthenticated ? (
-          <div className="dropdown dropdown-end dropdown-hover">
+          <div className="dropdown dropdown-end md:dropdown-hover">
             <div
               tabIndex={0}
               role="button"
@@ -239,17 +237,24 @@ export default function Navbar() {
             </div>
             <ul
               tabIndex={0}
-              className="menu dropdown-content dropdown-hover fixed right-0 z-50 w-screen bg-white p-4 text-black shadow"
-            ></ul>
+              className="menu dropdown-content fixed right-0 z-50 w-screen bg-white p-4 text-black shadow"
+            >
+              {" "}
+              <li className="relative h-32 w-full">
+                <Image src="/cat-cart.jpg" alt="123" fill />
+              </li>
+            </ul>
           </div>
         ) : null}
-        <div className="dropdown dropdown-end md:hidden">
-          <div role="button" className="btn btn-ghost btn-circle md:hidden">
-            <Link href="/member">
-              <FaUser />
-            </Link>
+        {isAuthenticated ? (
+          <div className="md:hidden">
+            <div role="button" className="btn btn-ghost btn-circle md:hidden">
+              <a href="/member">
+                <FaUser />
+              </a>
+            </div>
           </div>
-        </div>
+        ) : null}
         <div className="dropdown dropdown-end md:hidden">
           <div
             tabIndex={0}
@@ -277,13 +282,33 @@ export default function Navbar() {
             tabIndex={0}
             className="menu dropdown-content fixed right-0 z-50 w-screen bg-white p-4 text-black"
           >
+            {isAuthenticated ? null : (
+              <>
+                <li>
+                  <Link href="/auth/login" className="hover:text-gray-300">
+                    登入
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/auth/register" className="hover:text-gray-300">
+                    註冊
+                  </Link>
+                </li>
+              </>
+            )}
+
             {navLinks.map((v, i) => {
               return (
                 <li key={i}>
-                  <Link href={v.href}>{v.name}</Link>
+                  <a href={v.href}>{v.name}</a>
                 </li>
               );
             })}
+            <li className="">
+              <button onClick={logout} className="flex w-full items-center">
+                <span>登出</span>
+              </button>
+            </li>
           </ul>
         </div>
       </div>
