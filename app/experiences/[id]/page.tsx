@@ -2,9 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import { useFavorites } from "@/contexts/FavoriteContext";
 import { useState, useEffect } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation"; // 💡 引入 useParams 獲取網址 ID
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { FaImages } from "react-icons/fa";
+import { useCart } from "@/contexts/cart";
 import {
   HiStar,
   HiHeart,
@@ -13,14 +16,12 @@ import {
   HiOutlineShoppingCart,
   HiChevronUp,
 } from "react-icons/hi";
-import { FaImages } from "react-icons/fa";
-
 import HostSection from "@/app/experiences/_components/HostSection";
 import LocationSection from "@/app/experiences/_components/LocationSection";
 import ReviewsSection from "@/app/experiences/_components/ReviewsSection";
 import NotesSection from "@/app/experiences/_components/NotesSection";
 import BookingCard from "@/app/experiences/_components/BookingCard";
-import { useCart } from "@/contexts/cart";
+
 
 // 💡 調整 Type 定義，以符合後端資料庫回傳的真實欄位
 type ExperienceNote = {
@@ -225,57 +226,85 @@ export default function ExperienceDetailPage() {
     });
   };
 
+  //處理Edit編輯&加入onAdd購物車按鈕
   const handleCartSubmit = async (
     sessionId: number,
-    quantity: number,
+    adultQty: number,
+    childQty: number,
     sessionName: string,
   ) => {
     if (!experience) return;
+
+    // 找出使用者選中的 Session 以確保拿到正確金額
+  const targetSession = experience.sessions.find((s) => s.id === sessionId);
 
     const productInfo = {
       experienceId: experience.id,
       name: experience.title,
-      price: experience.price,
-      image: experience.image_url,
+      price: targetSession?.adult_price ?? experience.adult_price ?? experience.price ?? 0,
+      adultPrice: targetSession?.adult_price ?? experience.adult_price ?? experience.price ?? 0,
+      childPrice: targetSession?.child_price ?? experience.child_price ?? 0,
+      image_url: experience.image_url ?? "",
+      image: experience.image_url ?? "", 
     };
 
     try {
       if (isEditMode && oldSessionId !== null) {
-        onEdit(
+        await onEdit(
           experience.id,
           oldSessionId,
           productInfo,
           sessionId,
-          quantity,
+          adultQty,
+          childQty,
           sessionName,
         );
+        toast.success("已更新購物車資料！");
         router.push("/cart");
         return;
       }
 
-      await onAdd(productInfo, sessionId, quantity, sessionName);
-      alert("已加入購物車！");
+      await onAdd(productInfo, sessionId, adultQty, childQty, sessionName);
+      toast.success("已成功加入購物車！");
     } catch (error) {
       console.error("購物車同步失敗:", error);
-      alert("加入失敗，請確認選擇的場次是否正確！");
+      toast.error("加入失敗，請確認選擇的場次是否正確！");
     }
   };
 
-  const handleDirectBook = (
-    sessionId: number,
-    quantity: number,
-    sessionName: string,
-  ) => {
-    if (!experience) return;
+  //處理點擊立即預定按鈕到checkout介面
+  const handleDirectBook = async (
+  sessionId: number,
+  adultQty: number,
+  childQty: number,
+  sessionName: string,
+) => {
+  if (!experience) return;
 
-    const queryParams = new URLSearchParams({
-      experienceId: experience.id.toString(),
-      sessionId: sessionId.toString(),
-      quantity: quantity.toString(),
-      sessionName,
-    });
-    router.push(`/checkout?${queryParams.toString()}`);
+  const targetSession = experience.sessions.find((s) => s.id === sessionId);
+
+  const productInfo = {
+    experienceId: experience.id,
+    name: experience.title,
+    price: targetSession?.adult_price ?? experience.adult_price ?? experience.price ?? 0,
+    adultPrice: targetSession?.adult_price ?? experience.adult_price ?? experience.price ?? 0,
+    childPrice: targetSession?.child_price ?? experience.child_price ?? 0,
+    image: experience.image_url ?? undefined,
   };
+
+  try {
+    // 1. 寫入購物車後跳轉
+    await onAdd(productInfo, sessionId, adultQty, childQty, sessionName);
+    // 2. 順暢跳轉至結帳頁面
+    toast.success("正在前往結帳頁面...");
+    router.push("/checkout");
+  } catch (error) {
+    console.error("立即預訂失敗:", error);
+    toast.error("預訂失敗，請重試！");
+  }
+};
+
+// 【型別與載入保護】絕對不能刪！有這兩段 TypeScript 才知道底下的 experience 絕對不為 null
   if (isLoading) {
     return <div className="px-6 py-20 text-center">載入中...</div>;
   }
@@ -287,6 +316,7 @@ export default function ExperienceDetailPage() {
       </div>
     );
   }
+
   return (
     <div className="min-h-screen bg-white text-[#292E33]">
       <main className="mx-auto w-full max-w-[1280px] px-6 pt-10 pb-28 max-sm:px-2 max-sm:pt-0">
@@ -564,7 +594,7 @@ export default function ExperienceDetailPage() {
               onClick={() => {
                 const session = experience.sessions[0];
                 if (session) {
-                  handleCartSubmit(session.id, 1, session.start_time);
+                  handleCartSubmit(session.id, 1, 0, session.start_time);
                 }
               }}
               disabled={experience.sessions.length === 0}
@@ -579,7 +609,7 @@ export default function ExperienceDetailPage() {
               onClick={() => {
                 const session = experience.sessions[0];
                 if (session) {
-                  handleDirectBook(session.id, 1, session.start_time);
+                  handleDirectBook(session.id, 1, 0, session.start_time);
                 }
               }}
               disabled={experience.sessions.length === 0}

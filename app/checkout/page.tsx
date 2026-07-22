@@ -99,7 +99,7 @@ export default function CheckPage() {
       lastName: autoLastName.toUpperCase(),
       firstName: autoFirstName.toUpperCase(),
       phoneCode: "+886",
-      phone: "0919123456", //資料庫沒欄位先寫死
+      phone: auth.phone || "", 
       email: auth.email || "",
     });
     setShowForm(true);

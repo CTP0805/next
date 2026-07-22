@@ -6,24 +6,31 @@ import { API_SERVER } from "@/config/api-path";
 
 //定義商品項目型別
 export interface ProductItem {
+  id?: number;
   experienceId: number;
   name: string;
+  title?: string;
   price: number;
-  spec?: string;
+  adultPrice?: number;
+  childPrice?: number;
   image_url?: string;
+  image?: string;
 }
 
 //定義購買的商品項目的型別
 export interface CartItem {
-  image?: string;
-  spec?: string;
   cartId?: number;
   experienceId: number;
   sessionId: number;
   name: string;
-  price: number;
+  adultPrice: number;
+  childPrice: number;
+  adultQuantity: number;
+  childQuantity: number;
   quantity: number; //購物車項目數量屬性
-  sessionName?: string; // 可讀的場次資訊 (例如：2026-08-01 14:00)
+  sessionName?: string; //可讀的場次資訊 (例如：2026-08-01 14:00)
+  image?: string;
+  isSoldOut?: boolean; //新增：是否完售/過期
 }
 
 //要使用context共享的value類型
@@ -37,13 +44,20 @@ interface CartcontextType {
   onAdd: (
     product: ProductItem,
     sessionId: number,
-    quantity?: number,
+    adultQuantity?: number,
+    childQuantity?: number,
     sessionName?: string,
   ) => void;
 
-  // 操作數量或移除時，因為唯一 Key 是「商品 ID + 場次 ID」，所以必須同時傳入這兩個參數
-  onDecrease: (experienceId: number, sessionId: number) => void;
-  onIncrease: (experienceId: number, sessionId: number) => void;
+  //更新大人小孩人數
+  onUpdateQuantity: (
+    experienceId: number,
+    sessionId: number,
+    type: "adult" | "child",
+    delta: number,
+  ) => void;
+
+  //刪除功能
   onRemove: (experienceId: number, sessionId: number) => void;
 
   //編輯功能
@@ -52,7 +66,8 @@ interface CartcontextType {
     oldSessionId: number,
     newProduct: ProductItem,
     newSessionId: number,
-    newQuantity: number,
+    newAdultQty: number,
+    newChildQty: number,
     newSessionName?: string,
   ) => void;
 }
@@ -69,28 +84,44 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   //新增useEffect,在 Provider 第一次渲染時，去後端拿真實的購物車商品
   useEffect(() => {
-    fetch(`${API_SERVER}/api/cart/cart`,{
-        method: "GET",
-        credentials: "include"
+    fetch(`${API_SERVER}/api/cart/cart`, {
+      method: "GET",
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData.success) {
+          // 將後端回傳的購物車陣列存進 state 中
+          setItems(resData.data);
+        }
       })
-        .then((res) => res.json())
-        .then((resData) => {
-          if (resData.success) {
-            // 將後端回傳的購物車陣列存進 state 中
-            setItems(resData.data);
-          }
-        })
-        .catch((err) => console.error("無法取得購物車資料:", err));
+      .catch((err) => console.error("無法取得購物車資料:", err));
   }, []); // 空陣列代表只在網頁開啟時拿一次
 
-  //處理遞增: 增加指定行程與場次的數量
-  const onIncrease = async (experienceId: number, sessionId: number) => {
+  //更新數量（大人/小孩按鈕點擊）
+  const onUpdateQuantity = async (
+    experienceId: number,
+    sessionId: number,
+    type: "adult" | "child",
+    delta: number,
+  ) => {
     // 1. 先找出原本的項目，計算加 1 後的最新數量
     const currentItem = items.find(
       (v) => v.experienceId === experienceId && v.sessionId === sessionId,
     );
     if (!currentItem) return;
-    const targetQty = currentItem.quantity + 1;
+
+    let targetAdult = Number(currentItem.adultQuantity) || 0;
+    let targetChild = Number(currentItem.childQuantity) || 0;
+    
+    if (type === "adult") {
+      targetAdult = Math.max(0, targetAdult + delta);
+    } else {
+      targetChild = Math.max(0, targetChild + delta);
+    }
+
+    // 至少要有一位成人或兒童
+    if (targetAdult + targetChild < 1) return;
 
     // 2. 先更新前端狀態，讓使用者點擊時數字瞬間改變
     const nextItems = items.map((v) => {
@@ -98,7 +129,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (v.experienceId === experienceId && v.sessionId === sessionId) {
         // 對符合條件的物件作修改
         // 用展開運算子作複製物件，並修改quantity屬性值+1
-        return { ...v, quantity: targetQty };
+        return {
+          ...v,
+          adultQuantity: targetAdult,
+          childQuantity: targetChild,
+          quantity: targetAdult + targetChild,
+        };
       } else {
         // 不符條件的直接回傳保持原樣
         return v;
@@ -114,57 +150,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: 1, // 暫時寫死的會員 ID
           experienceId,
           sessionId,
-          quantity: targetQty, // 告訴後端最新數量
+          adultQuantity: targetAdult,
+          childQuantity: targetChild,
         }),
       });
     } catch (err) {
       console.error("同步後端數量失敗", err);
-    }
-  };
-
-  //處理遞減
-  const onDecrease = async (experienceId: number, sessionId: number) => {
-    // 1. 找出原本的項目，計算減 1 後的最新數量 (最少為 1)
-    const currentItem = items.find(
-      (v) => v.experienceId === experienceId && v.sessionId === sessionId,
-    );
-    if (!currentItem) return;
-    const targetQty =
-      currentItem.quantity - 1 < 1 ? 1 : currentItem.quantity - 1;
-
-    // 2. 如果數量已經是 1 還點減，就不執行任何動作 (防止發送沒意義的 API 請求)
-    if (currentItem.quantity === 1) return;
-
-    // 3. 更新前端狀態
-    const nextItems = items.map((v) => {
-      if (v.experienceId === experienceId && v.sessionId === sessionId) {
-        return { ...v, quantity: targetQty };
-      } else {
-        // 不符條件的直接回傳保持原樣
-        return v;
-      }
-    });
-
-    // 設定到狀態中成為新狀態
-    setItems(nextItems);
-
-    // 4. 背景發送更新 API
-    try {
-      await fetch("http://localhost:3001/api/cart/update", {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          experienceId,
-          sessionId,
-          quantity: targetQty, // 告訴後端最新數量
-        }),
-      });
-    } catch (error) {
-      console.error("同步後端數量失敗:", error);
     }
   };
 
@@ -200,7 +193,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const onAdd = async (
     product: ProductItem,
     sessionId: number,
-    quantity = 1,
+    adultQuantity = 1,
+    childQuantity = 0,
     sessionName?: string,
   ) => {
     // 尋找購物車中是否已經有「同行程且同場次」的項目
@@ -213,7 +207,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       // 找到了：直接增加數量 (增加傳入的 quantity，若沒傳入預設是 +1)量
       const nextItems = items.map((v, idx) => {
         if (idx === foundIndex) {
-          return { ...v, quantity: v.quantity + quantity };
+          const nextAdult = v.adultQuantity + adultQuantity;
+          const nextChild = v.childQuantity + childQuantity;
+          return {
+            ...v,
+            adultQuantity: nextAdult,
+            childQuantity: nextChild,
+            quantity: nextAdult + nextChild,
+          };
         }
         return v;
       });
@@ -221,14 +222,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } else {
       // 沒找到：新加入一筆
       const newItem: CartItem = {
-        image: product.image,
-        spec: product.spec,
+        image: product.image || product.image_url || "/images/experiences/seine-picnic.jpg",
         experienceId: product.experienceId,
         name: product.name,
-        price: product.price,
-        sessionId: sessionId,
-        quantity: quantity,
+        adultPrice: product.adultPrice ?? product.price ?? 0,
+        childPrice: product.childPrice ?? 0,
         sessionName: sessionName,
+        adultQuantity,
+        childQuantity,
+        quantity: adultQuantity + childQuantity,
+        sessionId: sessionId,
       };
       // 讓新加入的商品在最上面
       const nextItems = [newItem, ...items];
@@ -240,9 +243,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          experienceId: product.experienceId || product.id,
-          sessionId: sessionId,
-          quantity: quantity,
+          experienceId: product.experienceId,
+          sessionId,
+          adultQuantity,
+          childQuantity,
         }),
       });
     } catch (error) {
@@ -256,7 +260,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     oldSessionId: number,
     newProduct: ProductItem,
     newSessionId: number,
-    newQuantity: number,
+    newAdultQty: number,
+    newChildQty: number,
     newSessionName?: string,
   ) => {
     // 1. 先過濾掉舊的那一筆資料
@@ -276,7 +281,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       // 如果新選擇的場次本來就在購物車其他地方有了，就直接合併數量
       const nextItems = filteredItems.map((v, idx) => {
         if (idx === foundIndex) {
-          return { ...v, quantity: v.quantity + newQuantity };
+          const nextAdult = v.adultQuantity + newAdultQty;
+          const nextChild = v.childQuantity + newChildQty;
+          return {
+            ...v,
+            adultQuantity: nextAdult,
+            childQuantity: nextChild,
+            quantity: nextAdult + nextChild,
+          };
         }
         return v;
       });
@@ -284,11 +296,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } else {
       // 如果是一筆全新的商品+場次組合，就建立新項目並塞進去
       const newItem: CartItem = {
+        image: newProduct.image || newProduct.image_url || "/images/experiences/seine-picnic.jpg", 
         experienceId: newProduct.experienceId,
         name: newProduct.name,
-        price: newProduct.price,
+        adultPrice: newProduct.adultPrice ?? newProduct.price ?? 0,
+        childPrice: newProduct.childPrice ?? 0,
         sessionId: newSessionId,
-        quantity: newQuantity,
+        adultQuantity: newAdultQty,
+        childQuantity: newChildQty,
+        quantity: newAdultQty + newChildQty,
         sessionName: newSessionName,
       };
       setItems([newItem, ...filteredItems]);
@@ -302,9 +318,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({
           // 冒號左邊是「後端收的名字」，冒號右邊是「前端本函式擁有的變數」
           experienceId: oldExperienceId,
-          oldSessionId: oldSessionId,
-          newSessionId: newSessionId,
-          newQuantity: newQuantity,
+          oldSessionId,
+          newSessionId,
+          newAdultQuantity: newAdultQty,
+          newChildQuantity: newChildQty,
         }),
       });
     } catch (error) {
@@ -312,13 +329,32 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // 計算總數量：使用 reduce 方法累加所有商品的數量
-  // reduce(累加器函數, 初始值) - acc是累加器，item是當前項目，0是初始值
-  const totalQty = items.reduce((acc, item) => acc + item.quantity, 0);
-  const totalAmount = items.reduce(
-    (acc, item) => acc + item.quantity * item.price,
-    0,
-  );
+  // 計算總件數與金額（排除掉已完售/過期的項目）
+  const activeItems = items.filter((item) => !item.isSoldOut);
+
+  const totalQty = activeItems.reduce((acc, item) => {
+    const adult = Number(item.adultQuantity) || 0;
+    const child = Number(item.childQuantity) || 0;
+    // 若兩個都是 0，至少計算舊機制的 item.quantity
+    const itemQty =
+      adult + child > 0 ? adult + child : Number(item.quantity) || 0;
+    return acc + itemQty;
+  }, 0);
+
+  const totalAmount = activeItems.reduce((acc, item) => {
+    const adult = Number(item.adultQuantity) || 0;
+    const child = Number(item.childQuantity) || 0;
+    const adultP = Number(item.adultPrice) || Number(item.price) || 0;
+    const childP = Number(item.childPrice) || 0;
+
+    // 如果大人小孩數量都有算出來
+    let sum = adult * adultP + child * childP;
+    // 若都沒有（舊資料情境），備用舊邏輯
+    if (sum === 0 && item.quantity) {
+      sum = (Number(item.quantity) || 0) * adultP;
+    }
+    return acc + sum;
+  }, 0);
 
   return (
     <CartContext.Provider
@@ -329,8 +365,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         totalAmount,
         onEdit,
         onAdd,
-        onDecrease,
-        onIncrease,
+        onUpdateQuantity,
         onRemove,
       }}
     >

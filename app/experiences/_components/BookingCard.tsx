@@ -18,8 +18,8 @@ type BookingCardProps = {
   isEditMode?: boolean;
   oldSessionId?: number | null;
   oldQty?: number | null;
-  onSubmit: (sessionId: number, quantity: number, sessionName: string) => void;
-  onDirectBook: (sessionId: number, quantity: number, sessionName: string) => void;
+  onSubmit: (sessionId: number, adultQty: number, childQty: number, sessionName: string) => void;
+  onDirectBook: (sessionId: number, adultQty: number,childQty: number, sessionName: string) => void;
 };
 const formatDateValue = (dateString: string) => {
   return new Date(dateString).toISOString().slice(0, 10);
@@ -66,14 +66,17 @@ export default function BookingCard({
     oldSessionId ?? firstSession?.id ?? 0,
   );
 
+  // 只有在當前日期有場次時才去匹配 selectedSession，否則為 null
   const selectedSession =
-    sessions.find((session) => session.id === selectedSessionId) ??
-    sessionsByDate[0] ??
-    firstSession;
+    sessionsByDate.length > 0
+    ? (sessionsByDate.find((session) => session.id === selectedSessionId) ?? sessionsByDate[0])
+    : null;
 
   const adultPrice = selectedSession?.adult_price ?? 0;
   const childPrice = selectedSession?.child_price ?? 0;
   const total = adults * adultPrice + children * childPrice;
+
+  // 🚀 格式化完整場次日期與時間字串
   const sessionName = selectedSession
     ? `${formatDateValue(selectedSession.start_time)} ${formatTimeRange(
         selectedSession.start_time,
@@ -187,19 +190,22 @@ export default function BookingCard({
       </div>
 
       <div className="grid grid-cols-2 gap-3">
+        
+        {/* 加入購物車 / 確認修改按鈕 */}
         <button
           type="button"
-          disabled={!selectedSession}
-          onClick={() => selectedSession && onSubmit(selectedSession.id, adults + children, sessionName)}
+          disabled={!selectedSession || sessionsByDate.length === 0}
+          onClick={() => selectedSession && onSubmit(selectedSession.id, adults, children, sessionName)}
           className="h-12 rounded-xl bg-[#FF9224] text-[16px] font-extrabold text-white transition-colors hover:bg-[#F48312] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF9224]"
         >
           {isEditMode ? "確認修改" : "加入購物車"}
         </button>
 
+        {/* 立即預訂按鈕 */}
         <button
           type="button"
-          disabled={!selectedSession}
-          onClick={() => selectedSession && onDirectBook(selectedSession.id, adults + children, sessionName)}
+          disabled={!selectedSession || sessionsByDate.length === 0}
+          onClick={() => selectedSession && onDirectBook(selectedSession.id, adults, children, sessionName)}
           className="h-12 rounded-xl bg-[#68BBC3] text-[16px] font-extrabold text-white transition-colors hover:bg-[#55AAB2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#68BBC3]"
         >
           立即預訂
