@@ -170,7 +170,7 @@ export default function PaymentPage() {
                 </div>
               </div>
 
-              {/* 💰 第二塊卡片：金額總計與大傻幣回饋 (複製 Klook 獨立底色區塊結構) */}
+              {/* 💰 第二塊卡片：金額總計與M幣回饋 (複製 Klook 獨立底色區塊結構) */}
               <div className="flex w-full flex-col overflow-hidden rounded-lg border border-gray-100 bg-white shadow-sm">
                 {/* 金額計算區 */}
                 <div className="flex flex-col gap-2 p-6">
@@ -185,7 +185,7 @@ export default function PaymentPage() {
                   </div>
                 </div>
 
-                {/* 下半部：大傻幣提示框 (獨立出一條灰色底色背景區塊，更像官方 Klook 付款頁) */}
+                {/* 下半部：M幣提示框 (獨立出一條灰色底色背景區塊，更像官方 Klook 付款頁) */}
                 <div className="mt-6 rounded-lg border border-cyan-100 bg-cyan-50/60 p-3 text-xs text-cyan-600 justify-center">
                   <p className="text-center">
                     你可獲得{" "}

@@ -5,7 +5,8 @@
  * 對應後端：
  *   GET  /api/member-coupon/benefits     → api-member-coupon.ts
  *   POST /api/member-coupon/redeem       → api-member-coupon.ts
- *   POST /api/payment-success-rewards    → api-payment-success-rewards.ts（接線用，不寫 success 頁註解）
+ *   POST /api/payment-success-rewards    → api-payment-success-rewards.ts
+ *         （success 頁進頁呼叫；M 幣＝當下剩餘 + 實付回饋）
  * =============================================================================
  */
 
@@ -94,7 +95,28 @@ export async function redeemCouponCode(
   return result.data.coupon;
 }
 
-/** POST /api/payment-success-rewards（由 success 頁接線呼叫；該頁非本人不註解） */
+/**
+ * =============================================================================
+ * 【函式】applyPaymentSuccessRewards
+ * =============================================================================
+ * 對應路由：POST /api/payment-success-rewards
+ * 後端檔：express/routes/api-payment-success-rewards.ts → router.post("/")
+ * 誰用：next/app/success/page.tsx（進成功頁 useEffect）
+ *
+ * 用途（本人後續，不改 order_status）：
+ *   1) 核銷本單優惠券
+ *   2) M 幣：當下剩餘 + 實付回饋（例 750+950=1700）
+ *   3) total_spent / total_orders、member_level
+ *
+ * 參數 orderId?: string | null
+ *   建議傳結帳回傳的 order_id；省略則後端抓最近一筆
+ *
+ * 語法：
+ *   body: JSON.stringify(orderId ? { order_id: orderId } : {})
+ *     → 有 id 才放進 JSON，否則空物件 {}
+ *   credentials: "include" → 帶登入 Cookie
+ * =============================================================================
+ */
 export async function applyPaymentSuccessRewards(orderId?: string | null) {
   const response = await fetch(`${API_SERVER}/api/payment-success-rewards`, {
     method: "POST",
@@ -105,6 +127,7 @@ export async function applyPaymentSuccessRewards(orderId?: string | null) {
 
   const result = (await response.json()) as ApiEnvelope<{
     order_id: string;
+    already_applied?: boolean;
     coupon: {
       applied: boolean;
       already_used: boolean;
@@ -115,15 +138,16 @@ export async function applyPaymentSuccessRewards(orderId?: string | null) {
       granted: number;
       source: string;
       detail: string;
+      balance_before?: number;
       balance_after: number;
+      final_amount?: number;
     };
-    note?: string;
+    member_progress?: unknown;
   }>;
 
   if (!response.ok || !result.success) {
     throw new Error(result.message || "付款成功後處理失敗");
   }
 
-  // 可能是 undefined，呼叫端可再檢查
   return result.data;
 }

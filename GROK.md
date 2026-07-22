@@ -122,8 +122,7 @@ This is NOT the Next.js you know — APIs、慣例、目錄結構可能與訓練
 2. **`AGENTS.md` 保持原樣供其他人讀**：Grok 不為「引導自己」去改共用檔；重啟後自行讀本檔。
 3. **本人負責三大主題**：`blog`、`member/level`、`member/coupon`（見下方完整目錄條列）。預設工作範圍以此為主；改到範圍外路徑須使用者明確要求。
 4. **新手學習註解**：三大主題前後端要有 `【新手導讀】`／import 說明／函式對應路由／關鍵語法說明；新增邏輯沿用同風格，勿灌水到組員檔案。
-   - 精讀範本：`member/level/api.ts`、`member/level/page.tsx`、`express/routes/api-member-level.ts`、`member/coupon/api.ts`
-   - success 相關不寫學習註解：`success/page.tsx`、後端 `api-payment-success-rewards.ts` 只留精簡說明
+   - 精讀範本：`member/level/*`、`member/coupon/api.ts`、`api-payment-success-rewards.ts`、`success/page.tsx`（接線 rewards）
 
 ### Session 重開檢查清單
 
@@ -267,7 +266,9 @@ next/app/member/coupon/
 ```text
 express/routes/
 ├── api-member-coupon.ts              # 優惠券／兌換／交易等 API
-└── api-payment-success-rewards.ts    # POST /api/payment-success-rewards（精簡、無學習註解）
+└── api-payment-success-rewards.ts    # POST /api/payment-success-rewards
+                                      # 結帳後剩餘 + 實付回饋；核銷券；累積／等級
+                                      # 詳細註解見檔案頂部【新手導讀】
 ```
 
 ---
