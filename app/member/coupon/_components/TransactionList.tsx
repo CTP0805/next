@@ -1,3 +1,6 @@
+/**
+ * 【新手】M 幣流水列表（獲得／使用／…）純展示
+ */
 import type { PointTransaction } from "../types";
 import { formatAmount, formatDate } from "../utils";
 

@@ -1,9 +1,13 @@
 "use client";
 
 /**
- * 會員中心 — 管理文章
- * 分頁切換參考 member/profile（管理文章｜新增文章）
- * 新增文章：框內嵌 BlogPostEditor
+ * =============================================================================
+ * 【新手導讀】會員中心 — 管理／新增文章 `/member/edit-post`
+ * =============================================================================
+ * Tab「管理」：fetchMyBlogPosts、刪除、篩選狀態
+ * Tab「新增」：內嵌 BlogPostEditor（= BlogPostForm）
+ * 這是 Blog 在會員區的主入口（/blog/manage 會轉來這裡）
+ * =============================================================================
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";

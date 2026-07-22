@@ -1,5 +1,14 @@
 "use client";
 
+/**
+ * =============================================================================
+ * 【新手導讀】Blog 公開列表頁 `/blog`
+ * =============================================================================
+ * 角色：訪客可看已上架文章；用地區關鍵字篩選
+ * 資料：fetchBlogPosts() → GET /api/blog（後端預設 published）
+ * 子元件：BlogPostCard、BlogMediaImage、BlogOwnerEditLink
+ * =============================================================================
+ */
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -10,6 +19,7 @@ import { fetchBlogPosts } from "./_lib/api";
 import type { BlogPost } from "./_lib/types";
 import { BLOG_REGIONS, blogCategoryLabel } from "./_lib/types";
 
+/** 是否已上架（列表精選只用 published） */
 function isPublished(post: BlogPost) {
   return post.status === "published";
 }
@@ -37,10 +47,12 @@ function CardSkeleton() {
 }
 
 export default function BlogListPage() {
+  // ---------- 畫面狀態 ----------
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [allPosts, setAllPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // ---------- 進頁載入列表（cancelled 避免卸載後還 setState）----------
   useEffect(() => {
     let cancelled = false;
     (async () => {

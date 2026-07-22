@@ -1,3 +1,12 @@
+/**
+ * =============================================================================
+ * 【新手導讀】文章詳情頁 `/blog/[slug]`（Server Component）
+ * =============================================================================
+ * 沒有 "use client"：在伺服器端就 fetch，HTML 直接帶資料出去
+ * params.slug = 網址那一段（例如 /blog/my-trip → "my-trip"）
+ * 資料：fetchBlogPostBySlug + 列表做「相關推薦」
+ * =============================================================================
+ */
 import React from "react";
 import Link from "next/link";
 import BlogCommentSection from "../_components/BlogCommentSection";
@@ -16,12 +25,14 @@ export default async function BlogDetail({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  // Next.js 新版 params 是 Promise，要 await
   const { slug } = await params;
 
   let allPosts: BlogPost[] = [];
   let post: BlogPost | null = null;
 
   try {
+    // 推薦區需要列表；詳情用 slug 精準取一篇
     allPosts = await fetchBlogPosts();
     try {
       post = await fetchBlogPostBySlug(slug);

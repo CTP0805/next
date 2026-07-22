@@ -1,6 +1,14 @@
 /**
- * 會員優惠／M幣 資料模型
- * 欄位對齊 express schema：coupons / member_coupons / member.current_points / order_main
+ * =============================================================================
+ * 【新手導讀】Coupon／M 幣 TypeScript 型別
+ * =============================================================================
+ * PointWallet        = 餘額卡片
+ * PointTransaction   = M 幣流水一筆（從訂單推導）
+ * Coupon             = 券目錄（coupons 表）
+ * MemberCouponView   = 我持有的券 + 狀態 available/used/...
+ * MemberBenefitsPayload = benefits API 整包 data
+ * SELECTED_COUPON_STORAGE_KEY = 結帳前暫存選中的券（localStorage）
+ * =============================================================================
  */
 
 /** M幣帳戶（一使用者一筆；餘額來自 member.current_points） */

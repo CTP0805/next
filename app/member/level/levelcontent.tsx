@@ -1,41 +1,76 @@
 "use client";
 
+/**
+ * =============================================================================
+ * 【新手導讀＋語法】會員詳情抽屜  levelcontent.tsx
+ * =============================================================================
+ * 誰引入：page.tsx → import MemberLevelDetailDrawer from "./levelcontent"
+ * props：data（等級資料）、isOpen（開/關）、onClose（關閉回呼）
+ * =============================================================================
+ */
+
+// useEffect：開關時鎖 body 捲動、聽 Esc
+// useId：產生唯一 id 給 aria-labelledby（無障礙）
+// useRef：抓住 DOM 節點（關閉鈕、面板）
+// useState：是否已在瀏覽器掛載（portal 需要 document）
 import { useEffect, useId, useRef, useState } from "react";
+
+// createPortal(jsx, DOM節點)：把 JSX 渲染到指定節點（通常 document.body）
+//   用途：抽屜脫離父層 stacking context，才蓋住全畫面
 import { createPortal } from "react-dom";
+
+// 圖示
 import { ArrowLeft, X, Crown } from "lucide-react";
+
+// 型別來自 ./api（前端 API 層定義，對齊 GET /api/member-level）
 import type { MemberLevel, MemberLevelPayload } from "./api";
 
+/** props 介面 */
 interface MemberLevelDetailDrawerProps {
   data: MemberLevelPayload;
   isOpen: boolean;
   onClose: () => void;
 }
 
+// 各等級標題顏色 class（Tailwind）
 const LEVEL_HEADER_CLASS: Record<MemberLevel, string> = {
   銅: "text-amber-700",
   銀: "text-slate-500",
   金: "text-yellow-600",
 };
 
+/**
+ * 【主要元件】MemberLevelDetailDrawer
+ * export default：page 用預設 import 引入
+ * 參數用解構＋型別註記（等價 React.FC）
+ */
 export default function MemberLevelDetailDrawer({
   data,
   isOpen,
   onClose,
 }: MemberLevelDetailDrawerProps) {
+  // useId()：SSR/CSR 一致的唯一字串 id
   const titleId = useId();
+  // useRef<HTMLButtonElement>：ref 綁在 <button> 上
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  // mounted：避免 SSR 時存取 document 報錯；client 掛上後才 portal
   const [mounted, setMounted] = useState(false);
 
+  // 空依賴 []：只在「第一次掛載」跑一次
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // 抽屜打開時：鎖捲動、聚焦關閉鈕、Esc 關閉
+  // return () => {...}：cleanup，元件卸載或依賴變前執行（還原 overflow、清 timer）
   useEffect(() => {
     if (!isOpen) return;
 
     const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow = "hidden"; // 鎖背景捲動
+    // setTimeout：延遲聚焦，等動畫/DOM 就緒
+    // ?.：closeBtnRef.current 可能 null
     const t = window.setTimeout(() => closeBtnRef.current?.focus(), 50);
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -51,7 +86,23 @@ export default function MemberLevelDetailDrawer({
   }, [isOpen, onClose]);
 
   const progressWidth = Math.min(100, Math.max(0, data.progress_percent));
-  const remainingSpendText = `NT$ ${data.remaining_spend.toLocaleString("zh-TW")}`;
+
+  // 下一級目標：已完成 X/3 筆、已消費 Y/5,000（完成其一即可）
+  const goalOrders =
+    data.goal_orders ??
+    (data.next_level ? data.thresholds[data.next_level]?.minOrders : null);
+  const goalSpent =
+    data.goal_spent ??
+    (data.next_level ? data.thresholds[data.next_level]?.minSpent : null);
+  const doneOrders =
+    goalOrders != null ? Math.min(data.total_orders, goalOrders) : data.total_orders;
+  const doneSpent =
+    goalSpent != null ? Math.min(data.total_spent, goalSpent) : data.total_spent;
+  const goalOrdersText =
+    goalOrders != null ? goalOrders.toLocaleString("zh-TW") : "—";
+  const goalSpentText =
+    goalSpent != null ? goalSpent.toLocaleString("zh-TW") : "—";
+  const doneSpentText = doneSpent.toLocaleString("zh-TW");
 
   if (!mounted) return null;
 
@@ -135,21 +186,31 @@ export default function MemberLevelDetailDrawer({
                 style={{ width: `${progressWidth}%` }}
               />
             </div>
-            <p className="text-sm text-gray-600">
-              {data.next_level ? (
+            <div className="space-y-1 text-sm text-gray-600">
+              {data.next_level && goalOrders != null && goalSpent != null ? (
                 <>
-                  再完成{" "}
-                  <span className="font-semibold">
-                    {data.remaining_orders} 筆訂單
-                  </span>{" "}
-                  或消費{" "}
-                  <span className="font-semibold">{remainingSpendText}</span>{" "}
-                  即可升級。
+                  <p>
+                    已完成{" "}
+                    <span className="font-semibold text-gray-900">
+                      {doneOrders}/{goalOrdersText}
+                    </span>{" "}
+                    筆訂單
+                  </p>
+                  <p>
+                    已消費{" "}
+                    <span className="font-semibold text-gray-900">
+                      {doneSpentText}/{goalSpentText}
+                    </span>
+                  </p>
+                  <p className="text-gray-500">
+                    完成<span className="font-semibold text-gray-700">其一</span>
+                    條件即可升級為{data.next_level}級。
+                  </p>
                 </>
               ) : (
-                <>您已達到最高等級。</>
+                <p>您已達到最高等級。</p>
               )}
-            </p>
+            </div>
           </section>
 
           <section>
@@ -221,16 +282,20 @@ export default function MemberLevelDetailDrawer({
               <p>會員等級資格以「完成參加訂單活動」為準計算。</p>
               <p>
                 目前為{data.current_level}級會員
-                {data.next_level ? (
+                {data.next_level && goalOrders != null && goalSpent != null ? (
                   <>
-                    ，需再完成{" "}
+                    。升級進度：已完成{" "}
                     <span className="font-semibold text-gray-900">
-                      {data.remaining_orders} 筆訂單
+                      {doneOrders}/{goalOrdersText}
                     </span>{" "}
-                    或累積消費{" "}
+                    筆訂單、已消費{" "}
                     <span className="font-semibold text-gray-900">
-                      {remainingSpendText}
-                    </span>{" "}
+                      {doneSpentText}/{goalSpentText}
+                    </span>
+                    。
+                    <span className="font-semibold text-gray-900">
+                      完成其一條件
+                    </span>
                     即可升級為{data.next_level}級。
                   </>
                 ) : (
@@ -239,8 +304,8 @@ export default function MemberLevelDetailDrawer({
               </p>
               <p className="text-xs text-gray-500">
                 *
-                銅→銀：3 筆訂單或 NT$5,000；銀→金：6 筆訂單或
-                NT$15,000。系統依 total_orders／total_spent 計算進度。
+                銅→銀：已完成 3 筆訂單或已消費 NT$5,000（其一即可）；銀→金：6
+                筆或 NT$15,000。數字來自 member.total_orders／total_spent（付款成功頁會累加）。
               </p>
             </div>
           </section>

@@ -1,23 +1,59 @@
 "use client";
+// 客戶端頁：hooks + toast
 
+/**
+ * =============================================================================
+ * 【新手導讀＋語法】優惠頁  路由：/member/coupon
+ * 檔案：next/app/member/coupon/page.tsx
+ * =============================================================================
+ * 本頁：登入檢查 + 載入 benefits
+ * 子頁互動：CouponPageClient
+ * 後端：GET /api/member-coupon/benefits（api-member-coupon.ts）
+ * =============================================================================
+ */
+
+// ---------- import ----------
+
+// React hooks（見 level/page 語法說明）
 import { useCallback, useEffect, useState } from "react";
+
+// react-hot-toast：輕量提示（成功/失敗小彈窗）
+//   toast(...) 在子元件也可能用；Toaster 是顯示容器，一個頁面放一次
 import toast, { Toaster } from "react-hot-toast";
+
+// 登入狀態：@/contexts/auth-context
 import { useAuth } from "@/contexts/auth-context";
+
+// 同資料夾 API：GET /api/member-coupon/benefits
 import { fetchMemberBenefits } from "./api";
+
+// 型別：benefits 整包 data
 import type { MemberBenefitsPayload } from "./types";
+
+// 子元件：真正的列表／兌換／分頁 UI
+//   路徑 ./_components/... 底線資料夾 = 非正式路由片段（不會變成 /_components 網址）
 import CouponPageClient from "./_components/CouponPageClient";
 
 /**
- * 會員優惠頁（M幣紀錄 + 優惠券）
- * - 資料來自 Express /api/member-coupon/benefits（不再使用 mock）
- * - 列表每頁 10 筆，超過可翻頁
+ * =============================================================================
+ * 【主要元件】MemberCouponPage
+ * export default → Next 路由頁面
+ * =============================================================================
  */
 export default function MemberCouponPage() {
   const { isAuthenticated, authInit } = useAuth();
+
+  // data：後端整包；null = 尚未成功載入
   const [data, setData] = useState<MemberBenefitsPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * 【函式】load
+   * 對應：fetchMemberBenefits → GET /api/member-coupon/benefits
+   * 也會當 onReload 傳給 CouponPageClient（兌換成功後重抓）
+   * useCallback(..., [])：函式參考穩定
+   */
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -28,11 +64,16 @@ export default function MemberCouponPage() {
       const message = e instanceof Error ? e.message : "載入失敗";
       setError(message);
       setData(null);
+      // 可選：toast.error(message) — 目前用畫面上 error 區塊
     } finally {
       setLoading(false);
     }
   }, []);
 
+  /**
+   * 登入流程就緒後才 load
+   * void load()：不 await 的 fire-and-forget
+   */
   useEffect(() => {
     if (!authInit) return;
     if (!isAuthenticated) {
@@ -43,6 +84,13 @@ export default function MemberCouponPage() {
     void load();
   }, [authInit, isAuthenticated, load]);
 
+  /**
+   * JSX：
+   *   <Toaster /> 掛提示容器
+   *   三態：loading / error / data
+   *   data 就緒 → <CouponPageClient data={data} onReload={load} />
+   *     props 傳遞：把函式 load 當 onReload 傳下去（子元件兌換後呼叫）
+   */
   return (
     <div className="w-full max-w-full min-w-0">
       <Toaster position="top-center" />

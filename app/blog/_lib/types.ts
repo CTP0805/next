@@ -1,16 +1,27 @@
-import { pinyin } from "pinyin-pro";
-
 /**
- * 部落格文章 — 對齊 DB posts 表
- * ⭐ 阿偉：order_id／order_title 綁已完成訂單；review_note 管理者註解
+ * =============================================================================
+ * 【新手導讀】Blog 型別定義（TypeScript 的「資料長什麼樣」）
+ * =============================================================================
+ * 為什麼需要？
+ *   後端 JSON 若少欄位，TS 會在編譯期提醒，少寫 post.tittle 這種拼錯。
+ * 和後端關係：
+ *   BlogPost 約略對齊 posts 表 + API 多回的 author_name 等
+ *   狀態 status: draft | pending_review | published | rejected
+ *   對應後端 mapPost()：express/routes/api-blog.ts
+ * =============================================================================
  */
 
+/** 文章狀態（和後端 ALLOWED_STATUS 對齊） */
 export type BlogPostStatus =
   | "draft"
   | "pending_review"
   | "published"
   | "rejected";
 
+/** 標題上限（後端 TITLE_MAX = 20） */
+export const BLOG_TITLE_MAX = 20;
+
+/** 狀態 → 中文標籤（卡片、管理頁 badge） */
 export const BLOG_STATUS_LABEL: Record<BlogPostStatus, string> = {
   draft: "草稿",
   pending_review: "待審核",
@@ -18,107 +29,101 @@ export const BLOG_STATUS_LABEL: Record<BlogPostStatus, string> = {
   rejected: "被退回",
 };
 
-/** 標題 VARCHAR(20) */
-export const BLOG_TITLE_MAX = 20;
+/**
+ * 列表頁地區篩選用關鍵字（DB 無 region 欄）
+ * 會用「標題／摘要／內文是否包含此字」來 filter
+ * 可依實際文章內容調整
+ */
+export const BLOG_REGIONS = [
+  "巴黎",
+  "倫敦",
+  "阿姆斯特丹",
+  "巴塞隆納",
+  "慕尼黑",
+  "威尼斯",
+] as const;
 
+/**
+ * 單篇文章（API 回傳形狀）
+ * 對應後端 mapPost + posts 表
+ */
 export interface BlogPost {
   id: number;
-  author_id: number;
-  category_id: number | null;
   title: string;
   slug: string;
   content: string;
   excerpt: string | null;
   cover_image: string | null;
   content_image: string | null;
+  status: BlogPostStatus;
   published_at: string | null;
   updated_at: string;
-  created_at?: string;
-  status: BlogPostStatus;
-  /** 綁定 order_main.id */
+  created_at: string;
+  author_id: number;
+  category_id: number | null;
+  /** 綁定的訂單（當「分類」用，新增後通常不可改） */
   order_id?: string | null;
-  /** 訂單／體驗名稱（分類顯示，不可改） */
   order_title?: string | null;
-  /** 管理者審查註解 */
+  /** 管理者退回時的註解 */
   review_note?: string | null;
+  /** JOIN member 時可能有 */
   author_name?: string | null;
 }
 
-export const BLOG_REGIONS = [
-  "倫敦",
-  "巴黎",
-  "慕尼黑",
-  "阿姆斯特丹",
-  "羅馬",
-  "巴賽隆納",
-] as const;
-
-/** 舊分類（相容顯示） */
-export const BLOG_CATEGORY_MAP: Record<number, string> = {
-  1: "古蹟巡禮",
-  2: "藝文導覽",
-  3: "美饌饗宴",
-  4: "戶外探索",
-  5: "專人攝影",
-  6: "娛樂與夜生活",
-};
-
-export type BlogEligibleOrder = {
-  order_id: string;
-  order_title: string;
-  final_amount: number;
-  created_at: string | null;
-  order_status: string;
-};
-
-export type BlogPostInput = {
+/**
+ * 新增／更新時送出的 body（BlogPostForm → createBlogPost / updateBlogPost）
+ */
+export interface BlogPostInput {
   title: string;
-  slug?: string;
+  slug: string;
   content: string;
   excerpt?: string | null;
   cover_image?: string | null;
   content_image?: string | null;
-  /** 新建必填：已完成訂單 */
+  /** 僅新增時必填：綁哪張已付款訂單 */
   order_id?: string;
-  category_id?: number | null;
-  status?: BlogPostStatus;
   author_id?: number;
-};
+  status: BlogPostStatus;
+}
 
-const HAS_CJK = /[\u4e00-\u9fff]/;
+/**
+ * 可撰寫心得的訂單（GET /api/blog/eligible-orders）
+ */
+export interface BlogEligibleOrder {
+  order_id: string;
+  order_title: string;
+  final_amount: number;
+  created_at: string | null;
+  order_status?: string;
+}
 
-export function slugifyTitle(title: string): string {
-  const trimmed = title.trim();
-  if (!trimmed) return `post-${Date.now()}`;
+/**
+ * 顯示用「分類」標籤：優先訂單名稱，否則 category_id
+ */
+export function blogCategoryLabel(
+  post: Pick<BlogPost, "order_title" | "category_id" | "title">,
+): string {
+  const orderTitle = post.order_title?.trim();
+  if (orderTitle) return orderTitle;
+  if (post.category_id != null) return `分類 #${post.category_id}`;
+  return "未分類";
+}
 
-  let source = trimmed;
-
-  if (HAS_CJK.test(trimmed)) {
-    source = pinyin(trimmed, { toneType: "none", type: "array" }).join("-");
-  }
-
-  let base = source
+/**
+ * 標題 → slug（網址用）
+ * 邏輯與後端 slugify 相近；真正唯一性由後端 ensureUniqueSlug 保證
+ */
+export function slugifyTitle(input: string): string {
+  const base = input
+    .trim()
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[_\s]+/g, "-")
+    .replace(/[^\w\s\u4e00-\u9fff-]/g, "")
+    .replace(/[\s_]+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
 
-  if (!base && HAS_CJK.test(trimmed)) {
-    base = encodeURIComponent(trimmed)
-      .toLowerCase()
-      .replace(/[^a-z0-9%]+/g, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "");
-  }
-
-  return base || `post-${Date.now()}`;
-}
-
-/** 顯示分類：優先訂單名稱 */
-export function blogCategoryLabel(post: BlogPost): string {
-  if (post.order_title?.trim()) return post.order_title.trim();
-  return BLOG_CATEGORY_MAP[post.category_id ?? 0] || "其他";
+  if (base) return base.slice(0, 200);
+  return `post-${Date.now()}`;
 }

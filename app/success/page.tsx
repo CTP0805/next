@@ -1,50 +1,71 @@
 "use client";
-import Link from 'next/link';
 
-import { useEffect } from "react";
+import Link from "next/link";
+import { useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { applyPaymentSuccessRewards } from "@/app/member/coupon/api";
 import { clearSelectedCoupon } from "@/app/member/coupon/utils";
 
 export default function SuccessPage() {
-  // 訂單資料送出／付款完成後，取消優惠券選用狀態
+  const searchParams = useSearchParams();
+  const ranRef = useRef(false);
+
   useEffect(() => {
     clearSelectedCoupon();
-  }, []);
+
+    if (ranRef.current) return;
+    ranRef.current = true;
+
+    const orderId =
+      searchParams.get("order_id") ||
+      searchParams.get("orderId") ||
+      searchParams.get("MerchantTradeNo") ||
+      "";
+
+    const guardKey = `payment-success-rewards:${orderId || "latest"}`;
+    try {
+      if (typeof sessionStorage !== "undefined") {
+        if (sessionStorage.getItem(guardKey) === "1") return;
+        sessionStorage.setItem(guardKey, "1");
+      }
+    } catch {
+      /* ignore */
+    }
+
+    void applyPaymentSuccessRewards(orderId || null).catch((err) => {
+      console.error("[success] payment-success-rewards", err);
+      try {
+        sessionStorage.removeItem(guardKey);
+      } catch {
+        /* ignore */
+      }
+    });
+  }, [searchParams]);
 
   return (
     <>
-      {/* 最外層淺灰底容器 */}
       <div className="min-h-[calc(100vh-160px)] w-full bg-slate-50 py-10 text-gray-800">
-        {/* 核心主容器：最大寬度 1280px，mx-auto 負責在大螢幕下置中 */}
         <div className="mx-auto w-full max-w-7xl px-4">
-          {/* ==================== 1. 頂部步驟進度條 (DaisyUI Steps) ==================== */}
-          <div className="w-full flex justify-center mb-10">
-            <ul className="steps id-steps w-full max-w-7xl text-sm grid grid-cols-3">
+          <div className="mb-10 flex w-full justify-center">
+            <ul className="steps id-steps grid w-full max-w-7xl grid-cols-3 text-sm">
               <li className="step step-accent">填寫資料</li>
               <li className="step step-accent">選擇付款</li>
               <li className="step step-accent">完成付款</li>
             </ul>
           </div>
 
-          {/* ==================== 2. 主要內容卡片區 ==================== */}
-          {/* 對照設計圖，內容區塊靠左對齊，但限制最大寬度，避免在 1920 螢幕下文字拉得太散 */}
           <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-            {/* 訂單編號與複製按鈕 */}
             <div className="flex items-center gap-2 pl-2 text-sm text-gray-500">
               <span>訂單編號：5439229639</span>
-              {/* 複製小圖示，暫時用網頁符號代替 */}
               <button className="transition hover:text-gray-700 active:scale-95">
                 🗐
               </button>
             </div>
 
-            {/* 核心狀態灰色大卡片 */}
             <div className="rounded-2xl border border-gray-200/50 bg-gray-100/70 p-6">
-              {/* 使用 DaisyUI 的 Timeline 垂直時間軸元件 */}
               <ul className="timeline timeline-vertical timeline-compact">
-                {/* 節點 1：付款完成 */}
                 <li>
                   <div className="timeline-middle text-success">
-                    {/* 綠色圓圈打勾 */}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
@@ -63,14 +84,12 @@ export default function SuccessPage() {
                       付款完成！
                     </h4>
                   </div>
-                  <hr className="bg-success" /> {/* 連接線變綠色 */}
+                  <hr className="bg-success" />
                 </li>
 
-                {/* 節點 2：訂單確認中 */}
                 <li>
                   <hr className="bg-success" />
                   <div className="timeline-middle text-success">
-                    {/* 綠色時鐘圖示 */}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
@@ -100,12 +119,11 @@ export default function SuccessPage() {
               </ul>
             </div>
 
-            {/* 查看訂單按鈕 */}
             <div className="mt-4">
-            <Link href="/member/order">
-              <button className="btn btn-outline rounded-xl border-gray-400 px-8 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-800">
-                查看訂單
-              </button>
+              <Link href="/member/order">
+                <button className="btn btn-outline rounded-xl border-gray-400 px-8 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-800">
+                  查看訂單
+                </button>
               </Link>
             </div>
           </div>

@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * 【新手】我的優惠券列表
+ * items = 目前頁的券；onUse = 點「使用」時回傳給父層（存 localStorage 去結帳）
+ */
 import { useState } from "react";
 import type { MemberCouponView } from "../types";
 import {

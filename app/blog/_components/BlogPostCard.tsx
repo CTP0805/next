@@ -13,7 +13,9 @@ interface BlogPostCardProps {
 }
 
 /**
- * 等高校牌：固定圖片比例 + 標題/摘要固定行數 + 底部標籤貼底
+ * 【新手】文章卡片 UI（列表一格）
+ * 點卡片 → /blog/{slug}；可選 footer 插作者編輯鈕等
+ * 等高校牌：固定圖片比例 + 標題/摘要固定行數
  */
 export default function BlogPostCard({ post, footer }: BlogPostCardProps) {
   const category = blogCategoryLabel(post);

@@ -3,7 +3,9 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-/** 舊路由：文章審查已移至會員中心（管理者） */
+/**
+ * 【新手】舊網址 /blog/review → 轉到 /member/blog-review（管理者審核）
+ */
 export default function BlogReviewRedirectPage() {
   const router = useRouter();
   useEffect(() => {

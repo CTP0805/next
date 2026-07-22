@@ -68,10 +68,18 @@ function hasMeaningfulContent(html: string): boolean {
 }
 
 /**
- * 部落格文章編輯表單（共用）
- * - 掛載於 member/edit-post（會員中心內嵌）與 blog/new（獨立頁）
- * - 封面：選圖 → 裁切／縮放（react-easy-crop）→ 預覽
- * - 儲存草稿／送出審查 → Express posts
+ * =============================================================================
+ * 【新手導讀】文章編輯表單（Blog 最重要的寫入 UI）
+ * =============================================================================
+ * 掛在哪：
+ *   - /blog/new、/blog/[slug]/edit
+ *   - /member/edit-post（會員中心內嵌）
+ * 做什麼：
+ *   填標題／摘要／封面／選訂單／CKEditor 內文
+ *   按「草稿」或「送出審查」→ createBlogPost / updateBlogPost
+ * 封面流程：選檔 → BlogCoverCropDialog 裁切 → 送審時 uploadBlogImage
+ * 內文圖片：persistContentImagesInHtml（base64 → 上傳）
+ * =============================================================================
  */
 export default function BlogPostForm({
   mode,

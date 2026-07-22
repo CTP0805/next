@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * 【新手】留言區（目前為前端 mock／本機 state，未接後端 API）
+ * postSlug 用來區分不同文章的本機留言 key
+ */
 import { FormEvent, useMemo, useState } from "react";
 
 interface Comment {
