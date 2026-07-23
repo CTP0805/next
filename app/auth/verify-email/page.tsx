@@ -1,20 +1,19 @@
+'use client'
+
+import { useAuth } from "@/contexts/auth-context";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 // TS 型別
-type EmailVerifiedPageProps = {
-  searchParams: Promise<{
-    success?: string;
-    message?: string;
-    already?: string;
-  }>;
-};
-
 type PageContent = {
   title: string;
   message: string;
   buttonText: string;
   buttonHref: string;
+  buttonText1?: string;
+  buttonHref1?: string;
 };
-
+/*
 // 錯誤訊息(後端翻譯成前端) 有需要翻譯的那麼仔細嗎?? 還是統一回覆:驗證失敗，請聯繫客服
 const failedContentMap: Record<string, PageContent> = {
   "missing-token": {
@@ -48,12 +47,13 @@ const defaultFailedContent: PageContent = {
   message: "驗證過程發生問題，請稍後再試，或重新發送驗證信。",
   buttonText: "回到註冊",
   buttonHref: "/auth/register",
+  buttonText1: "重新發送驗證信(待開發)",
+  buttonHref1: "/auth/register",
 };
 
 // function 根據後端給的回應決定前端要顯示什麼
 function getPageContent(params: {
-  success?: string;
-  message?: string;
+  success?: string | null;
   already?: string;
 }): PageContent {
   const isSuccess = params.success === "true";
@@ -66,6 +66,7 @@ function getPageContent(params: {
       message: "你的信箱已完成驗證，現在可以登入並使用會員功能。",
       buttonText: "前往登入",
       buttonHref: "/auth/login",
+
     };
   }
 
@@ -76,72 +77,102 @@ function getPageContent(params: {
       message: "你的信箱先前已完成驗證，可以直接登入會員。",
       buttonText: "前往登入",
       buttonHref: "/auth/login",
+
     };
   }
 
   // 失敗狀態：根據後端 redirect 過來的 message 顯示不同內容
-  if (params.message && failedContentMap[params.message]) {
-    return failedContentMap[params.message];
-  }
+  // if (params.message && failedContentMap[params.message]) {
+  //   return failedContentMap[params.message];
+  // }
 
   // 失敗狀態：沒有對應到任何 message，就顯示通用錯誤
   return defaultFailedContent;
 }
+*/
 
-export default async function EmailVerifiedPage({
-  searchParams,
-}: EmailVerifiedPageProps) {
+export default function EmailVerifiedPage() {
   
-  const params = await searchParams;
+  const searchParams  = useSearchParams()
+  const { resendVerifyEmail } = useAuth();
 
   // 只在這裡判斷一次成功或失敗
   // 後面樣式全部共用這個 isSuccess 來決定顏色
-  const isSuccess = params.success === "true";
+  const success = searchParams.get("success");
+  const already = searchParams.get("already");
+  const email = searchParams.get("email");
 
+  const isSuccess = success === "true";
+  const isAlreadyVerified = already === "true";
+  /*
   // 根據後端傳來的 query string，整理出畫面要顯示的資料
-  const pageContent = getPageContent(params);
-
-  // 樣式開關
-  const theme = {
-    icon: isSuccess ? "✔" : "!",
-    iconBgColor: isSuccess ? "bg-green-100" : "bg-red-100",
-    iconTextColor: isSuccess ? "text-green-600" : "text-red-600",
-    buttonBgColor: isSuccess ? "bg-green-600" : "bg-red-600",
-    buttonHoverColor: isSuccess ? "hover:bg-green-700" : "hover:bg-red-700",
-  };
+  const pageContent = getPageContent({
+    success,
+    already,
+  });
+  */
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
-      <section className="w-full max-w-md rounded-lg bg-white p-8 text-center shadow">
-        <div
-          className={[
-            "mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full text-3xl",
-            theme.iconBgColor,
-            theme.iconTextColor,
-          ].join(" ")}
-        >
-          {theme.icon}
-        </div>
+    <main className="flex h-[calc(100vh-60px)] items-center justify-center bg-gray-100 px-4">
+      {/* 
+        isSuccess 為 true：顯示成功框
+        isSuccess 為 false：顯示失敗框
+      */}
+      {isSuccess ? (
+        /* ==================== 成功訊息框 ==================== */
+        <section className="w-full max-w-md rounded-[12px] bg-white p-8 text-center shadow">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl text-green-600">
+            ✔
+          </div>
 
-        <h3>
-          {pageContent.title}
-        </h3>
+          <h3>
+            {isAlreadyVerified ? "此信箱已驗證過" : "信箱驗證成功"}
+          </h3>
 
-        <p className="mt-3 text-gray-600">
-          {pageContent.message}
-        </p>
+          <p className="mt-3 text-gray-600">
+            {isAlreadyVerified
+              ? "你的信箱先前已完成驗證，可以直接登入會員。"
+              : "你的信箱已完成驗證，現在可以登入並使用會員功能。"}
+          </p>
 
-        <a
-          href={pageContent.buttonHref}
-          className={[
-            "mt-6 inline-block rounded-md px-5 py-3 text-white",
-            theme.buttonBgColor,
-            theme.buttonHoverColor,
-          ].join(" ")}
-        >
-          {pageContent.buttonText}
-        </a>
-      </section>
+          <Link
+            href="/auth/login"
+            className="mt-6 inline-block rounded-md bg-green-600 px-5 py-3 text-white hover:bg-green-700"
+          >
+            前往登入
+          </Link>
+        </section>
+      ) : (
+        /* ==================== 失敗訊息框 ==================== */
+        <section className="w-full max-w-md rounded-[12px] bg-white p-8 text-center shadow">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-3xl text-red-600">
+            !
+          </div>
+
+          <h3>信箱驗證失敗</h3>
+
+          <p className="mt-3 text-gray-600">
+            驗證連結可能已過期、內容不正確，或驗證過程發生問題。
+          </p>
+
+          <div className="mt-6 flex justify-center gap-3">
+            <Link
+              href="/auth/register"
+              className="rounded-md bg-zinc-200 px-5 py-3 text-zinc-800 hover:bg-zinc-300"
+            >
+              回到註冊
+            </Link>
+
+            <button
+              type="button"
+              onClick={()=>resendVerifyEmail(email)}
+              className="rounded-md bg-red-600 px-5 py-3 text-white hover:bg-red-700"
+            >
+              重新發送驗證信
+            </button>
+          </div>
+        </section>
+      )}
     </main>
   );
 }

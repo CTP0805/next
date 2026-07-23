@@ -5,10 +5,13 @@ import { Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import toast from "react-hot-toast";
 import { API_SERVER } from "@/config/api-path";
+import useFirebase, {
+  type GoogleProviderData,
+} from "../_hook/use-firebase/index";
 
 /* 還不確定用不用的到
 type LoginRequest = {
@@ -62,9 +65,14 @@ export default function RegisterPage() {
 
   // isLoading 用來控制按下登入後，按鈕顯示「登入中」
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { refreshAuth } = useAuth();
+  const { loginGoogle } = useFirebase(); // 第三方登入
+  
   const router = useRouter();
+  const searchParams = useSearchParams();
+
 
   // 使用者按下「註冊」按鈕時會執行這個函式
   async function handleRegister(
@@ -136,6 +144,45 @@ export default function RegisterPage() {
 
     
   }
+
+  // google 第三方登入
+  async function handleGoogleLogin(providerData: GoogleProviderData) {
+    const next = searchParams.get("next");
+    try {
+      setIsGoogleLoading(true);
+
+      // 前端送什麼？
+      // 送 Google / Firebase 回傳的 providerData 給後端
+      // 裡面會有 uid、email、displayName、photoURL、providerId
+      const response = await fetch(`${API_SERVER}/api/auth/oauth-google`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(providerData),
+      });
+
+      // 後端回什麼？
+      // success、message、data，並且後端會順便把 JWT 寫進 HttpOnly Cookie
+      const result = await response.json();
+
+      if (!response.ok) {
+        toast.error(result.message || "Google 登入失敗");
+        return;
+      }
+
+      await refreshAuth(); // 刷新context裡面的狀態(一般登入不用是因為他已經在context裡面刷新)
+      toast.success(result.message || "Google 登入成功");
+      router.replace(next ?? "/"); // 登入後跳轉回上一個畫面 或首頁
+    } catch (error) {
+      console.warn(error);
+      toast.error("Google 登入時發生錯誤，請稍後再試");
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  }
+
 
   return (
     <main className="min-h-screen bg-[url('/images/register-bg.jpg')] bg-cover bg-[position:33%_center] xl:bg-left text-white">
@@ -266,14 +313,20 @@ export default function RegisterPage() {
 
                 {/* Google 登入 */}
                 <button
-                  type="button"
-                  className="flex h-[56px] w-full items-center justify-center gap-3 rounded-xl border border-white/80 bg-white/5 text-xl font-bold hover:bg-white/15 sm:h-[64px] sm:gap-4 sm:text-[24px]"
-                >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-2xl font-bold sm:h-9 sm:w-9">
-                    <FcGoogle />
-                  </span>
-                  <span>使用 Google 註冊</span>
-                </button>
+                    type="button"
+                    disabled={isGoogleLoading}
+                    onClick={() => {
+                      loginGoogle(handleGoogleLogin);
+                    }}
+                    className="flex h-[56px] w-full items-center justify-center gap-3 rounded-xl border border-white/80 bg-white/5 text-xl font-bold hover:bg-white/15 sm:h-[64px] sm:gap-4 sm:text-[24px]"
+                  >
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-2xl font-bold sm:h-9 sm:w-9">
+                      <FcGoogle />
+                    </span>
+                    <span>
+                      {isGoogleLoading ? "Google 登入中..." : "使用 Google 登入"}
+                    </span>
+                  </button>
 
                 <p className="mt-6 text-center text-[16px]">
                   已有帳號?

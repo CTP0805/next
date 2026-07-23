@@ -6,8 +6,8 @@ import { FavoriteProvider } from "@/contexts/FavoriteContext";
 import { AuthContextProvider } from "@/contexts/auth-context";
 import Header from "@/components/Header";
 import FooterGuard from "@/components/FooterGuard";
+import { AuthRouteGuard } from "@/components/AuthRouteGuard";
 import { Toaster } from "react-hot-toast";
-
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -25,16 +25,23 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body suppressHydrationWarning className={`flex min-h-full flex-col ${besley.variable}`}>
-        <Toaster /> 
+      <body
+        suppressHydrationWarning
+        className={`flex min-h-full flex-col ${besley.variable}`}
+      >
+        <Toaster />
         <AuthContextProvider>
-          <FavoriteProvider>
-            <CartProvider>
-              <Header />
-              {children}
-              <FooterGuard />
-            </CartProvider>
-          </FavoriteProvider>
+          
+            <FavoriteProvider>
+              <CartProvider>
+                <Header />
+                <AuthRouteGuard>
+                {children}
+                </AuthRouteGuard>
+                <FooterGuard />
+              </CartProvider>
+            </FavoriteProvider>
+          
         </AuthContextProvider>
       </body>
     </html>

@@ -21,6 +21,7 @@ import ReviewsSection from "@/app/experiences/_components/ReviewsSection";
 import NotesSection from "@/app/experiences/_components/NotesSection";
 import BookingCard from "@/app/experiences/_components/BookingCard";
 import { useCart } from "@/contexts/cart";
+import Loading from "@/components/Loading";
 
 // 💡 調整 Type 定義，以符合後端資料庫回傳的真實欄位
 type ExperienceNote = {
@@ -277,7 +278,8 @@ export default function ExperienceDetailPage() {
     router.push(`/checkout?${queryParams.toString()}`);
   };
   if (isLoading) {
-    return <div className="px-6 py-20 text-center">載入中...</div>;
+    return <Loading/>
+    // return <div className="px-6 py-20 text-center">載入中...</div>;
   }
 
   if (errorMessage || !experience) {

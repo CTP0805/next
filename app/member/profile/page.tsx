@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
+import { HiChevronDown } from "react-icons/hi";
 
 type ProfileData = {
   name: string;
@@ -73,6 +74,7 @@ export default function ProfileFormTabs() {
 
       // step3. 解析回應
       const result = await response.json();
+      console.log(result);
 
       const profileData: ProfileData = {
         name: result.data.name ?? "",
@@ -285,7 +287,7 @@ export default function ProfileFormTabs() {
                 />
               </div>
 
-              <div>
+              <div className="relative">
                 <label htmlFor="gender" className="profile-label">
                   性別
                 </label>
@@ -294,13 +296,17 @@ export default function ProfileFormTabs() {
                   id="gender"
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
-                  className="profile-input h-[45px] w-full rounded-[12px] bg-transparent px-5 text-lg transition outline-none placeholder:text-white/40 focus:border-white focus:ring-2 focus:ring-sky-200/30"
+                  className="profile-input h-[45px] w-full appearance-none rounded-[12px] bg-transparent px-5 text-lg text-[16px] transition outline-none placeholder:text-white/40 focus:border-white focus:ring-2 focus:ring-sky-200/30"
                 >
                   <option value="">請選擇...</option>
                   <option value="男">男</option>
                   <option value="女">女</option>
                   <option value="其他">非二元性別</option>
                 </select>
+                <HiChevronDown
+                    aria-hidden="true"
+                    className="pointer-events-none absolute top-3/4 right-3 size-5 -translate-y-1/2 text-[#737B81]"
+                  />
               </div>
 
               <div>
@@ -382,7 +388,11 @@ export default function ProfileFormTabs() {
                   aria-label="顯示或隱藏密碼"
                   className="absolute top-3/4 right-4 -translate-y-1/2 text-zinc-400 hover:cursor-pointer hover:text-[#68BBC3]"
                 >
-                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showConfirmPassword ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
                 </button>
               </div>
             </div>

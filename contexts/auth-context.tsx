@@ -20,7 +20,7 @@ export type Auth = {
   email: string;
   member_level?: string;     // 💡 新增：等級中文名稱 (例如 '金牌會員 (享95折優惠)')
   current_points?: number;   // 💡 新增：會員現有的 M 幣存量
-
+  role: string;
 };
 
 // 初始值
@@ -30,6 +30,7 @@ export const emptyAuth: Auth = {
   email: "",
   member_level: "一般會員 (無折扣)",
   current_points: 0, // 沒登入時預設為 0
+  role: "",
 };
 
 type AuthApiResponse = {
@@ -43,9 +44,11 @@ type AuthContextValue = {
   auth: Auth;
   authInit: boolean;
   isAuthenticated: boolean;
+  isLoggingOut: boolean;
   login: (email: string, password: string) => Promise<boolean>; // 因為裡面有用到 async/await，所以要用 Promise
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
+  resendVerifyEmail: (email: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -68,6 +71,7 @@ export function AuthContextProvider({
 }) {
   const [auth, setAuth] = useState(emptyAuth);
   const [authInit, setAuthInit] = useState(false); // true：後端已經回答，目前可安全判斷是否登入 false：還在問後端登入狀態
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -200,8 +204,8 @@ export function AuthContextProvider({
       }
 
       if (response.ok) {
-        setAuth(result.data);
-        setAuthInit(true);
+        setAuth(result.data); // 刷新狀態
+        setAuthInit(true); // 刷新狀態
         toast.success(result.message || "登入成功(前端)");
         router.replace(next ?? "/"); // 登入成功後跳轉到首頁(💡看有沒有要換成其他的)
         return true; // ❓❓❓為什麼要回傳 true 目的是甚麼?
@@ -216,6 +220,7 @@ export function AuthContextProvider({
 
   const logout = async (): Promise<void> => {
     try {
+      setIsLoggingOut(true);
       await fetch(`${API_SERVER}/api/auth/logout`, {
         method: "POST",
         credentials: "include",
@@ -224,10 +229,12 @@ export function AuthContextProvider({
       console.warn(error);
     }
 
+    router.replace("/");
+    
+    // window.location.replace("/"); // 💡💡💡TODO : 點下登出後 如果使用者原本是在會員中心或購物車 要跳轉到首頁
     setAuth(emptyAuth);
     setAuthInit(true);
-    // 💡💡💡TODO : 點下登出後 如果使用者原本是在會員中心或購物車 要跳轉到首頁
-    router.push("/auth/login");
+    
   };
 
   return (
@@ -237,9 +244,11 @@ export function AuthContextProvider({
         auth, // 目前登入的使用者的資料
         authInit, // 是否已經問完後端登入狀態
         isAuthenticated: auth.id !== 0, // 是否已登入的簡單 true / false 判斷 (true-->已登入、false-->未登入)
+        isLoggingOut,
         login,
         logout,
         refreshAuth, // 呼叫 /api/auth/me 重新確認 Cookie 的函式
+        resendVerifyEmail,
       }}
     >
       {children}

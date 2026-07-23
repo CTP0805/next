@@ -10,7 +10,6 @@ import { useAuth } from "@/contexts/auth-context";
 import toast from "react-hot-toast";
 import { API_SERVER } from "@/config/api-path";
 
-
 // 還不確定用不用的到
 type LoginRequest = {
   email: string;
@@ -21,7 +20,7 @@ type LoginResponse = {
   success: boolean;
   message: string;
   token?: string;
-  user?: User;
+  user?: string;
 };
 
 export default function ForgotPasswordPage() {
@@ -63,9 +62,8 @@ export default function ForgotPasswordPage() {
       }
 
       if (response.ok) {
-        
         toast.success(result.message || "登入成功(前端)");
-        
+
         return;
       }
 
@@ -78,12 +76,11 @@ export default function ForgotPasswordPage() {
       // 不管成功或失敗，都把 loading 關掉
       setIsLoading(false);
     }
-    
   }
 
   return (
     <>
-      <main className="min-h-screen bg-[url('/images/login-bg.jpg')] bg-cover bg-[position:48%_center] xl:bg-left text-white">
+      <main className="min-h-screen bg-[url('/images/login-bg.jpg')] bg-cover bg-[position:48%_center] text-white xl:bg-left">
         {/* 背景遮罩 */}
         <div className="min-h-screen bg-black/10 backdrop-brightness-75">
           {/* 外層 container：負責控制整體寬度與 RWD 留白 */}
@@ -96,7 +93,10 @@ export default function ForgotPasswordPage() {
             <div className="flex w-full max-w-md flex-col overflow-hidden rounded-[12px] border border-white/80 bg-black/35 shadow-2xl backdrop-blur-[2px] xl:max-w-[1280px] xl:flex-row">
               {/* 左側：登入表單 */}
               <div className="flex w-full items-center justify-center px-5 py-10 sm:px-8 sm:py-12 xl:w-1/2 xl:px-16 xl:px-20">
-                <form onSubmit={handleForgotPassword} className="w-full max-w-[470px]">
+                <form
+                  onSubmit={handleForgotPassword}
+                  className="w-full max-w-[470px]"
+                >
                   <h2 className="mb-10 text-center">忘記密碼</h2>
                   <p className="text-center">請輸入您的電子信箱</p>
                   <p className="mb-6 text-center">

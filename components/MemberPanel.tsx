@@ -80,6 +80,7 @@ interface AvatarUploadResponse {
   message: string;
   data?: {
     avatarUrl: string;
+    name: string;
   };
 }
 
@@ -175,7 +176,7 @@ export default function MemberPanel() {
         });
 
         const result = (await response.json()) as ProfileResponse;
-
+        console.log(result);
         setName(result.data.name);
 
         const absoluteUrl = result.data.avatar_url.trim();

@@ -35,8 +35,11 @@ export default function LoginPage() {
 
   // isLoading 用來控制按下登入後，按鈕顯示「登入中」
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, refreshAuth } = useAuth();
   const { loginGoogle } = useFirebase(); // 第三方登入
   const searchParams = useSearchParams();
 
@@ -108,7 +111,7 @@ export default function LoginPage() {
   async function handleGoogleLogin(providerData: GoogleProviderData) {
     const next = searchParams.get("next");
     try {
-      setIsLoading(true);
+      setIsGoogleLoading(true);
 
       // 前端送什麼？
       // 送 Google / Firebase 回傳的 providerData 給後端
@@ -131,13 +134,14 @@ export default function LoginPage() {
         return;
       }
 
+      await refreshAuth(); // 刷新context裡面的狀態(一般登入不用是因為他已經在context裡面刷新)
       toast.success(result.message || "Google 登入成功");
       router.replace(next ?? "/"); // 登入後跳轉回上一個畫面 或首頁
     } catch (error) {
       console.warn(error);
       toast.error("Google 登入時發生錯誤，請稍後再試");
     } finally {
-      setIsLoading(false);
+      setIsGoogleLoading(false);
     }
   }
 
@@ -226,7 +230,7 @@ export default function LoginPage() {
                   {/* Google 登入 */}
                   <button
                     type="button"
-                    disabled={isLoading}
+                    disabled={isGoogleLoading}
                     onClick={() => {
                       loginGoogle(handleGoogleLogin);
                     }}
@@ -236,7 +240,7 @@ export default function LoginPage() {
                       <FcGoogle />
                     </span>
                     <span>
-                      {isLoading ? "Google 登入中..." : "使用 Google 登入"}
+                      {isGoogleLoading ? "Google 登入中..." : "使用 Google 登入"}
                     </span>
                   </button>
 

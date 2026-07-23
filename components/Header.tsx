@@ -140,7 +140,7 @@ export default function Navbar() {
         <button
           type="submit"
           aria-label="搜尋"
-          className="absolute top-1/2 left-3 z-10 -translate-y-1/2 cursor-pointer text-gray-400"
+          className="absolute top-1/2 left-4 z-10 -translate-y-1/2 cursor-pointer text-gray-100"
         >
           <FaSearch />
         </button>

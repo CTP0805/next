@@ -6,6 +6,7 @@ import FilterPanel from "@/app/experiences/_components/FilterPanel";
 import ExperienceCard from "@/app/experiences/_components/ExperienceCard";
 import Link from "next/link";
 import { HiAdjustments, HiChevronUp, HiChevronDown } from "react-icons/hi";
+import Loading from "@/components/Loading";
 
 type Experience = {
   id: number;
@@ -338,9 +339,10 @@ export default function ExperienceListPage() {
             </div>
 
             {loading ? (
-              <div className="px-6 py-16 text-center">
-                <p className="font-bold text-[#596066]">載入中...</p>
-              </div>
+              <Loading/>
+              // <div className="px-6 py-16 text-center">
+              //   <p className="font-bold text-[#596066]">載入中...</p>
+              // </div>
             ) : experiences.length === 0 ? (
               <div className="rounded-lg border border-[#E3E7E9] px-6 py-16 text-center">
                 <p className="font-bold text-[#596066]">找不到符合條件的體驗</p>

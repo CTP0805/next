@@ -48,13 +48,15 @@ const resetpasswordSchema = z
 // 錯誤畫面元件
 function ResetPasswordError() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <section className="w-full max-w-md rounded-lg bg-white p-8 text-center shadow">
-        <div className="mb-4 text-5xl">❌</div>
+    <main className="flex h-[calc(100vh-60px)] items-center justify-center bg-gray-100 px-4">
+      <section className="w-full max-w-md rounded-[12px] bg-white p-8 text-center shadow">
+        <div className={"mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full text-3xl bg-red-100 text-red-600"}>
+          !
+        </div>
 
-        <h1 className="mb-3 text-2xl font-bold text-gray-800">
+        <h3 className="mb-3">
           重設密碼連結無效
-        </h1>
+        </h3>
 
         <p className="mb-6 text-gray-600">
           此連結可能已經過期、已經使用過，或網址中的驗證資訊不正確。
@@ -62,7 +64,7 @@ function ResetPasswordError() {
 
         <Link
           href="/auth/forgot-password"
-          className="inline-block rounded bg-blue-600 px-5 py-3 text-white hover:bg-blue-700"
+          className="button-red"
         >
           重新申請重設密碼
         </Link>
@@ -190,7 +192,7 @@ export default function ResetPasswordPage() {
                       aria-label="顯示或隱藏密碼"
                       className="absolute top-1/2 right-4 -translate-y-1/2 text-white hover:cursor-pointer hover:text-[#68BBC3]"
                     >
-                      {showPassword ? <EyeOff size={25} /> : <Eye size={25} />}
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
                 </div>
@@ -216,9 +218,9 @@ export default function ResetPasswordPage() {
                       className="absolute top-1/2 right-4 -translate-y-1/2 text-white hover:cursor-pointer hover:text-[#68BBC3]"
                     >
                       {showConfirmPassword ? (
-                        <EyeOff size={25} />
+                        <EyeOff size={20} />
                       ) : (
-                        <Eye size={25} />
+                        <Eye size={20} />
                       )}
                     </button>
                   </div>
