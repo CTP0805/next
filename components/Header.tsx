@@ -36,9 +36,9 @@ export default function Navbar() {
   const searchParams = useSearchParams();
 
   const navLinks = [
-    { name: "部落格", href: "/blog" },
-    { name: "體驗分類", href: "/categories" },
+    { name: "體驗分類", href: "/experiences/search" },
     { name: "品牌介紹", href: "/about" },
+    { name: "部落格", href: "/blog" },
     { name: "聯絡我們", href: "/contact" },
   ];
 
@@ -116,7 +116,7 @@ export default function Navbar() {
   };
   return (
     <nav
-      className={`${navPosition} top-0 left-0 z-50 flex h-[60px] w-full items-center justify-between p-2 text-white xl:px-37.5 ${navStyle}`}
+      className={`${navPosition} top-0 left-0 z-50 box-border flex h-[60px] w-full items-center justify-between p-2 text-white xl:px-37.5 ${navStyle}`}
     >
       {/* 1. 左側 Logo */}
       <div className="items-left relative flex aspect-square h-[40px] w-[40px] shrink-0">
@@ -174,13 +174,11 @@ export default function Navbar() {
         {/* 🛒 購物車觸發區：僅在【已登入】時顯示 */}
         {isAuthenticated && (
           <li className="group relative mr-6 cursor-pointer px-3 py-2">
-            <Link href="/cart" className="relative flex shrink-0 items-center w-[40px] h-[40px] ">
-              <Image
-                src="/icon/cart.svg"
-                alt="Cart"
-                width={40}
-                height={40}
-              />
+            <Link
+              href="/cart"
+              className="relative flex h-[40px] w-[40px] shrink-0 items-center"
+            >
+              <Image src="/icon/cart.svg" alt="Cart" width={40} height={40} />
               {totalQty > 0 && (
                 <span className="absolute -top-2.5 -right-2.5 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white shadow-sm">
                   {totalQty}
@@ -300,10 +298,10 @@ export default function Navbar() {
 
         {/* 👤 會員 / 登入註冊 (桌面版) */}
         {isAuthenticated ? (
-          <li className="dropdown dropdown-end dropdown-hover relative">
+          <li className="dropdown dropdown-end dropdown-hover relative p-4 pr-0">
             <div
               tabIndex={0}
-              className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 hover:bg-white/10"
+              className="flex cursor-pointer items-center gap-2 rounded-lg p-4 hover:bg-white/10"
             >
               <Image
                 src="/images/avatar-test.png"
@@ -340,6 +338,10 @@ export default function Navbar() {
               {memberLists.map((v) => (
                 <li key={v.href}>
                   <Link
+                    onClick={(e) => {
+                      const elem = document.activeElement as HTMLElement;
+                      if (elem) elem.blur();
+                    }}
                     href={v.href}
                     className="flex items-center gap-3 rounded-lg px-4 py-2 hover:bg-blue-600 hover:text-white"
                   >
@@ -428,7 +430,7 @@ export default function Navbar() {
 
           <ul
             tabIndex={0}
-            className="menu dropdown-content fixed right-0 z-50 w-screen bg-white p-4 text-black shadow-xl"
+            className="menu dropdown-content fixed right-0 z-50 bg-white p-4 text-black shadow-xl"
           >
             {!isAuthenticated && (
               <>
