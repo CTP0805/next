@@ -53,7 +53,13 @@ export default function ChatWidget() {
       });
     }
   };
-
+  useEffect(() => {
+    if (isOpen) {
+      requestAnimationFrame(() => {
+        scrollToBottom();
+      });
+    }
+  }, [messages, isOpen]);
   return (
     <div className="fixed right-6 bottom-6 z-50">
       <button
@@ -67,7 +73,7 @@ export default function ChatWidget() {
         <div className="absolute right-0 bottom-20 flex h-[480px] w-80 flex-col overflow-hidden rounded-2xl border bg-white shadow-2xl">
           {/* Header */}
           <div className="flex items-center gap-2 bg-[#45cad5] p-4 font-semibold text-white">
-            {/* <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20"></div> */}
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20"></div>
             線上客服
           </div>
 
