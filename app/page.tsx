@@ -2,6 +2,7 @@ import HeroSection from "@/components/HeroSection";
 import PopularDestinations from "@/components/PopularDestinations";
 import ExperienceCard from "@/components/ExperienceCard";
 import ReviewSection from "@/components/ReviewSection";
+import ChatWidget from "@/components/ChatWidget";
 import Features from "@/components/Features";
 export default function Home() {
   return (
@@ -11,6 +12,7 @@ export default function Home() {
       <ExperienceCard />
       <Features />
       <ReviewSection />
+      <ChatWidget />
     </>
   );
 }
