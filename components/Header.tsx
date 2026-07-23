@@ -36,7 +36,7 @@ export default function Navbar() {
   const searchParams = useSearchParams();
 
   const navLinks = [
-    { name: "體驗分類", href: "/experiences/search" },
+    { name: "所有體驗", href: "/experiences/search" },
     { name: "品牌介紹", href: "/about" },
     { name: "部落格", href: "/blog" },
     { name: "聯絡我們", href: "/contact" },
@@ -171,12 +171,10 @@ export default function Navbar() {
         {/* 🛒 購物車觸發區：僅在【已登入】時顯示 */}
         {isAuthenticated && (
           <li className="group relative mr-6 cursor-pointer px-3 py-2">
-            <Link 
-            href="/cart" 
-            className="relative flex shrink-0 items-center">
-              <Image src="/icon/cart.svg" alt="Cart" width={30} height={30} />
+            <Link href="/cart" className="relative flex shrink-0 items-center">
+              <Image src="/icon/cart.svg" alt="Cart" width={20} height={20} />
               {items.length > 0 && (
-                <span className="absolute -top-2.5 -right-2.5 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white shadow-sm">
+                <span className="absolute -top-2.5 -right-2.5 grid h-4 min-w-4 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white shadow-sm">
                   {items.length}
                 </span>
               )}

@@ -5,12 +5,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import toast from "react-hot-toast";
 
-/**
- * =============================================================================
- * 【主要元件】SuccessPage
- * export default：Next App Router 把此元件當 /success 頁面
- * =============================================================================
- */
 export default function SuccessPage() {
   const searchParams = useSearchParams();
   const { auth } = useAuth();
@@ -53,80 +47,25 @@ export default function SuccessPage() {
   };
 
 
-  // ranRef.current：同一輪掛載只跑業務一次（Strict Mode 會雙調 effect）
-  const ranRef = useRef(false);
-
-  /**
-   * 【副作用】進頁打本人 rewards API
-   * 依賴 [searchParams]：query 變了會再跑
-   *
-   * 語法補充：
-   *   || ：左邊假值（""、null…）就用右邊
-   *   void promise：呼叫 Promise 不 await（fire-and-forget）
-   *   .catch(fn)：Promise 失敗時執行
-   *   try/catch：sessionStorage 在隱私模式可能丟錯
-   */
-  useEffect(() => {
-    // 1) 清前端「選用中優惠券」暫存
-    clearSelectedCoupon();
-
-    // 2) 同一 mount 只跑一次
-    if (ranRef.current) return;
-    ranRef.current = true;
-
-    // 3) 訂單編號（建議結帳導向時帶上）
-    //    MerchantTradeNo：綠界有時用的參數名
-    const orderId =
-      searchParams.get("order_id") ||
-      searchParams.get("orderId") ||
-      searchParams.get("MerchantTradeNo") ||
-      "";
-
-    // 4) sessionStorage 防重整重複打 API（後端另有 log 表防重）
-    //    鍵：payment-success-rewards:訂單號
-    const guardKey = `payment-success-rewards:${orderId || "latest"}`;
-    try {
-      // SSR 沒有 sessionStorage，要先 typeof 檢查
-      if (typeof sessionStorage !== "undefined") {
-        if (sessionStorage.getItem(guardKey) === "1") return;
-        sessionStorage.setItem(guardKey, "1");
-      }
-    } catch {
-      // 存取被拒時略過，仍打 API
-    }
-
-    // 5) 打後端：有 orderId 放 body；沒有則 {}（後端取最近一筆）
-    //    成功時後端會：餘額 += 實付回饋、累積消費／等級、核銷券
-    void applyPaymentSuccessRewards(orderId || null).catch((err) => {
-      console.error("[success] payment-success-rewards", err);
-      // 失敗拿掉旗標，允許重試
-      try {
-        sessionStorage.removeItem(guardKey);
-      } catch {
-        /* ignore */
-      }
-    });
-  }, [searchParams]);
-
-  /**
-   * return JSX：成功頁靜態 UI（示意文案；訂單編號可之後改接真資料）
-   *   className：Tailwind / DaisyUI
-   *   <Link href>：去會員訂單
-   */
   return (
     <>
+      {/* 最外層淺灰底容器 */}
       <div className="min-h-[calc(100vh-160px)] w-full bg-slate-50 py-10 text-gray-800">
+        {/* 核心主容器：最大寬度 1280px，mx-auto 負責在大螢幕下置中 */}
         <div className="mx-auto w-full max-w-7xl px-4">
-          {/* 步驟進度條 */}
-          <div className="mb-10 flex w-full justify-center">
-            <ul className="steps id-steps grid w-full max-w-7xl grid-cols-3 text-sm">
+          {/* ==================== 1. 頂部步驟進度條 (DaisyUI Steps) ==================== */}
+          <div className="w-full flex justify-center mb-10">
+            <ul className="steps id-steps w-full max-w-7xl text-sm grid grid-cols-3">
               <li className="step step-accent">填寫資料</li>
               <li className="step step-accent">選擇付款</li>
               <li className="step step-accent">完成付款</li>
             </ul>
           </div>
 
+          {/* ==================== 2. 主要內容卡片區 ==================== */}
+          {/* 對照設計圖，內容區塊靠左對齊，但限制最大寬度，避免在 1920 螢幕下文字拉得太散 */}
           <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+            {/* 訂單編號與複製按鈕 */}
             <div className="flex items-center gap-2 pl-2 text-sm text-gray-500">
               <span>訂單編號：{orderId || "載入中..."}</span>
               {/* 複製小圖示，暫時用網頁符號代替 */}
@@ -137,10 +76,14 @@ export default function SuccessPage() {
               </button>
             </div>
 
+            {/* 核心狀態灰色大卡片 */}
             <div className="rounded-2xl border border-gray-200/50 bg-gray-100/70 p-6">
+              {/* 使用 DaisyUI 的 Timeline 垂直時間軸元件 */}
               <ul className="timeline timeline-vertical timeline-compact">
+                {/* 節點 1：付款完成 */}
                 <li>
                   <div className="timeline-middle text-success">
+                    {/* 綠色圓圈打勾 */}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
@@ -159,12 +102,14 @@ export default function SuccessPage() {
                       付款完成！
                     </h4>
                   </div>
-                  <hr className="bg-success" />
+                  <hr className="bg-success" /> {/* 連接線變綠色 */}
                 </li>
 
+                {/* 節點 2：訂單確認中 */}
                 <li>
                   <hr className="bg-success" />
                   <div className="timeline-middle text-success">
+                    {/* 綠色時鐘圖示 */}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
@@ -193,11 +138,12 @@ export default function SuccessPage() {
               </ul>
             </div>
 
+            {/* 查看訂單按鈕 */}
             <div className="mt-4">
-              <Link href="/member/order">
-                <button className="btn btn-outline rounded-xl border-gray-400 px-8 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-800">
-                  查看訂單
-                </button>
+            <Link href="/member/order">
+              <button className="btn btn-outline rounded-xl border-gray-400 px-8 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-800">
+                查看訂單
+              </button>
               </Link>
             </div>
           </div>
