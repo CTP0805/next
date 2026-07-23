@@ -8,9 +8,9 @@ type ChatMessage = {
   text: string;
   sender: "user" | "admin";
 };
+const socket = io("http://localhost:3001");
 
 export default function ChatWidget() {
-  const socket = io("http://localhost:3001");
   const { auth } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -38,7 +38,7 @@ export default function ChatWidget() {
     return () => {
       socket.off("receive-message");
     };
-  });
+  }, [auth.id]);
 
   useEffect(() => {
     scrollToBottom();
