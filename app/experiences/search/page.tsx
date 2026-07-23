@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import FilterPanel from "@/app/experiences/_components/FilterPanel";
 import ExperienceCard from "@/app/experiences/_components/ExperienceCard";
 import Link from "next/link";
@@ -36,9 +36,16 @@ type Pagination = {
 
 export default function ExperienceListPage() {
   const searchParams = useSearchParams();
-  const keyword = searchParams.get("keyword")?.trim() ?? "";
+  const router = useRouter();
+  const pathname = usePathname();
+  const MAX_PRICE_LIMIT = 9999;
   const city = searchParams.get("city")?.trim() ?? "";
-  const [selectedDate, setSelectedDate] = useState("");
+  const keyword = searchParams.get("keyword") ?? "";
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const date = searchParams.get("date") ?? "";
+
+    return date === "tomorrow" || /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : "";
+  });
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [categoryIds, setCategoryIds] = useState<number[]>(() => {
     const categoryIdsParam = searchParams.get("category_ids");
@@ -51,11 +58,36 @@ export default function ExperienceListPage() {
       .filter((id) => Number.isInteger(id) && id > 0);
   });
   const [categories, setCategories] = useState<Category[]>([]);
-  const [sort, setSort] = useState<SortOption>("popular");
-  const MAX_PRICE_LIMIT = 9999;
-  const [minPrice, setMinPrice] = useState(0);
-  const [maxPrice, setMaxPrice] = useState(MAX_PRICE_LIMIT);
-  const [page, setPage] = useState(1);
+  const [sort, setSort] = useState<SortOption>(() => {
+    const urlSort = searchParams.get("sort");
+
+    return urlSort === "rating" ||
+      urlSort === "price_asc" ||
+      urlSort === "popular"
+      ? urlSort
+      : "popular";
+  });
+  const [minPrice, setMinPrice] = useState(() => {
+    const value = Number(searchParams.get("min_price"));
+
+    return Number.isFinite(value) && value >= 0 ? value : 0;
+  });
+  const [maxPrice, setMaxPrice] = useState(() => {
+    const maxPriceParam = searchParams.get("max_price");
+
+    if (!maxPriceParam) return MAX_PRICE_LIMIT;
+
+    const value = Number(maxPriceParam);
+
+    return Number.isFinite(value) && value >= 0 && value <= MAX_PRICE_LIMIT
+      ? value
+      : MAX_PRICE_LIMIT;
+  });
+  const [page, setPage] = useState(() => {
+    const value = Number(searchParams.get("page"));
+
+    return Number.isInteger(value) && value > 0 ? value : 1;
+  });
   const titleKeyword = keyword || city;
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -66,10 +98,93 @@ export default function ExperienceListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const isFirstLoad = useRef(true);
+  const previousSearchRef = useRef({ keyword, city });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const clearFilters = () => {
+    setCategoryIds([]);
+    setMinPrice(0);
+    setMaxPrice(MAX_PRICE_LIMIT);
+    setSelectedDate("");
+    setPage(1);
+  };
+  const activeFilterCount =
+    categoryIds.length +
+    (selectedDate !== "" ? 1 : 0) +
+    (minPrice > 0 || maxPrice < MAX_PRICE_LIMIT ? 1 : 0);
   // 建立控制「回到頂端」按鈕是否顯示的狀態
   const [showScrollTop, setShowScrollTop] = useState(false);
 
+  useEffect(() => {
+    const previousSearch = previousSearchRef.current;
+
+    const hasSearchContextChanged =
+      previousSearch.keyword !== keyword || previousSearch.city !== city;
+
+    previousSearchRef.current = { keyword, city };
+
+    // 第一次進頁面不重設，避免吃掉網址原本的 category_ids
+    if (!hasSearchContextChanged) return;
+
+    setCategoryIds([]);
+    setMinPrice(0);
+    setMaxPrice(MAX_PRICE_LIMIT);
+    setSelectedDate("");
+    setSort("popular");
+    setPage(1);
+  }, [keyword, city]);
+  useEffect(() => {
+    const params = new URLSearchParams();
+
+    // 保留搜尋本身帶來的條件
+    if (keyword) params.set("keyword", keyword);
+    if (city) params.set("city", city);
+
+    // 非預設值才寫進網址，網址會比較乾淨
+    if (categoryIds.length > 0) {
+      params.set("category_ids", categoryIds.join(","));
+    }
+
+    if (minPrice > 0) {
+      params.set("min_price", String(minPrice));
+    }
+
+    if (maxPrice < MAX_PRICE_LIMIT) {
+      params.set("max_price", String(maxPrice));
+    }
+
+    if (selectedDate) {
+      params.set("date", selectedDate);
+    }
+
+    if (sort !== "popular") {
+      params.set("sort", sort);
+    }
+
+    if (page > 1) {
+      params.set("page", String(page));
+    }
+
+    const nextQuery = params.toString();
+    const currentQuery = searchParams.toString();
+
+    if (nextQuery === currentQuery) return;
+
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
+      scroll: false,
+    });
+  }, [
+    keyword,
+    city,
+    categoryIds,
+    minPrice,
+    maxPrice,
+    selectedDate,
+    sort,
+    page,
+    searchParams,
+    pathname,
+    router,
+  ]);
   useEffect(() => {
     async function loadExperiences() {
       try {
@@ -164,27 +279,9 @@ export default function ExperienceListPage() {
   useEffect(() => {
     async function loadCategories() {
       try {
-        const params = new URLSearchParams();
-
-        if (keyword) {
-          params.set("keyword", keyword);
-        }
-
-        if (city) {
-          params.set("city", city);
-        }
-
-        if (selectedDate) {
-          params.set("date", selectedDate);
-        }
-
-        const queryString = params.toString();
-
-        const url = queryString
-          ? `http://localhost:3001/api/experiences/categories?${queryString}`
-          : "http://localhost:3001/api/experiences/categories";
-
-        const response = await fetch(url);
+        const response = await fetch(
+          "http://localhost:3001/api/experiences/categories",
+        );
 
         if (!response.ok) {
           throw new Error(`取得分類失敗：${response.status}`);
@@ -203,7 +300,7 @@ export default function ExperienceListPage() {
     }
 
     loadCategories();
-  }, [keyword, city, selectedDate]);
+  }, []);
 
   // ⭕️ 2. 監聽網頁滾動事件
   useEffect(() => {
@@ -265,7 +362,7 @@ export default function ExperienceListPage() {
             <span className="text-[#68BBC3]">首頁</span>
           </Link>
           <span> › </span>
-          <span>{titleKeyword || "全部體驗"}</span>
+          <span>{titleKeyword || "探索體驗"}</span>
         </nav>
 
         <h2 className="mt-6 leading-tight font-extrabold text-[#292E33] max-md:hidden">
@@ -275,7 +372,7 @@ export default function ExperienceListPage() {
               相關的體驗
             </>
           ) : (
-            "全部體驗"
+            "探索體驗"
           )}
         </h2>
         <div className="mt-9 grid grid-cols-[280px_minmax(0,1fr)] items-start gap-8 max-lg:grid-cols-1 max-md:mt-2">
@@ -295,12 +392,30 @@ export default function ExperienceListPage() {
           </div>
           <section aria-label="體驗列表" className="min-w-0">
             <div className="mb-6 flex items-center justify-between gap-4">
-              <p className="text-[16px] font-bold whitespace-nowrap text-[#596066] sm:text-[17px]">
-                <span className="mr-1 text-[20px] font-extrabold text-[#68BBC3] sm:text-[24px]">
-                  {pagination.total}
-                </span>
-                項體驗可預訂
-              </p>
+              <div>
+                <p className="text-[16px] font-bold whitespace-nowrap text-[#596066] sm:text-[14px]">
+                  <span className="mr-1 text-[20px] font-extrabold text-[#68BBC3] sm:text-[18px]">
+                    {pagination.total}
+                  </span>
+                  項體驗可預訂
+                </p>
+
+                {activeFilterCount > 0 && (
+                  <div className="mt-1 flex items-center gap-3">
+                    <p className="text-sm font-bold text-[#596066]">
+                      已選擇 {activeFilterCount} 個篩選條件
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="text-sm font-medium text-[#489DA5] underline underline-offset-4 hover:text-[#287D85]"
+                    >
+                      清除
+                    </button>
+                  </div>
+                )}
+              </div>
 
               <div className="flex items-center gap-2">
                 {/* 💡 修正 2：手機版專屬「篩選按鈕」。只在 lg 以下顯示，點擊開啟彈窗 */}

@@ -12,8 +12,11 @@ import {
   HiChevronLeft,
   HiOutlineShoppingCart,
   HiChevronUp,
+  HiCheck,
 } from "react-icons/hi";
 import { FaImages } from "react-icons/fa";
+import { FaLink } from "react-icons/fa6";
+import toast from "react-hot-toast";
 
 import HostSection from "@/app/experiences/_components/HostSection";
 import LocationSection from "@/app/experiences/_components/LocationSection";
@@ -27,6 +30,13 @@ import Loading from "@/components/Loading";
 type ExperienceNote = {
   title: string;
   content: string;
+};
+
+type ExperienceImage = {
+  id: number;
+  image_url: string;
+  is_primary: number;
+  sort_order: number;
 };
 
 type ExperienceSession = {
@@ -64,9 +74,7 @@ type Experience = {
   host_role: string | null;
 
   title: string;
-  subtitle: string;
   description: string;
-  notice: string | null;
   meeting_point: string;
   city: string;
   longitude: number | null;
@@ -78,6 +86,7 @@ type Experience = {
   duration_minutes: number;
 
   image_url: string | null;
+  images: ExperienceImage[];
 
   rating: number;
   review_count: number;
@@ -86,28 +95,6 @@ type Experience = {
   sessions: ExperienceSession[];
   reviews: ExperienceReview[];
 };
-const gallery = [
-  {
-    src: "/images/experiences/seine-picnic.jpg",
-    alt: "朋友在塞納河畔野餐",
-  },
-  {
-    src: "/images/experiences/paris-market.jpg",
-    alt: "巴黎在地市場",
-  },
-  {
-    src: "/images/experiences/paris-cafe.jpg",
-    alt: "巴黎露天咖啡館",
-  },
-  {
-    src: "/images/experiences/paris-car.jpg",
-    alt: "巴黎街區散步",
-  },
-  {
-    src: "/images/experiences/paris-arcade.jpg",
-    alt: "巴黎鐵塔街景",
-  },
-] as const;
 
 function IconButton({
   label,
@@ -174,6 +161,23 @@ export default function ExperienceDetailPage() {
       const message = error instanceof Error ? error.message : "收藏操作失敗";
 
       alert(message);
+    }
+  };
+  const [isLinkCopied, setIsLinkCopied] = useState(false);
+
+  const handleShareClick = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+
+      setIsLinkCopied(true);
+      toast.success("已複製體驗連結！");
+
+      window.setTimeout(() => {
+        setIsLinkCopied(false);
+      }, 2000);
+    } catch (error) {
+      console.error("複製網址失敗：", error);
+      toast.error("複製網址失敗，請手動複製網址列");
     }
   };
 
@@ -289,6 +293,17 @@ export default function ExperienceDetailPage() {
       </div>
     );
   }
+  const galleryImages =
+    experience.images.length > 0
+      ? experience.images
+      : [
+          {
+            id: 0,
+            image_url: "/images/placeholder.jpg",
+            is_primary: 1,
+            sort_order: 1,
+          },
+        ];
   return (
     <div className="min-h-screen bg-white text-[#292E33]">
       <main className="mx-auto w-full max-w-[1280px] px-6 pt-10 pb-28 max-sm:px-2 max-sm:pt-0">
@@ -328,10 +343,8 @@ export default function ExperienceDetailPage() {
           {/* 第一張主圖容器 (在手機版將作為所有浮動按鈕的基地) */}
           <div className="relative min-h-[360px] overflow-hidden max-sm:h-[280px] max-sm:min-h-0">
             <Image
-              src={
-                experience.image_url ?? "/images/experiences/seine-picnic.jpg"
-              }
-              alt={experience.title}
+              src={galleryImages[0].image_url}
+              alt={`${experience.title}主圖`}
               fill
               priority
               sizes="(max-width: 768px) 100vw, 62vw"
@@ -389,15 +402,16 @@ export default function ExperienceDetailPage() {
 
           {/* 右側四張圖拼圖區：加上 max-sm:hidden，手機版直接隱藏不顯示 */}
           <div className="grid grid-cols-2 grid-rows-2 gap-2 max-md:h-[320px] max-sm:hidden">
-            {gallery.slice(1).map((photo, index) => (
-              <div key={photo.src} className="relative overflow-hidden">
+            {galleryImages.slice(1, 5).map((photo, index) => (
+              <div key={photo.id} className="relative overflow-hidden">
                 <Image
-                  src={photo.src}
-                  alt={photo.alt}
+                  src={photo.image_url}
+                  alt={`${experience.title}照片 ${index + 2}`}
                   fill
                   sizes="(max-width: 768px) 50vw, 20vw"
                   className="object-cover"
                 />
+
                 {index === 3 && (
                   <button
                     type="button"
@@ -437,7 +451,17 @@ export default function ExperienceDetailPage() {
             </div>
           </div>
           <div className="flex shrink-0 gap-2 max-sm:hidden">
-            <IconButton label="分享體驗">↗</IconButton>
+            <IconButton
+              label={isLinkCopied ? "網址已複製" : "複製體驗網址"}
+              onClick={handleShareClick}
+            >
+              {isLinkCopied ? (
+                <HiCheck className="size-5 text-[#68BBC3]" />
+              ) : (
+                <FaLink className="size-5" />
+              )}
+            </IconButton>
+
             <IconButton
               label={favorite ? "取消收藏" : "加入我的最愛"}
               pressed={favorite}

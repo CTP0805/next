@@ -103,10 +103,7 @@ export default function Navbar() {
 
     const trimmedKeyword = searchInputRef.current?.value.trim() ?? "";
 
-    if (!trimmedKeyword) {
-      router.push("/experiences/search");
-      return;
-    }
+    if (!trimmedKeyword) return;
 
     const params = new URLSearchParams({
       keyword: trimmedKeyword,
@@ -140,7 +137,7 @@ export default function Navbar() {
         <button
           type="submit"
           aria-label="搜尋"
-          className="absolute top-1/2 left-4 z-10 -translate-y-1/2 cursor-pointer text-gray-100"
+          className="absolute top-1/2 left-3 z-10 -translate-y-1/2 text-gray-400"
         >
           <FaSearch />
         </button>
@@ -151,7 +148,7 @@ export default function Navbar() {
           type="search"
           defaultValue={urlKeyword}
           placeholder="搜尋城市、分類或體驗"
-          className="h-[40px] w-full rounded-[25px] bg-gray-300/20 pr-4 pl-10 text-[16px] placeholder:text-white/70 focus:outline-none"
+          className="h-[40px] w-full rounded-[25px] bg-gray-300/20 pr-4 pl-10 text-[16px] placeholder:text-white/70 focus:outline-none [&::-webkit-search-cancel-button]:cursor-pointer"
         />
       </form>
 
@@ -174,13 +171,11 @@ export default function Navbar() {
         {/* 🛒 購物車觸發區：僅在【已登入】時顯示 */}
         {isAuthenticated && (
           <li className="group relative mr-6 cursor-pointer px-3 py-2">
-            <Link href="/cart" className="relative flex shrink-0 items-center w-[40px] h-[40px] ">
-              <Image
-                src="/icon/cart.svg"
-                alt="Cart"
-                width={40}
-                height={40}
-              />
+            <Link
+              href="/cart"
+              className="relative flex h-[40px] w-[40px] shrink-0 items-center"
+            >
+              <Image src="/icon/cart.svg" alt="Cart" width={40} height={40} />
               {totalQty > 0 && (
                 <span className="absolute -top-2.5 -right-2.5 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white shadow-sm">
                   {totalQty}

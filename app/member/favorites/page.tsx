@@ -52,7 +52,7 @@ export default function FavoritesPage() {
 
         {/* 💡 修正 3：標題「我的心願清單」，手機版高度太空，微調內邊距 */}
 
-        <div className="px-8 max-sm:px-0">
+        <div className="max-sm:px-0">
           {/* 
               💡 修正 4：
               - 加上 items-center，強迫「目前有12個體驗」跟「下拉選單」不論在哪種螢幕都垂直完美置中！
