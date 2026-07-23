@@ -1,5 +1,14 @@
 "use client";
 
+/**
+ * =============================================================================
+ * 【新手導讀】Blog 公開列表頁 `/blog`
+ * =============================================================================
+ * 角色：訪客可看已上架文章；用地區關鍵字篩選
+ * 資料：fetchBlogPosts() → GET /api/blog（後端預設 published）
+ * 子元件：BlogPostCard、BlogMediaImage、BlogOwnerEditLink
+ * =============================================================================
+ */
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -8,8 +17,10 @@ import BlogOwnerEditLink from "./_components/BlogOwnerEditLink";
 import BlogPostCard from "./_components/BlogPostCard";
 import { fetchBlogPosts } from "./_lib/api";
 import type { BlogPost } from "./_lib/types";
-import { BLOG_CATEGORY_MAP, BLOG_REGIONS } from "./_lib/types";
+import { BLOG_REGIONS, blogCategoryLabel } from "./_lib/types";
+import { useAuth } from "@/contexts/auth-context";
 
+/** 是否已上架（列表精選只用 published） */
 function isPublished(post: BlogPost) {
   return post.status === "published";
 }
@@ -37,17 +48,22 @@ function CardSkeleton() {
 }
 
 export default function BlogListPage() {
+  // ---------- 畫面狀態 ----------
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [allPosts, setAllPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const { auth } = useAuth();
 
+  // ---------- 進頁載入列表（cancelled 避免卸載後還 setState）----------
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
+        // 公開列表：後端預設只回 published
         const posts = await fetchBlogPosts();
-        if (!cancelled) setAllPosts(posts);
-      } catch {
+        if (!cancelled) setAllPosts(Array.isArray(posts) ? posts : []);
+      } catch (e) {
+        console.error("[blog list]", e);
         if (!cancelled) setAllPosts([]);
       } finally {
         if (!cancelled) setLoading(false);
@@ -194,25 +210,19 @@ export default function BlogListPage() {
               ) : null}
             </p>
           </div>
+          {/* 管理／新增：會員中心分頁；部落格仍可走獨立撰寫頁 */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <Link
-              href="/blog/manage"
-              className="inline-flex items-center gap-1.5 rounded-[12px] border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
-            >
-              文章管理
+            {(auth?.role === "管理者" || auth?.role === "會員") && ( 
+            <>
+            <Link href="/member/edit-post" className="inline-flex items-center gap-1.5 rounded-[12px] border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">
+              管理文章
             </Link>
-            <Link
-              href="/blog/review"
-              className="inline-flex items-center gap-1.5 rounded-[12px] border border-amber-300 bg-amber-50 px-5 py-2.5 text-sm font-semibold text-amber-800 shadow-sm transition hover:bg-amber-100"
-            >
-              文章審查
-            </Link>
-            <Link
-              href="/blog/new"
-              className="inline-flex items-center gap-1.5 rounded-[12px] bg-[#45cad5] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#36b3be] hover:shadow-lg"
-            >
+            {auth?.role === "會員" && (
+            <Link href="/blog/new" className="inline-flex items-center gap-1.5 rounded-[12px] bg-[#45cad5] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#36b3be] hover:shadow-lg">
               <span aria-hidden>+</span> 新增文章
-            </Link>
+            </Link>) }
+            </>
+            )}
           </div>
         </div>
 
@@ -297,7 +307,7 @@ export default function BlogListPage() {
                       <div className="flex min-w-0 flex-1 flex-col py-0.5 sm:py-1">
                         <div className="mb-2 flex flex-wrap items-center gap-2">
                           <span className="rounded-[12px] bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
-                            {BLOG_CATEGORY_MAP[post.category_id ?? 0] || "其他"}
+                            {blogCategoryLabel(post)}
                           </span>
                           <span className="text-xs text-gray-400 sm:ml-auto">
                             {formatDate(post.published_at)}
@@ -343,7 +353,7 @@ export default function BlogListPage() {
                       <div className="min-w-0 flex-1">
                         <div className="mb-1 flex flex-wrap items-center gap-1.5 text-xs">
                           <span className="text-amber-600">
-                            {BLOG_CATEGORY_MAP[post.category_id ?? 0] || "其他"}
+                            {blogCategoryLabel(post)}
                           </span>
                         </div>
                         <h4 className="line-clamp-2 text-base leading-snug font-medium text-gray-900 transition-colors group-hover:text-teal-600">

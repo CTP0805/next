@@ -1,39 +1,89 @@
 "use client";
+// 客戶端元件：有摺疊 FAQ 的 useState
 
+/**
+ * =============================================================================
+ * 【新手導讀＋語法】等級右側主面板  level.tsx
+ * =============================================================================
+ * 誰引入：page.tsx → import MemberLevelRightPanel from "./level"
+ * 資料來源：props.data（來自 GET /api/member-level，不是本檔 fetch）
+ * onOpenDetail：父元件傳進來的函式，點「會員詳情」時呼叫 → 開抽屜
+ * =============================================================================
+ */
+
+// React：預設命名空間；useState 做 FAQ 開合
 import React, { useState } from "react";
+
+// lucide-react：圖示元件庫（每個名字是一個 SVG 元件）
 import {
-  Crown,
-  Gift,
-  Percent,
-  Tag,
-  ChevronDown,
-  ChevronUp,
+  Crown, // 皇冠
+  Gift, // 禮物
+  Percent, // 百分比
+  Tag, // 標籤
+  ChevronDown, // 向下箭頭
+  ChevronUp, // 向上箭頭
 } from "lucide-react";
+
+// 型別：./api 的 MemberLevelPayload（與後端 data 對齊）
 import type { MemberLevelPayload } from "./api";
 
+/**
+ * interface：定義「這個元件需要哪些 props」
+ *   data：等級資料
+ *   onOpenDetail: () => void  → 無參數、無回傳的函式型別
+ */
 interface MemberLevelRightPanelProps {
   data: MemberLevelPayload;
   onOpenDetail: () => void;
 }
 
+/**
+ * 【主要元件】MemberLevelRightPanel
+ * React.FC<Props>：Function Component，props 型別是 Props
+ * 解構 ({ data, onOpenDetail })：直接取出 props 欄位當區域變數
+ */
 const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
   data,
   onOpenDetail,
 }) => {
+  // 目前展開的 FAQ 索引；null = 全部收合
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
 
+  // .slice(0, 3)：取前 3 題
+  // .map(f => (...))：把每題轉成 { question, answer } 方便畫 UI
   const faqs = data.faqs.slice(0, 3).map((f) => ({
     question: f.q,
     answer: f.a,
   }));
 
+  /** 點某一題：同一題再點就關，否則開那一題 */
   const toggleFAQ = (index: number) => {
     setOpenFAQ(openFAQ === index ? null : index);
   };
 
+  // 進度夾在 0~100（後端：訂單進度、消費進度取較高 → 符合「完成其一」）
   const progress = Math.min(100, Math.max(0, data.progress_percent));
+  // ??：左邊是 null/undefined 才用右邊（空字串不會觸發）
   const nextLabel = data.next_level ?? "已達最高等級";
-  const remainingSpendText = `NT$ ${data.remaining_spend.toLocaleString("zh-TW")}`;
+
+  // 下一級門檻：優先用 API 的 goal_*；否則從 thresholds 推
+  const goalOrders =
+    data.goal_orders ??
+    (data.next_level ? data.thresholds[data.next_level]?.minOrders : null);
+  const goalSpent =
+    data.goal_spent ??
+    (data.next_level ? data.thresholds[data.next_level]?.minSpent : null);
+
+  // 顯示「已完成 0/3 筆訂單」「已消費 0/5,000」（分子不超過分母）
+  const doneOrders =
+    goalOrders != null ? Math.min(data.total_orders, goalOrders) : data.total_orders;
+  const doneSpent =
+    goalSpent != null ? Math.min(data.total_spent, goalSpent) : data.total_spent;
+  const goalOrdersText =
+    goalOrders != null ? goalOrders.toLocaleString("zh-TW") : "—";
+  const goalSpentText =
+    goalSpent != null ? goalSpent.toLocaleString("zh-TW") : "—";
+  const doneSpentText = doneSpent.toLocaleString("zh-TW");
 
   return (
     <div className="w-full min-w-0">
@@ -81,21 +131,31 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
               style={{ width: `${progress}%` }}
             />
           </div>
-          <p className="text-sm text-white/90">
-            {data.next_level ? (
+          <div className="space-y-1 text-sm text-white/90">
+            {data.next_level && goalOrders != null && goalSpent != null ? (
               <>
-                再完成{" "}
-                <span className="font-semibold">
-                  {data.remaining_orders} 筆訂單
-                </span>{" "}
-                或消費{" "}
-                <span className="font-semibold">{remainingSpendText}</span>{" "}
-                即可升級。
+                <p>
+                  已完成{" "}
+                  <span className="font-semibold">
+                    {doneOrders}/{goalOrdersText}
+                  </span>{" "}
+                  筆訂單
+                </p>
+                <p>
+                  已消費{" "}
+                  <span className="font-semibold">
+                    {doneSpentText}/{goalSpentText}
+                  </span>
+                </p>
+                <p className="text-white/80">
+                  完成<span className="font-semibold">其一</span>
+                  條件即可升級為{data.next_level}級。
+                </p>
               </>
             ) : (
-              <>您已達到最高等級，感謝支持。</>
+              <p>您已達到最高等級，感謝支持。</p>
             )}
-          </p>
+          </div>
         </div>
       </div>
 

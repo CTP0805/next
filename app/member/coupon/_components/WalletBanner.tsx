@@ -1,3 +1,6 @@
+/**
+ * 【新手】頂部藍色 M 幣餘額橫幅（純展示 wallet.balance）
+ */
 import Link from "next/link";
 import type { PointWallet } from "../types";
 

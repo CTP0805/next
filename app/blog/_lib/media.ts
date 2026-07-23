@@ -1,8 +1,11 @@
 /**
- * 部落格圖片 URL 解析
- * - DB 存相對路徑 /uploads/blog/xxx.jpg（Express static）
- * - seed 舊路徑 /blog/xxx.jpg 檔案不存在 → 改用預設圖
- * - 或完整 https URL、或本站 /images/...
+ * =============================================================================
+ * 【新手導讀】Blog 圖片網址怎麼拼
+ * =============================================================================
+ * DB 常存：/uploads/blog/xxx.jpg（相對路徑）
+ * 瀏覽器要開圖：要接到 Express 網域 → http://localhost:3001/uploads/...
+ * 本檔：resolveBlogMediaUrl、rewriteBlogContentMedia
+ * =============================================================================
  */
 import { getApiServer } from "@/config/api-path";
 

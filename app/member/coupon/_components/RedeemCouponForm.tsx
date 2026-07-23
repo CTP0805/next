@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * 【新手】輸入券碼兌換表單（如 C1）
+ * 真正打 API 在父層 onRedeem → redeemCouponCode
+ */
 import { useState } from "react";
 
 interface RedeemCouponFormProps {
@@ -14,6 +18,7 @@ export default function RedeemCouponForm({
   const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // 表單送出：避免連點（submitting 鎖）
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (disabled || submitting) return;

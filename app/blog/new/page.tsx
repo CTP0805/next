@@ -2,8 +2,17 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import BlogPostForm from "../_components/BlogPostForm";
+import BlogPostEditor from "../_components/BlogPostEditor";
 
+/**
+ * =============================================================================
+ * 【新手導讀】新增文章頁 `/blog/new`
+ * =============================================================================
+ * 真正表單在 BlogPostEditor → BlogPostForm
+ * 儲存成功後依狀態導向公開頁或管理頁
+ * 會員中心也有嵌入版：/member/edit-post（同一元件）
+ * =============================================================================
+ */
 export default function BlogNewPage() {
   const router = useRouter();
 
@@ -26,7 +35,7 @@ export default function BlogNewPage() {
               新增旅遊文章
             </h1>
             <p className="mt-1.5 text-sm text-gray-500">
-              填寫標題與內容後即可儲存，並可設定上架狀態
+              填寫標題與內容後即可儲存；封面可裁切調整後送出審查
             </p>
           </div>
           <Link
@@ -38,13 +47,14 @@ export default function BlogNewPage() {
         </div>
 
         <div className="rounded-[12px] border border-gray-100 bg-white p-5 shadow-sm sm:p-8">
-          <BlogPostForm
+          <BlogPostEditor
             mode="create"
+            variant="standalone"
             onSuccess={(post) => {
               router.push(
                 post.status === "published"
                   ? `/blog/${post.slug}`
-                  : "/blog/manage",
+                  : "/member/edit-post",
               );
               router.refresh();
             }}

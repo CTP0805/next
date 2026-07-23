@@ -1,5 +1,17 @@
 "use client";
 
+/**
+ * =============================================================================
+ * 【新手導讀】優惠頁「互動主體」（CouponPageClient）
+ * =============================================================================
+ * page.tsx 載入 data 後丟進來；這裡管：
+ *   - 主 Tab：優惠券 vs M 幣流水
+ *   - 篩選、分頁、選券、兌換碼
+ * 子元件分工：
+ *   WalletBanner 餘額｜SegmentTabs 切換｜CouponList 列表｜
+ *   TransactionList 流水｜RedeemCouponForm 兌換｜ListPagination 翻頁
+ * =============================================================================
+ */
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
@@ -39,6 +51,7 @@ export default function CouponPageClient({
   onReload,
 }: CouponPageClientProps) {
   const router = useRouter();
+  // ---------- UI 狀態：分頁／篩選／選中券 ----------
   const [mainTab, setMainTab] = useState<CouponPageTab>("coupons");
   const [pointFilter, setPointFilter] = useState<PointFilter>("all");
   const [couponFilter, setCouponFilter] = useState<CouponFilter>("all");
@@ -48,6 +61,7 @@ export default function CouponPageClient({
   const [redeemPool, setRedeemPool] = useState<Coupon[]>(data.redeemable_codes);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
+  // 父層重新 load 後同步列表
   useEffect(() => {
     setCoupons(data.coupons);
     setRedeemPool(data.redeemable_codes);
@@ -59,6 +73,7 @@ export default function CouponPageClient({
     setSelectedId(null);
   }, []);
 
+  // 各篩選條件的筆數（給 Tab badge）
   const pointCounts = useMemo(() => {
     const { transactions } = data;
     return {

@@ -1,3 +1,6 @@
+/**
+ * 【新手】列表翻頁：資料少於一頁時不顯示
+ */
 interface ListPaginationProps {
   page: number;
   totalItems: number;

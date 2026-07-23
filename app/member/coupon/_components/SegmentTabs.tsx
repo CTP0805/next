@@ -1,3 +1,7 @@
+/**
+ * 【新手】通用分段 Tab（優惠券／M幣、篩選 all/used…）
+ * items = 按鈕清單；value = 目前選中；onChange = 點了換誰
+ */
 interface TabItem<T extends string> {
   key: T;
   label: string;

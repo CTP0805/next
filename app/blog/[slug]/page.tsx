@@ -1,3 +1,12 @@
+/**
+ * =============================================================================
+ * 【新手導讀】文章詳情頁 `/blog/[slug]`（Server Component）
+ * =============================================================================
+ * 沒有 "use client"：在伺服器端就 fetch，HTML 直接帶資料出去
+ * params.slug = 網址那一段（例如 /blog/my-trip → "my-trip"）
+ * 資料：fetchBlogPostBySlug + 列表做「相關推薦」
+ * =============================================================================
+ */
 import React from "react";
 import Link from "next/link";
 import BlogCommentSection from "../_components/BlogCommentSection";
@@ -5,7 +14,10 @@ import BlogMediaImage from "../_components/BlogMediaImage";
 import BlogOwnerEditLink from "../_components/BlogOwnerEditLink";
 import BlogRichTextContent from "../_components/BlogRichTextContent";
 import { fetchBlogPostBySlug, fetchBlogPosts } from "../_lib/api";
-import { BLOG_CATEGORY_MAP, BLOG_STATUS_LABEL } from "../_lib/types";
+import {
+  BLOG_STATUS_LABEL,
+  blogCategoryLabel,
+} from "../_lib/types";
 import type { BlogPost } from "../_lib/types";
 
 export default async function BlogDetail({
@@ -13,12 +25,14 @@ export default async function BlogDetail({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  // Next.js 新版 params 是 Promise，要 await
   const { slug } = await params;
 
   let allPosts: BlogPost[] = [];
   let post: BlogPost | null = null;
 
   try {
+    // 推薦區需要列表；詳情用 slug 精準取一篇
     allPosts = await fetchBlogPosts();
     try {
       post = await fetchBlogPostBySlug(slug);
@@ -72,8 +86,7 @@ export default async function BlogDetail({
         day: "numeric",
       })
     : null;
-  const categoryLabel =
-    BLOG_CATEGORY_MAP[post.category_id ?? 0] || "其他";
+  const categoryLabel = blogCategoryLabel(post);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -193,7 +206,7 @@ export default async function BlogDetail({
                       </div>
                       <div className="mb-1 flex flex-wrap items-center gap-1.5 text-xs">
                         <span className="text-amber-600">
-                          {BLOG_CATEGORY_MAP[rec.category_id ?? 0] || "其他"}
+                          {blogCategoryLabel(rec)}
                         </span>
                       </div>
                       <h3 className="line-clamp-2 text-base leading-snug font-semibold text-gray-900 transition-colors group-hover:text-teal-600">

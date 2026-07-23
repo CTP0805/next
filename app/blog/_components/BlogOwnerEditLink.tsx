@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
 
 /**
- * 僅文章作者本人可見的「編輯」連結
+ * 【新手】只有「登入且 authorId === 自己」才顯示編輯連結
+ * 別人看到的畫面不會出現這顆按鈕
  */
 export default function BlogOwnerEditLink({
   authorId,

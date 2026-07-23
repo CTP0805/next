@@ -18,9 +18,9 @@ export type Auth = {
   id: number;
   name: string;
   email: string;
-  member_level?: string;     // 💡 新增：等級中文名稱 (例如 '金牌會員 (享95折優惠)')
-  current_points?: number;   // 💡 新增：會員現有的 M 幣存量
-  role: string;
+  member_level?: string; // 💡 新增：等級中文名稱 (例如 '金牌會員 (享95折優惠)')
+  current_points?: number; // 💡 新增：會員現有的 M 幣存量
+  role?: string;
 };
 
 // 初始值
@@ -58,7 +58,7 @@ AuthContext.displayName = "MyAuthContext"; // 方便除錯
 const loginSchema = z.object({
   email: z
     .string()
-    .min(1, { message : "請輸入 Email"})
+    .min(1, { message: "請輸入 Email" })
     .email({ message: "請輸入正確的 Email 格式" }),
   password: z.string().min(1, { message: "請輸入密碼" }),
 });
@@ -112,35 +112,35 @@ export function AuthContextProvider({
   }, [refreshAuth]);
 
   const resendVerifyEmail = async (email: string): Promise<void> => {
-  try {
-    // 把登入表單中的 Email 傳給後端
-    const response = await fetch(
-      `${API_SERVER}/api/auth/resend-verify-email`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+    try {
+      // 把登入表單中的 Email 傳給後端
+      const response = await fetch(
+        `${API_SERVER}/api/auth/resend-verify-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+          }),
         },
-        body: JSON.stringify({
-          email,
-        }),
-      },
-    );
+      );
 
-    // 後端會回傳 { success, message }
-    const result = (await response.json()) as AuthApiResponse;
+      // 後端會回傳 { success, message }
+      const result = (await response.json()) as AuthApiResponse;
 
-    if (!response.ok || !result.success) {
-      toast.error(result.message || "驗證信寄送失敗，請稍後再試");
-      return;
+      if (!response.ok || !result.success) {
+        toast.error(result.message || "驗證信寄送失敗，請稍後再試");
+        return;
+      }
+
+      toast.success(result.message || "驗證信已重新寄出，請至信箱查看");
+    } catch (error) {
+      console.warn("resendVerifyEmail error:", error);
+      toast.error("目前無法連線到伺服器，請稍後再試");
     }
-
-    toast.success(result.message || "驗證信已重新寄出，請至信箱查看");
-  } catch (error) {
-    console.warn("resendVerifyEmail error:", error);
-    toast.error("目前無法連線到伺服器，請稍後再試");
-  }
-};
+  };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     // step1. 前端格式驗證
@@ -179,7 +179,10 @@ export function AuthContextProvider({
         toast(
           (t) => (
             <>
-              <p className="mr-2 py-2 "><IoIosWarning className="text-yellow-400 text-[25px] inline"/> {result.message}</p>
+              <p className="mr-2 py-2">
+                <IoIosWarning className="inline text-[25px] text-yellow-400" />{" "}
+                {result.message}
+              </p>
               <button
                 className="rounded-[8px] bg-red-400 px-3 py-2 text-center text-white"
                 onClick={() => void resendVerifyEmail(trimmedEmail)}
@@ -230,11 +233,10 @@ export function AuthContextProvider({
     }
 
     router.replace("/");
-    
+
     // window.location.replace("/"); // 💡💡💡TODO : 點下登出後 如果使用者原本是在會員中心或購物車 要跳轉到首頁
     setAuth(emptyAuth);
     setAuthInit(true);
-    
   };
 
   return (
