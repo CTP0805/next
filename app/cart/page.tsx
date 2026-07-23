@@ -400,7 +400,7 @@ export default function CartPage() {
                 </Link>
 
                 <p className="mt-2 text-center text-xs text-cyan-600">
-                  可獲得約 {totalAmount.toLocaleString()} M幣
+                  預估可獲得約 {Math.round(totalAmount * 0.01).toLocaleString()} M幣
                 </p>
               </div>
           </div>

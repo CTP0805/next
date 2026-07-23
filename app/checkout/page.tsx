@@ -1,11 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/contexts/cart";
 import { useAuth } from "@/contexts/auth-context";
 import { HiOutlineTicket, HiCurrencyDollar, HiUser } from "react-icons/hi";
+import toast from "react-hot-toast";
 
 // 在元件最上方定義後端傳過來的真實優惠券型別
 type CouponType = {
@@ -41,6 +41,15 @@ export default function CheckPage() {
   const [useLevelDiscount, setUseLevelDiscount] = useState(true); // 是否套用會員等級折扣 Checkbox
   const [mCoinsInput, setMCoinsInput] = useState<number>(0); // M 幣折抵控制狀態
 
+  //會員最新資料
+  const [userProfile, setUserProfile] = useState<{
+    member_level: string;
+    current_points: number;
+  }>({
+    member_level: auth.member_level || "銅",
+    current_points: auth.current_points || 0,
+  });
+
   // 計算後的金額金額狀態
   const [levelDiscountAmount, setLevelDiscountAmount] = useState(0);
   const [couponDiscountAmount, setCouponDiscountAmount] = useState(0);
@@ -50,33 +59,43 @@ export default function CheckPage() {
   // 發現這個人根本沒有登入 (isAuthenticated === false)，直接把他踢回登入頁
   useEffect(() => {
     if (authInit && !isAuthenticated) {
-      alert("請先登入會員，才能進行結帳流程！");
+      toast.error("請先登入會員，才能進行結帳流程！");
       router.push("/auth/login");
     }
   }, [authInit, isAuthenticated, router]);
 
-  //當會員確認登入後，立刻向後端動態撈取專屬優惠券
+  // 主動撈取最新的會員 Profile 與 優惠券
   useEffect(() => {
     if (isAuthenticated) {
-      const fetchAvailableCoupons = async () => {
-        try {
-          const response = await fetch(
-            `http://localhost:3001/api/checkout/coupons`,
-            {
-              method: "GET",
-              credentials: "include", // 確保帶上憑證讓後端能辨識會員
-            },
-          );
-          const result = await response.json();
-          if (result.success) {
-            setCoupons(result.coupons); // 將真實優惠券塞入狀態
+      // 1. 撈取會員 profile 資料
+      fetch(`http://localhost:3001/api/member/profile`, {
+        method: "GET",
+        credentials: "include",
+      })
+        .then((res) => res.json())
+        .then((result) => {
+          if (result.success || result.id) {
+            const data = result.data || result;
+            setUserProfile({
+              member_level: data.member_level || "銅",
+              current_points: Number(data.current_points) || 0,
+            });
           }
-        } catch (error) {
-          console.error("撈取優惠券發生錯誤:", error);
-        }
-      };
+        })
+        .catch((err) => console.error("撈取會員 profile 失敗:", err));
 
-      fetchAvailableCoupons();
+      //2. 撈取可用優惠券
+      fetch(`http://localhost:3001/api/checkout/coupons`, {
+        method: "GET",
+        credentials: "include", // 確保帶上憑證讓後端能辨識會員
+      })
+        .then((res) => res.json())
+        .then((result) => {
+          if (result.success) {
+            setCoupons(result.coupons || []); // 將真實優惠券塞入狀態
+          }
+        })
+        .catch((err) => console.error("撈取優惠券失敗:", err));
     }
   }, [isAuthenticated]);
 
@@ -99,18 +118,20 @@ export default function CheckPage() {
       lastName: autoLastName.toUpperCase(),
       firstName: autoFirstName.toUpperCase(),
       phoneCode: "+886",
-      phone: auth.phone || "", 
+      phone: (auth as any).phone || (auth as any).mobile || "",
       email: auth.email || "",
     });
     setShowForm(true);
   };
 
-  // 宣告一個前端動態配對資料庫會員等級的折扣換算函式
-  const getDiscountRate = (level: string | undefined) => {
-    if (level === "金") return 0.95; // 金牌享 95 折
-    if (level === "銀") return 0.98; // 銀牌享 98 折
-    return 1.0; // 資料庫預設是 "銅" 牌，即無折扣 (1.0)
+  // 對齊「金 9折 (回饋5%)」、「銀 95折 (回饋3%)」、「銅 原價 (回饋1%)」
+  const getLevelConfig = (level: string | undefined) => {
+    if (level === "金") return { discountRate: 0.9, rewardRate: 0.05 };
+    if (level === "銀") return { discountRate: 0.95, rewardRate: 0.03 };
+    return { discountRate: 1.0, rewardRate: 0.01 };
   };
+
+  const levelConfig = getLevelConfig(userProfile.member_level);
 
   // --- 精準動態折扣計算 useEffect (隨購物車與折扣動態變更) ---
   useEffect(() => {
@@ -118,13 +139,11 @@ export default function CheckPage() {
     let levelDiscount = 0;
     let couponDiscount = 0;
 
-    // 透過函式，將資料庫吐出來的 "銅"、"金" 動態換算成 1.0 或 0.95
-    const currentDiscountRate = getDiscountRate(auth.member_level);
 
     // A. 優先判定並套用會員階級折抵
     if (useLevelDiscount) {
       // 算出打折後省了多少錢 (四捨五入)
-      levelDiscount = Math.round(totalAmount * (1 - currentDiscountRate));
+      levelDiscount = Math.round(totalAmount * (1 - levelConfig.discountRate));
       currentPrice -= levelDiscount;
     }
 
@@ -155,13 +174,14 @@ export default function CheckPage() {
     useLevelDiscount,
     selectedCouponId,
     mCoinsInput,
-    auth.member_level,
+    userProfile.member_level,
     coupons,
+    levelConfig.discountRate,
   ]);
 
-  // --- M 幣輸入防呆機制 ---
+  // --- M 幣全部折抵使用  userProfile.current_points---
   const handleMCoinsChange = (val: number) => {
-    const maxCoins = auth.current_points ?? 0;
+    const maxCoins = userProfile.current_points;
 
     // 限制：不能是負數
     if (val < 0) val = 0;
@@ -180,7 +200,7 @@ export default function CheckPage() {
   // 前端送出結帳訂單的處理函式
   const handleSubmitOrder = async () => {
     if (!formData.lastName || !formData.firstName || !formData.phone) {
-      alert("請填寫完整的聯絡人英文姓名與手機號碼！");
+      toast.error("請填寫完整的聯絡人英文姓名與手機號碼！");
       setShowForm(true);
       return;
     }
@@ -206,17 +226,21 @@ export default function CheckPage() {
       const result = await response.json();
 
       if (result.success) {
+        toast.success("訂單建立成功！準備前往付款...");
         // 🚀 建立訂單成功！後端此時已清空購物車與扣點數。
         // 立刻將使用者引導至下一步的付款畫面
         router.push(`/payment?order_id=${result.order_id}`);
       } else {
-        alert(result.message || "建立訂單失敗，請稍後再試");
+        toast.error(result.message || "建立訂單失敗，請稍後再試");
       }
     } catch (error) {
       console.error("提交訂單發生錯誤:", error);
-      alert("系統連線錯誤，請確認網路或後端服務是否正常。");
+      toast.error("系統連線錯誤，請確認網路或後端服務是否正常。");
     }
   };
+
+  // 正確計算獲取的 M 幣 (最終付款金額 * 會員回饋率)
+  const earnedMCoins = Math.round(finalPrice * levelConfig.rewardRate);
 
   if (!authInit) {
     return (
@@ -255,35 +279,48 @@ export default function CheckPage() {
                   </p>
                 ) : (
                   <div className="divide-y divide-gray-100">
-                    {items.map((item) => (
-                      <div
-                        key={`${item.experienceId}-${item.sessionId}`}
-                        className="flex items-center gap-4 py-3 first:pt-0 last:pb-0"
-                      >
-                        <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md bg-gray-200">
-                          <Image
-                            src={
-                              item.image ||
-                              "/images/experiences/seine-picnic.jpg"
-                            }
-                            alt={item.name}
-                            fill
-                            className="object-cover"
-                          />
+                    {items.map((item) => {
+                      // 正確計算大人/小孩小計金額
+                      const adultQty = Number(item.adultQuantity) || 0;
+                      const childQty = Number(item.childQuantity) || 0;
+                      const adultP =
+                        Number(item.adultPrice) || Number(item.price) || 0;
+                      const childP = Number(item.childPrice) || 0;
+                      const itemSubtotal =
+                        adultQty * adultP + childQty * childP;
+                      const totalPeople =
+                        adultQty + childQty || item.quantity || 1;
+
+                      return (
+                        <div
+                          key={`${item.experienceId}-${item.sessionId}`}
+                          className="flex items-center gap-4 py-3 first:pt-0 last:pb-0"
+                        >
+                          <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md bg-gray-200">
+                            <Image
+                              src={
+                                item.image ||
+                                "/images/experiences/seine-picnic.jpg"
+                              }
+                              alt={item.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="truncate text-sm font-bold text-gray-800">
+                              {item.name}
+                            </h4>
+                            <p className="mt-1 text-xs text-gray-400">
+                              {item.sessionName || "選擇場次"} × {totalPeople}人
+                            </p>
+                          </div>
+                          <span className="shrink-0 text-sm font-black text-gray-700">
+                            NT$ {itemSubtotal.toLocaleString()}
+                          </span>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <h4 className="truncate text-sm font-bold text-gray-800">
-                            {item.name}
-                          </h4>
-                          <p className="mt-1 text-xs text-gray-400">
-                            {item.sessionName || "選擇場次"} × {item.quantity}人
-                          </p>
-                        </div>
-                        <span className="shrink-0 text-sm font-black text-gray-700">
-                          NT$ {(item.price * item.quantity).toLocaleString()}
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -479,6 +516,8 @@ export default function CheckPage() {
                     使用折價券：
                   </span>
 
+
+                  {coupons.length > 0 ? (
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                     {coupons.map((coupon) => (
                       <label
@@ -511,6 +550,9 @@ export default function CheckPage() {
                       </label>
                     ))}
                   </div>
+                  ) : (
+                    <p className="text-xs text-gray-400">目前沒有可用的優惠券</p>
+                  )}
 
                   {selectedCouponId && (
                     <div className="mt-1 flex justify-end">
@@ -553,7 +595,7 @@ export default function CheckPage() {
                       />
                       <button
                         onClick={() =>
-                          handleMCoinsChange(auth.current_points ?? 0)
+                          handleMCoinsChange(userProfile.current_points)
                         }
                         className="btn btn-xs border-gray-300 bg-white px-2.5 text-[11px] font-bold text-gray-500 transition-colors hover:border-[#45cad5] hover:bg-gray-50"
                       >
@@ -642,14 +684,14 @@ export default function CheckPage() {
                   輕鬆享M幣回饋！
                 </h5>
                 <p className="text-[11px] text-gray-400">
-                  享以下額度折扣回饋：
+                  {userProfile.member_level}牌會員】獨享 {levelConfig.rewardRate * 100}% 回饋：
                 </p>
                 <div className="mt-1 flex items-center">
                   <div className="flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-600">
                     {/* 假設按最後付款金額的 0.1% 回饋 M 幣 */}
                     <span>≈ NT$ {Math.round(finalPrice * 1) || 1}</span>
                     <span className="text-[10px] font-normal text-gray-400">
-                      ({Math.round(finalPrice * 1) || 1} M幣)
+                      ({earnedMCoins} M幣)
                     </span>
                   </div>
                 </div>
