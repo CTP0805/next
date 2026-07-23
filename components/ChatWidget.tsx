@@ -7,6 +7,7 @@ type ChatMessage = {
   roomId: string;
   text: string;
   sender: "user" | "admin";
+  created_at?: string;
 };
 const socket = io("http://localhost:3001");
 
@@ -17,6 +18,7 @@ export default function ChatWidget() {
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    if (!auth.id) return;
     fetch(`http://localhost:3001/api/chat/${auth.id}/messages`)
       .then((res) => res.json())
       .then((data) => setMessages(data));
@@ -28,21 +30,21 @@ export default function ChatWidget() {
 
   useEffect(() => {
     if (!auth.id) return;
-    socket.emit("join-room", `user-${auth.id}`);
-    socket.on("receive-message", (data: ChatMessage) => {
-      console.log("收到後端:", data);
+    const roomId = `user-${auth.id}`;
 
+    socket.emit("join-room", `${roomId}`);
+
+    const handleMessage = (data: ChatMessage) => {
       setMessages((prev) => [...prev, data]);
-    });
+    };
+
+    socket.on("receive-message", handleMessage);
 
     return () => {
-      socket.off("receive-message");
+      socket.off("receive-message", handleMessage);
     };
   }, [auth.id]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
   const sendMessage = () => {
     if (input.trim()) {
       setInput("");
@@ -73,7 +75,6 @@ export default function ChatWidget() {
         <div className="absolute right-0 bottom-20 flex h-[480px] w-80 flex-col overflow-hidden rounded-2xl border bg-white shadow-2xl">
           {/* Header */}
           <div className="flex items-center gap-2 bg-[#45cad5] p-4 font-semibold text-white">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20"></div>
             線上客服
           </div>
 
