@@ -2,57 +2,71 @@
 import { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import { MessageCircle, X, Send } from "lucide-react";
-
-const socket = io("http://localhost:3000");
+import { useAuth } from "@/contexts/auth-context";
+type ChatMessage = {
+  roomId: string;
+  text: string;
+  sender: "user" | "admin";
+  created_at?: string;
+};
+const socket = io("http://localhost:3001");
 
 export default function ChatWidget() {
+  const { auth } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<
-    { text: string; sender: "user" | "admin" }[]
-  >([
-    // 假資料
-    { text: "您好，請問有什麼可以幫您的？", sender: "admin" },
-    { text: "我想查詢訂單編號 #A123456 的出貨進度", sender: "user" },
-    { text: "好的，請稍等，我幫您查詢。", sender: "admin" },
-    { text: "您的訂單目前已出貨，正在配送中，預計明天送達。", sender: "admin" },
-    { text: "謝謝！那我可以修改收件地址嗎？", sender: "user" },
-    { text: "可以的，請提供新的收件地址和電話，我幫您處理。", sender: "admin" },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
+  useEffect(() => {
+    if (!auth.id) return;
+    fetch(`http://localhost:3001/api/chat/${auth.id}/messages`)
+      .then((res) => res.json())
+      .then((data) => setMessages(data));
+  }, [auth.id]);
   // 自動滾動到底部
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
-    socket.on("receive-message", (msg: string) => {
-      setMessages((prev) => [...prev, { text: msg, sender: "admin" }]);
-    });
+    if (!auth.id) return;
+    const roomId = `user-${auth.id}`;
+
+    socket.emit("join-room", `${roomId}`);
+
+    const handleMessage = (data: ChatMessage) => {
+      setMessages((prev) => [...prev, data]);
+    };
+
+    socket.on("receive-message", handleMessage);
 
     return () => {
-      socket.off("receive-message");
+      socket.off("receive-message", handleMessage);
     };
-  }, []);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  }, [auth.id]);
 
   const sendMessage = () => {
     if (input.trim()) {
-      socket.emit("send-message", input);
-      setMessages((prev) => [...prev, { text: input, sender: "user" }]);
       setInput("");
+      socket.emit("send-message", {
+        roomId: `user-${auth.id}`,
+        text: input,
+        sender: "user",
+      });
     }
   };
-
+  useEffect(() => {
+    if (isOpen) {
+      requestAnimationFrame(() => {
+        scrollToBottom();
+      });
+    }
+  }, [messages, isOpen]);
   return (
     <div className="fixed right-6 bottom-6 z-50">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="rounded-full bg-blue-600 p-4 text-white shadow-lg transition-colors hover:bg-blue-700"
+        className="rounded-full bg-[#45cad5] p-4 text-white shadow-lg transition-colors hover:bg-[#45cad5]"
       >
         {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
       </button>
@@ -60,8 +74,7 @@ export default function ChatWidget() {
       {isOpen && (
         <div className="absolute right-0 bottom-20 flex h-[480px] w-80 flex-col overflow-hidden rounded-2xl border bg-white shadow-2xl">
           {/* Header */}
-          <div className="flex items-center gap-2 bg-blue-600 p-4 font-semibold text-white">
-            {/* <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20"></div> */}
+          <div className="flex items-center gap-2 bg-[#45cad5] p-4 font-semibold text-white">
             線上客服
           </div>
 
@@ -81,7 +94,7 @@ export default function ChatWidget() {
                 <div
                   className={`max-w-[75%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed ${
                     m.sender === "user"
-                      ? "rounded-br-none bg-blue-600 text-white"
+                      ? "rounded-br-none bg-[#45cad5] text-white"
                       : "rounded-bl-none border border-gray-200 bg-white text-gray-800"
                   }`}
                 >
@@ -100,11 +113,11 @@ export default function ChatWidget() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                 placeholder="輸入訊息..."
-                className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none"
+                className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm text-black focus:border-[#45cad5] focus:outline-none"
               />
               <button
                 onClick={sendMessage}
-                className="rounded-xl bg-blue-600 p-3 text-white transition-colors hover:bg-blue-700"
+                className="rounded-xl bg-[#45cad5] p-3 text-white transition-colors hover:bg-[#45cad5]"
               >
                 <Send size={20} />
               </button>
