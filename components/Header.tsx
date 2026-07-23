@@ -6,7 +6,7 @@ import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import type { SubmitEventHandler } from "react";
 import { FaSearch } from "react-icons/fa";
 import { useCart } from "@/contexts/cart"; // 引入購物車 Context
-import { HiOutlineShoppingCart, HiTrash } from "react-icons/hi"; // 引入美化 Icon
+import { HiOutlineShoppingCart, HiTrash } from "react-icons/hi"; //美化 Icon
 import { useAuth } from "@/contexts/auth-context"; // 引入你建立的 Context
 import type { ReactNode } from "react";
 import {
@@ -171,14 +171,13 @@ export default function Navbar() {
         {/* 🛒 購物車觸發區：僅在【已登入】時顯示 */}
         {isAuthenticated && (
           <li className="group relative mr-6 cursor-pointer px-3 py-2">
-            <Link
-              href="/cart"
-              className="relative flex h-[40px] w-[40px] shrink-0 items-center"
-            >
-              <Image src="/icon/cart.svg" alt="Cart" width={40} height={40} />
-              {totalQty > 0 && (
+            <Link 
+            href="/cart" 
+            className="relative flex shrink-0 items-center">
+              <Image src="/icon/cart.svg" alt="Cart" width={30} height={30} />
+              {items.length > 0 && (
                 <span className="absolute -top-2.5 -right-2.5 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white shadow-sm">
-                  {totalQty}
+                  {items.length}
                 </span>
               )}
             </Link>
@@ -225,50 +224,67 @@ export default function Navbar() {
                   </h4>
 
                   <div className="max-h-60 space-y-3 overflow-y-auto pr-1">
-                    {items.slice(0, 3).map((item) => (
-                      <div
-                        key={`${item.experienceId}-${item.sessionId}`}
-                        className="flex gap-3 border-b border-gray-50 pb-2.5 last:border-0"
-                      >
-                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-gray-100">
-                          <Image
-                            src={
-                              item.image ||
-                              "/images/experiences/seine-picnic.jpg"
-                            }
-                            alt={item.name}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <div className="flex min-w-0 flex-1 flex-col justify-between">
-                          <h5 className="truncate text-[12px] font-black text-gray-800">
-                            {item.name}
-                          </h5>
-                          <p className="truncate text-[10px] text-gray-400">
-                            {item.sessionName || "未定場次"}
-                          </p>
-                          <div className="mt-0.5 flex items-center justify-between">
-                            <span className="text-[11px] font-bold text-gray-500">
-                              NT$ {item.price.toLocaleString()}{" "}
-                              <span className="text-[10px] text-gray-400">
-                                x {item.quantity}
+                    {items.slice(0, 3).map((item) => {
+                      const adultQty = Number(item.adultQuantity) || 0;
+                      const childQty = Number(item.childQuantity) || 0;
+                      const adultPrice =
+                        Number(item.adultPrice) || Number(item.price) || 0;
+                      const childPrice = Number(item.childPrice) || 0;
+
+                      // 計算單項小計
+                      const subtotal =
+                        adultQty * adultPrice + childQty * childPrice ||
+                        (Number(item.quantity) || 1) * adultPrice;
+                      const totalPeople =
+                        adultQty + childQty > 0
+                          ? adultQty + childQty
+                          : Number(item.quantity) || 1;
+
+                      return (
+                        <div
+                          key={`${item.experienceId}-${item.sessionId}`}
+                          className="flex gap-3 border-b border-gray-50 pb-2.5 last:border-0"
+                        >
+                          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-gray-100">
+                            <Image
+                              src={
+                                item.image ||
+                                "/images/experiences/seine-picnic.jpg"
+                              }
+                              alt={item.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="flex min-w-0 flex-1 flex-col justify-between">
+                            <h5 className="truncate text-[12px] font-black text-gray-800">
+                              {item.name}
+                            </h5>
+                            <p className="truncate text-[10px] text-gray-400">
+                              {item.sessionName || "未定場次"}
+                            </p>
+                            <div className="mt-0.5 flex items-center justify-between">
+                              <span className="text-[11px] font-bold text-gray-500">
+                                NT$ {subtotal.toLocaleString()}{" "}
+                                <span className="text-[10px] text-gray-400">
+                                  x {totalPeople} 人
+                                </span>
                               </span>
-                            </span>
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                onRemove(item.experienceId, item.sessionId);
-                              }}
-                              className="p-0.5 text-gray-300 transition-colors hover:text-red-500"
-                              title="移除此商品"
-                            >
-                              <HiTrash className="size-3.5" />
-                            </button>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  onRemove(item.experienceId, item.sessionId);
+                                }}
+                                className="p-0.5 text-gray-300 transition-colors hover:text-red-500"
+                                title="移除此商品"
+                              >
+                                <HiTrash className="size-3.5" />
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   <div className="mt-2 border-t border-gray-100 pt-3">

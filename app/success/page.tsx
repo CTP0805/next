@@ -1,14 +1,51 @@
 "use client";
 import Link from 'next/link';
-
-import { useEffect } from "react";
-import { clearSelectedCoupon } from "@/app/member/coupon/utils";
+import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
+import toast from "react-hot-toast";
 
 export default function SuccessPage() {
-  // 訂單資料送出／付款完成後，取消優惠券選用狀態
-  useEffect(() => {
-    clearSelectedCoupon();
-  }, []);
+  const searchParams = useSearchParams();
+  const { auth } = useAuth();
+
+  // 綠界回傳的單號參數叫 MerchantTradeNo，我們自己的叫 order_id
+  const orderId =
+    searchParams.get("order_id") ||
+    searchParams.get("MerchantTradeNo") ||
+    "";
+
+    const [contactEmail, setContactEmail] = useState<string>("");
+  
+    useEffect(() => {
+    if (orderId) {
+      // 進入成功頁時，通知後端把訂單改為 paid 並發放 M 幣
+      fetch(`http://localhost:3001/api/checkout/pay-success`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ order_id: orderId }),
+      })
+        .then((res) => res.json())
+        .then((result) => {
+          if (result.success && result.email) {
+            setContactEmail(result.email);
+          }
+        })
+        .catch((err) => console.error("更新訂單付款狀態失敗:", err));
+    }
+  }, [orderId]);
+
+  // 複製訂單編號功能
+  const handleCopy = () => {
+    if (orderId) {
+      navigator.clipboard.writeText(orderId);
+      toast.success("已複製訂單編號！");
+    } else {
+      toast.error("尚無可複製的訂單編號");
+    }
+  };
+
 
   return (
     <>
@@ -30,9 +67,11 @@ export default function SuccessPage() {
           <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
             {/* 訂單編號與複製按鈕 */}
             <div className="flex items-center gap-2 pl-2 text-sm text-gray-500">
-              <span>訂單編號：5439229639</span>
+              <span>訂單編號：{orderId || "載入中..."}</span>
               {/* 複製小圖示，暫時用網頁符號代替 */}
-              <button className="transition hover:text-gray-700 active:scale-95">
+              <button onClick={handleCopy}
+                className="transition hover:text-gray-700 active:scale-95"
+                title="複製訂單編號">   
                 🗐
               </button>
             </div>
@@ -89,10 +128,9 @@ export default function SuccessPage() {
                       訂單確認中
                     </h4>
                     <p className="mt-2 text-xs leading-relaxed text-gray-500">
-                      感謝使用
-                      MeetLocals！訂單正在處理中，訂單確認後，將傳送訂單詳情及憑證至
+                      感謝使用 MeetLocals！訂單正在處理中，訂單確認後，將傳送訂單詳情及憑證至
                       <span className="ml-1 font-medium text-gray-700">
-                        a55******@gmail.com
+                        {contactEmail || auth.email || "您的電子信箱"}
                       </span>
                     </p>
                   </div>
