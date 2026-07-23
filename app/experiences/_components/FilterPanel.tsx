@@ -36,14 +36,16 @@ export default function FilterPanel({
   onSelectedDateChange,
 }: FilterPanelProps) {
   const dateInputRef = useRef<HTMLInputElement>(null);
-  const isCustomDate =
-    selectedDate !== "" &&
-    selectedDate !== "today" &&
-    selectedDate !== "tomorrow";
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const minSelectableDate = tomorrow.toLocaleDateString("en-CA");
+  const isCustomDate = selectedDate !== "" && selectedDate !== "tomorrow";
 
   const displayedDate = isCustomDate
     ? selectedDate.slice(5).replace("-", "/")
-    : "全部日期";
+    : "選擇日期";
   const toggleCategory = (id: number) => {
     const isChecked = categoryIds.includes(id);
 
@@ -98,13 +100,14 @@ export default function FilterPanel({
   };
   return (
     <aside className="h-fit overflow-hidden rounded-lg border border-[#E3E7E9] bg-white">
-      <div className="border-b border-[#E7EAEC] bg-[#F7F8F8] px-5 py-3.5">
-        <h5 className="font-extrabold text-[#30353A]">條件篩選</h5>
-        <p className="p-text-14 mt-1 text-[#969CA1]">
-          快速找到適合你的當地體驗
-        </p>
+      <div className="flex items-start justify-between border-b border-[#E7EAEC] bg-[#F7F8F8] px-5 py-3.5">
+        <div>
+          <h5 className="font-extrabold text-[#30353A]">條件篩選</h5>
+          <p className="p-text-14 mt-1 text-[#969CA1]">
+            快速找到適合你的當地體驗
+          </p>
+        </div>
       </div>
-
       <div className="space-y-5 px-5 py-5">
         <fieldset>
           <legend className="mb-2.5 text-[16px] font-extrabold text-[#34393E]">
@@ -112,7 +115,7 @@ export default function FilterPanel({
           </legend>
 
           <div className="space-y-3">
-            {categories.map(({ id, label, count }) => (
+            {categories.map(({ id, label }) => (
               <label
                 key={id}
                 className="flex cursor-pointer items-center gap-3 text-sm text-[#565D63]"
@@ -125,8 +128,6 @@ export default function FilterPanel({
                 />
 
                 <span className="flex-1">{label}</span>
-
-                <span className="text-sm text-[#9AA0A5]">{count}</span>
               </label>
             ))}
           </div>
@@ -137,29 +138,15 @@ export default function FilterPanel({
             日期
           </legend>
 
-          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.7fr)] gap-3">
+          <div className="grid grid-cols-[0.8fr_1.2fr] gap-3">
             <button
               type="button"
-              aria-pressed={selectedDate === "today"}
-              onClick={() => onSelectedDateChange("today")}
-              className={
-                selectedDate === "today"
-                  ? "h-10 w-full min-w-0 rounded-md border border-[#68BBC3] bg-white text-xs font-bold text-[#489DA5]"
-                  : "h-10 w-full min-w-0 rounded-md border border-[#E1E5E7] bg-white text-xs font-bold text-[#71787E] hover:border-[#68BBC3] hover:text-[#489DA5]"
-              }
-            >
-              今天
-            </button>
-
-            <button
-              type="button"
-              aria-pressed={selectedDate === "tomorrow"}
               onClick={() => onSelectedDateChange("tomorrow")}
-              className={
+              className={`h-10 rounded-md border text-xs font-bold transition-colors ${
                 selectedDate === "tomorrow"
-                  ? "h-10 w-full min-w-0 rounded-md border border-[#68BBC3] bg-white text-xs font-bold text-[#489DA5]"
-                  : "h-10 w-full min-w-0 rounded-md border border-[#E1E5E7] bg-white text-xs font-bold text-[#71787E] hover:border-[#68BBC3] hover:text-[#489DA5]"
-              }
+                  ? "border-[#68BBC3] text-[#489DA5]"
+                  : "border-[#E1E5E7] text-[#71787E] hover:border-[#68BBC3] hover:text-[#489DA5]"
+              }`}
             >
               明天
             </button>
@@ -169,7 +156,6 @@ export default function FilterPanel({
                 type="button"
                 onClick={() => {
                   const input = dateInputRef.current;
-
                   if (!input) return;
 
                   if (typeof input.showPicker === "function") {
@@ -178,30 +164,24 @@ export default function FilterPanel({
                     input.click();
                   }
                 }}
-                className={
+                className={`flex h-10 w-full items-center justify-center gap-2 rounded-md border text-xs font-bold transition-colors ${
                   isCustomDate
-                    ? "flex h-10 w-full min-w-0 items-center justify-center gap-2 rounded-md border border-[#68BBC3] bg-white px-2 text-xs font-bold text-[#489DA5]"
-                    : "flex h-10 w-full min-w-0 items-center justify-center gap-2 rounded-md border border-[#E1E5E7] bg-white px-2 text-xs font-bold text-[#71787E] hover:border-[#68BBC3] hover:text-[#489DA5]"
-                }
+                    ? "border-[#68BBC3] text-[#489DA5]"
+                    : "border-[#E1E5E7] text-[#71787E] hover:border-[#68BBC3] hover:text-[#489DA5]"
+                }`}
               >
-                <HiOutlineCalendar className="size-4 shrink-0" />
-
-                <span className="whitespace-nowrap">{displayedDate}</span>
+                <HiOutlineCalendar className="size-5" />
+                {displayedDate}
               </button>
 
               <input
                 ref={dateInputRef}
                 type="date"
-                min={new Date().toLocaleDateString("en-CA")}
-                value={
-                  selectedDate !== "today" && selectedDate !== "tomorrow"
-                    ? selectedDate
-                    : ""
-                }
+                min={minSelectableDate}
+                value={selectedDate !== "tomorrow" ? selectedDate : ""}
                 onChange={(event) => onSelectedDateChange(event.target.value)}
-                className="pointer-events-none absolute bottom-0 left-1/2 h-px w-px opacity-0"
+                className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
                 tabIndex={-1}
-                aria-label="選擇日期"
               />
             </div>
           </div>
