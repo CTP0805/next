@@ -18,6 +18,7 @@ import BlogPostCard from "./_components/BlogPostCard";
 import { fetchBlogPosts } from "./_lib/api";
 import type { BlogPost } from "./_lib/types";
 import { BLOG_REGIONS, blogCategoryLabel } from "./_lib/types";
+import { useAuth } from "@/contexts/auth-context";
 
 /** 是否已上架（列表精選只用 published） */
 function isPublished(post: BlogPost) {
@@ -51,6 +52,7 @@ export default function BlogListPage() {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [allPosts, setAllPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const { auth } = useAuth();
 
   // ---------- 進頁載入列表（cancelled 避免卸載後還 setState）----------
   useEffect(() => {
@@ -210,18 +212,17 @@ export default function BlogListPage() {
           </div>
           {/* 管理／新增：會員中心分頁；部落格仍可走獨立撰寫頁 */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <Link
-              href="/member/edit-post"
-              className="inline-flex items-center gap-1.5 rounded-[12px] border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
-            >
+            {(auth?.role === "管理者" || auth?.role === "會員") && ( 
+            <>
+            <Link href="/member/edit-post" className="inline-flex items-center gap-1.5 rounded-[12px] border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">
               管理文章
             </Link>
-            <Link
-              href="/blog/new"
-              className="inline-flex items-center gap-1.5 rounded-[12px] bg-[#45cad5] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#36b3be] hover:shadow-lg"
-            >
+            {auth?.role === "會員" && (
+            <Link href="/blog/new" className="inline-flex items-center gap-1.5 rounded-[12px] bg-[#45cad5] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#36b3be] hover:shadow-lg">
               <span aria-hidden>+</span> 新增文章
-            </Link>
+            </Link>) }
+            </>
+            )}
           </div>
         </div>
 
