@@ -1,34 +1,18 @@
 "use client";
 
 import { SyntheticEvent, useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
-import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
-import { z } from "zod";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import toast from "react-hot-toast";
 import { API_SERVER } from "@/config/api-path";
-
-// 還不確定用不用的到
-type LoginRequest = {
-  email: string;
-  password: string;
-};
-
-type LoginResponse = {
-  success: boolean;
-  message: string;
-  token?: string;
-  user?: string;
-};
+import { IoIosWarning } from "react-icons/io";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
 
   // isLoading 用來控制按下登入後，按鈕顯示「登入中」
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  const { resendVerifyEmail } = useAuth();
 
   // 使用者按下「登入」按鈕時會執行這個函式
   async function handleForgotPassword(
@@ -57,12 +41,33 @@ export default function ForgotPasswordPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        toast.error(result.message || "登入失敗(前端)");
+        // toast.error(result.message || "此帳號尚未完成信箱驗證(前端)");
+        toast(
+          (t) => (
+            <>
+              <p className="mr-2 py-2">
+                <IoIosWarning className="inline text-[25px] text-yellow-400" />{" "}
+                {result.message}
+              </p>
+              <button
+                className="rounded-[8px] bg-red-400 px-3 py-2 text-center text-white"
+                onClick={() => void resendVerifyEmail(trimmedEmail)}
+              >
+                重新發送驗證信
+              </button>
+            </>
+          ),
+          {
+            style: {
+              minWidth: "415px",
+            },
+          },
+        );
         return;
       }
 
       if (response.ok) {
-        toast.success(result.message || "登入成功(前端)");
+        toast.success(result.message || "若此 Email 存在，我們已寄送重設密碼信(前端)");
 
         return;
       }

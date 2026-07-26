@@ -48,6 +48,9 @@ export default function ProfileFormTabs() {
   const [birthday, setBirthday] = useState("");
   const [email, setEmail] = useState("");
 
+  const today = new Date().toISOString().split("T")[0]; // 取得今天日期 生日不能是未來日期
+  const [date, setDate] = useState<Date | undefined>();
+
   // 保存「剛從後端取得時」的原始資料，用來判斷使用者有沒有修改
   const [originalProfile, setOriginalProfile] = useState<ProfileData | null>(
     null,
@@ -287,7 +290,7 @@ export default function ProfileFormTabs() {
                 />
               </div>
 
-              <div className="relative">
+              {/* <div className="relative">
                 <label htmlFor="gender" className="profile-label">
                   性別
                 </label>
@@ -304,9 +307,28 @@ export default function ProfileFormTabs() {
                   <option value="其他">非二元性別</option>
                 </select>
                 <HiChevronDown
-                    aria-hidden="true"
-                    className="pointer-events-none absolute top-3/4 right-3 size-5 -translate-y-1/2 text-[#737B81]"
-                  />
+                  aria-hidden="true"
+                  className="pointer-events-none absolute top-3/4 right-3 size-5 -translate-y-1/2 text-[#737B81]"
+                />
+              </div> */}
+
+              <div className="relative">
+                <label htmlFor="gender" className="profile-label">
+                  性別
+                </label>
+                <select
+                  name="gender"
+                  id="gender"
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  className="select select-bordered h-[45px] min-h-10 rounded-[12px] border border-[#E1E5E7] bg-white pr-10 pl-4 text-[16px]  text-[#454B50] outline-none "
+                >
+                  <option value="">請選擇...</option>
+                  <option value="男">男</option>
+                  <option value="女">女</option>
+                  <option value="其他">非二元性別</option>
+                </select>
+                
               </div>
 
               <div>
@@ -318,10 +340,14 @@ export default function ProfileFormTabs() {
                   type="date"
                   className="profile-input"
                   value={birthday}
+                  max={today}
                   onChange={(e) => setBirthday(e.target.value)}
                 />
               </div>
+
+              
             </div>
+            
           )}
 
           {activeTab === "password" && (
@@ -404,11 +430,11 @@ export default function ProfileFormTabs() {
             <div className="mt-11 flex justify-end">
               <button
                 type="button"
-                className="rounded-[10px] bg-[#76bdc8] px-7 py-3 text-[20px] text-white hover:bg-[#66adba]"
+                className="button-main-2"
                 disabled={!isProfileChanged}
                 onClick={handleProfile}
               >
-                儲存1
+                儲存
               </button>
             </div>
           )}
@@ -418,13 +444,14 @@ export default function ProfileFormTabs() {
               <button
                 type="button"
                 onClick={handlePassword}
-                className="rounded-[10px] bg-[#76bdc8] px-7 py-3 text-[20px] text-white hover:bg-[#66adba]"
+                className="button-main-2"
               >
-                儲存2
+                儲存
               </button>
             </div>
           )}
         </form>
+    
       </div>
     </section>
   );

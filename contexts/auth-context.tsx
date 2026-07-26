@@ -179,12 +179,12 @@ export function AuthContextProvider({
         toast(
           (t) => (
             <>
-              <p className="mr-2 py-2">
-                <IoIosWarning className="inline text-[25px] text-yellow-400" />{" "}
+              <p className="mr-2 flex items-center py-3">
+                <IoIosWarning className="pr-2 text-[35px] text-yellow-400" />
                 {result.message}
               </p>
               <button
-                className="rounded-[8px] bg-red-400 px-3 py-2 text-center text-white"
+                className="rounded-md bg-red-400 px-4 py-1 my-2 text-center text-white"
                 onClick={() => void resendVerifyEmail(trimmedEmail)}
               >
                 重新發送驗證信
@@ -193,7 +193,8 @@ export function AuthContextProvider({
           ),
           {
             style: {
-              minWidth: "415px",
+              minWidth: "420px",
+              
             },
           },
         );
@@ -246,11 +247,11 @@ export function AuthContextProvider({
         auth, // 目前登入的使用者的資料
         authInit, // 是否已經問完後端登入狀態
         isAuthenticated: auth.id !== 0, // 是否已登入的簡單 true / false 判斷 (true-->已登入、false-->未登入)
-        isLoggingOut,
+        isLoggingOut, // 給 AuthRouteGuard 判斷是否為手動登出
         login,
         logout,
         refreshAuth, // 呼叫 /api/auth/me 重新確認 Cookie 的函式
-        resendVerifyEmail,
+        resendVerifyEmail, // 重新發送驗證信
       }}
     >
       {children}
