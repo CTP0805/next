@@ -28,10 +28,11 @@ export default function Features() {
     <div className="mx-auto grid max-w-[1280px] grid-cols-2 items-center justify-center gap-2 md:grid-cols-4">
       {data.map((v, i) => {
         return (
-          <div key={i} className="flex w-[280px] flex-col items-center">
+          <div key={i} className="flex w-full flex-col items-center">
             <div className="relative h-[70px] w-[70px] md:h-[128px] md:w-[128px]">
               <Image src={v.image} alt="" fill />
             </div>
+
             <div className="mt-3 text-center text-[#ACACAC]">
               <p className="text-[24px]">{v.title}</p>
               <span>{v.content}</span>
