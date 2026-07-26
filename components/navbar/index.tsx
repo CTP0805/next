@@ -122,7 +122,7 @@ export default function Navbar() {
       {/* 5. 行動版選單區域 (md:hidden) */}
       <div className="flex items-center gap-2 md:hidden">
         {isAuthenticated && (
-          <Link
+          <Link 
             href="/cart"
             className="btn btn-ghost btn-circle relative text-white"
           >
@@ -169,7 +169,7 @@ export default function Navbar() {
 
           <ul
             tabIndex={0}
-            className="menu dropdown-content fixed right-0 z-50 bg-white p-4 text-black shadow-xl"
+            className="menu dropdown-content fixed right-0 z-50 bg-white p-4 text-[#ACACAC] shadow-xl"
           >
             {!isAuthenticated && (
               <>
@@ -185,18 +185,22 @@ export default function Navbar() {
 
             {navLinks.map((v) => (
               <li key={v.href}>
-                <Link href={v.href}>{v.name}</Link>
+                <Link
+                  onClick={() => {
+                    const elem = document.activeElement as HTMLElement;
+                    if (elem) elem.blur();
+                  }}
+                  href={v.href}
+                >
+                  {v.name}
+                </Link>
               </li>
             ))}
 
             {isAuthenticated && (
               <>
                 <li className="mt-2 border-t border-gray-100 pt-2">
-                  <button
-                    onClick={logout}
-                    className="flex w-full items-center "
-                  >
-                    <FiLogOut className="mr-2" />
+                  <button onClick={logout} className="flex w-full items-center">
                     <span>登出</span>
                   </button>
                 </li>

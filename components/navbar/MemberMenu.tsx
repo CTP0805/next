@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { FiLogOut } from "react-icons/fi";
@@ -18,8 +19,13 @@ export default function MemberMenu({
   logout,
   memberLists,
 }: MemberMenuProps) {
+  const [open, setOpen] = useState(false);
   return (
-    <li className="dropdown dropdown-end dropdown-hover relative p-4 pr-0">
+    <li
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      className="dropdown dropdown-end dropdown-hover relative p-4 pr-0"
+    >
       <div
         tabIndex={0}
         className="flex cursor-pointer items-center gap-2 rounded-lg p-4 hover:bg-zinc-50"
@@ -36,7 +42,7 @@ export default function MemberMenu({
 
       <ul
         tabIndex={0}
-        className="dropdown-content menu rounded-box z-[60] mt-2 w-56 bg-white p-2 text-black shadow-xl"
+        className={`dropdown-content menu rounded-box z-[60] mt-2 w-56 bg-white p-2 text-black shadow-xl ${open ? "block" : "hidden"} `}
       >
         <li className="mb-2 border-b">
           <div className="flex items-center gap-3 px-4 py-3">
@@ -59,10 +65,7 @@ export default function MemberMenu({
         {memberLists.map((v) => (
           <li key={v.href}>
             <Link
-              onClick={() => {
-                const elem = document.activeElement as HTMLElement;
-                if (elem) elem.blur();
-              }}
+              onClick={() => setOpen(false)}
               href={v.href}
               className="flex items-center gap-3 rounded-lg px-4 py-2 text-[#ACACAC] hover:bg-zinc-50"
             >

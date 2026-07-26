@@ -13,7 +13,6 @@ type MemberMenuProps = {
 export default function MemberMenu({
   auth,
   logout,
-  memberLists,
 }: MemberMenuProps) {
   return (
     <li className="dropdown dropdown-end dropdown-hover relative p-4 pr-0">
