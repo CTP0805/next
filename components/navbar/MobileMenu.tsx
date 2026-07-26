@@ -1,67 +1,113 @@
 "use client";
-import Link from "next/link";
-import Image from "next/image";
-import { FiLogOut } from "react-icons/fi";
-import type { MemberList } from "@/types/navbar";
 
-type MemberMenuProps = {
-  auth: { name?: string };
+import Link from "next/link";
+import { FaCartShopping, FaUser } from "react-icons/fa6";
+import type { NavLink } from "@/types/navbar";
+
+type MobileMenuProps = {
+  isAuthenticated: boolean;
+  totalQty: number;
+  navLinks: NavLink[];
   logout: () => void;
-  memberLists: MemberList[];
 };
 
-export default function MemberMenu({
-  auth,
+export default function MobileMenu({
+  isAuthenticated,
+  totalQty,
+  navLinks,
   logout,
-}: MemberMenuProps) {
+}: MobileMenuProps) {
   return (
-    <li className="dropdown dropdown-end dropdown-hover relative p-4 pr-0">
-      <div
-        tabIndex={0}
-        className="flex cursor-pointer items-center gap-2 rounded-lg p-4 hover:bg-white/10"
-      >
-        <Image
-          src={auth.imageURL || "/images/member-avatar/angry-man.jpg"}
-          alt={auth.name || "User Avatar"}
-          className="h-8 w-8 rounded-full object-cover"
-          width={32}
-          height={32}
-        />
-        <span className="text-sm">{auth.name || "會員"} 你好～</span>
-      </div>
+    <div className="flex items-center gap-2 md:hidden">
+      {/* 購物車 */}
+      {isAuthenticated && (
+        <Link
+          href="/cart"
+          className="btn btn-ghost btn-circle relative text-white"
+        >
+          <FaCartShopping className="text-lg" />
 
-      <ul
-        tabIndex={0}
-        className="dropdown-content menu rounded-box z-[60] mt-2 w-56 bg-white p-2 text-black shadow-xl"
-      >
-        <li className="mb-2 border-b">
-          <div className="flex items-center gap-3 px-4 py-3">
-            <Image
-              src="/images/avatar-test.png"
-              alt="用戶頭像"
-              width={48}
-              height={48}
-              className="h-12 w-12 flex-shrink-0 rounded-full object-cover"
-            />
-            <div>
-              <div className="font-semibold">{auth.name || "王大明"}</div>
-              <div className="flex items-center gap-1.5 text-sm text-orange-400">
-                {}
-                <span>👑</span>
-              </div>
-            </div>
-          </div>
-        </li>
+          {totalQty > 0 && (
+            <span className="absolute top-1 right-1 grid h-4 min-w-4 place-items-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+              {totalQty}
+            </span>
+          )}
+        </Link>
+      )}
 
-        <li className="mt-2 border-t border-gray-200 pt-2">
-          <button
-            onClick={logout}
-            className="py-2hover:bg-zinc-50 flex w-full items-center gap-3 rounded-lg px-4"
+      {/* 會員 */}
+      {isAuthenticated && (
+        <Link
+          href="/member/profile"
+          className="btn btn-ghost btn-circle text-white"
+        >
+          <FaUser className="text-lg" />
+        </Link>
+      )}
+
+      {/* 漢堡選單 */}
+      <div className="dropdown dropdown-end">
+        <div
+          tabIndex={0}
+          role="button"
+          className="btn btn-ghost btn-circle text-white"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            <FiLogOut /> <span>登出</span>
-          </button>
-        </li>
-      </ul>
-    </li>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M4 6h16M4 12h16M4 18h7"
+            />
+          </svg>
+        </div>
+
+        <ul
+          tabIndex={0}
+          className="menu dropdown-content fixed right-0 z-50 bg-white p-4 text-[#ACACAC] shadow-xl"
+        >
+          {!isAuthenticated && (
+            <>
+              <li>
+                <Link href="/auth/login">登入</Link>
+              </li>
+
+              <li>
+                <Link href="/auth/register">註冊</Link>
+              </li>
+
+              <div className="my-2 border-t border-gray-100" />
+            </>
+          )}
+
+          {navLinks.map((v) => (
+            <li key={v.href}>
+              <Link
+                onClick={() => {
+                  const elem = document.activeElement as HTMLElement;
+
+                  elem?.blur();
+                }}
+                href={v.href}
+              >
+                {v.name}
+              </Link>
+            </li>
+          ))}
+
+          {isAuthenticated && (
+            <li className="mt-2 border-t border-gray-100 pt-2">
+              <button onClick={logout}>登出</button>
+            </li>
+          )}
+        </ul>
+      </div>
+    </div>
   );
 }
