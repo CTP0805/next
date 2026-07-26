@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { useCart } from "@/contexts/cart";
 import { useAuth } from "@/contexts/auth-context";
 import {
-  FaCartShopping,
   FaUser,
   FaAward,
   FaBagShopping,
@@ -15,8 +14,7 @@ import {
   FaHeart,
   FaClockRotateLeft,
 } from "react-icons/fa6";
-import { FiLogOut } from "react-icons/fi";
-
+import { FaEdit, FaClipboardCheck } from "react-icons/fa";
 import type { MemberList, NavLink } from "@/types/navbar";
 import SearchBar from "./SearchBar";
 import NavLinks from "./NavLinks";
@@ -24,7 +22,7 @@ import CartDropdown from "./CartDropdown";
 import MemberMenu from "./MemberMenu";
 import MobileMenu from "./MobileMenu";
 export default function Navbar() {
-  const { isAuthenticated, logout } = useAuth();
+  const { auth, isAuthenticated, logout } = useAuth();
   const { totalQty } = useCart();
   const pathname = usePathname();
   const [member, setMember] = useState([]);
@@ -35,20 +33,62 @@ export default function Navbar() {
     { name: "聯絡我們", href: "/contact" },
   ];
 
-  const memberLists: MemberList[] = [
-    { label: "會員資料", icon: <FaUser />, href: "/member/profile" },
-    { label: "會員等級", icon: <FaAward />, href: "/member/level" },
-    { label: "我的訂單", icon: <FaBagShopping />, href: "/member/order" },
-    { label: "我的優惠", icon: <FaTicket />, href: "/member/coupon" },
-    { label: "我的評價", icon: <FaCommentDots />, href: "/member/review" },
-    { label: "心願清單", icon: <FaHeart />, href: "/member/favorites" },
+  const memberListsBase: MemberList[] = [
+    {
+      label: "會員資料",
+      icon: <FaUser />,
+      href: "/member/profile",
+    },
+    {
+      label: "會員等級",
+      icon: <FaAward />,
+      href: "/member/level",
+    },
+    {
+      label: "我的訂單",
+      icon: <FaBagShopping />,
+      href: "/member/order",
+    },
+    {
+      label: "我的優惠",
+      icon: <FaTicket />,
+      href: "/member/coupon",
+    },
+    {
+      label: "我的評價",
+      icon: <FaCommentDots />,
+      href: "/member/review",
+    },
+    {
+      label: "心願清單",
+      icon: <FaHeart />,
+      href: "/member/favorites",
+    },
     {
       label: "最近瀏覽",
       icon: <FaClockRotateLeft />,
       href: "/member/recently-viewed",
     },
   ];
-
+  const memberLists: MemberList[] = [
+    ...memberListsBase,
+    ...(member.role === "管理者"
+      ? [
+          {
+            label: "文章審查",
+            icon: <FaClipboardCheck />,
+            href: "/member/blog-review",
+          } satisfies MemberList,
+        ]
+      : [
+          {
+            label: "管理文章",
+            icon: <FaEdit />,
+            href: "/member/edit-post",
+          } satisfies MemberList,
+        ]),
+  ];
+  console.log(auth);
   const isHomePage = pathname === "/";
   const [isScrolled, setIsScrolled] = useState(false);
   useEffect(() => {

@@ -8,7 +8,7 @@ import type { MemberList } from "@/types/navbar";
 type MemberMenuProps = {
   auth: {
     name?: string;
-    imageURL?: string;
+    image_url?: string;
     member_level: string;
   };
   logout: () => void;
@@ -31,7 +31,7 @@ export default function MemberMenu({
         className="flex cursor-pointer items-center gap-2 rounded-lg p-4 hover:bg-zinc-50"
       >
         <Image
-          src={auth.imageURL || "/images/member-avatar/angry-man.jpg"}
+          src={auth.image_url || "/images/member-avatar/angry-man.jpg"}
           alt={auth.name || "User Avatar"}
           className="h-8 w-8 rounded-full object-cover"
           width={32}
@@ -47,7 +47,7 @@ export default function MemberMenu({
         <li className="mb-2 border-b">
           <div className="flex items-center gap-3 px-4 py-3">
             <Image
-              src={auth.imageURL || "/images/member-avatar/angry-man.jpg"}
+              src={auth.image_url || "/images/member-avatar/angry-man.jpg"}
               alt="用戶頭像"
               width={48}
               height={48}
