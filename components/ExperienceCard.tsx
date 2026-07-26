@@ -122,7 +122,6 @@ export default function Page() {
       .then((data) => setExperiences(data.data.slice(0, 8)))
       .catch((err) => console.error(err));
   }, [experiences]);
-  console.log(experiences);
   return (
     <section className="mx-auto max-w-7xl px-4 py-12">
       <div className="mb-10 text-center">
