@@ -4,7 +4,7 @@ import { Besley } from "next/font/google";
 import { CartProvider } from "@/contexts/cart";
 import { FavoriteProvider } from "@/contexts/FavoriteContext";
 import { AuthContextProvider } from "@/contexts/auth-context";
-import Header from "@/components/Header";
+import Navbar from "@/components/navbar/index";
 import FooterGuard from "@/components/FooterGuard";
 import { AuthRouteGuard } from "@/components/AuthRouteGuard";
 import { Toaster } from "react-hot-toast";
@@ -31,17 +31,13 @@ export default function RootLayout({
       >
         <Toaster />
         <AuthContextProvider>
-          
-            <FavoriteProvider>
-              <CartProvider>
-                <Header />
-                <AuthRouteGuard>
-                {children}
-                </AuthRouteGuard>
-                <FooterGuard />
-              </CartProvider>
-            </FavoriteProvider>
-          
+          <FavoriteProvider>
+            <CartProvider>
+              <Navbar />
+              <AuthRouteGuard>{children}</AuthRouteGuard>
+              <FooterGuard />
+            </CartProvider>
+          </FavoriteProvider>
         </AuthContextProvider>
       </body>
     </html>

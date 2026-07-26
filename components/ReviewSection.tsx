@@ -1,66 +1,97 @@
-// components/ReviewCard.tsx
-export const columns = [
-  [
-    { type: "review", id: 1 },
-    { type: "image", id: 2 },
-  ],
-  [
-    { type: "image", id: 3 },
-    { type: "review", id: 4 },
-  ],
-  [
-    { type: "review", id: 6 },
-    { type: "image", id: 7 },
-  ],
-  [
-    { type: "image", id: 8 },
-    { type: "review", id: 9 },
-  ],
-];
-export function ReviewCard() {
+"use client";
+
+import Image from "next/image";
+import { useState, useEffect } from "react";
+
+interface ReviewCardProps {
+  rating: number;
+  comment: string;
+  memberName?: string;
+  avatarUrl?: string;
+}
+
+export function ReviewCard({
+  rating,
+  comment,
+  memberName = "旅客",
+  avatarUrl = "/images/carousel1.jpeg",
+}: ReviewCardProps) {
   return (
     <div className="rounded-3xl bg-gray-100 p-6 shadow-sm">
       <div className="flex items-center gap-3">
         <div className="relative aspect-square h-12 w-12 rounded-full bg-gray-300">
           <Image
-            src="/images/carousel1.jpeg"
+            src={avatarUrl}
             alt=""
-            className="rounded-full"
+            className="rounded-full object-cover"
             fill
           />
         </div>
         <div>
-          <p className="">Sarah W.</p>
-          ⭐⭐⭐⭐⭐
+          <p className="font-medium">{memberName}</p>
+          <div className="text-yellow-500">{"⭐".repeat(rating)}</div>
         </div>
       </div>
 
-      <p className="mt-4 text-gray-600">
-        「這不是觀光行程，而是在交朋友。..........這不是觀光行程，而是在交朋友。這不是觀光行程，而是在交朋友。這不是觀光行程，而是在交朋友。.」
-      </p>
+      <p className="mt-4 text-gray-600">「{comment}」</p>
     </div>
   );
 }
-// components/ImageCard.tsx
 
-import Image from "next/image";
+interface ImageCardProps {
+  imageUrl: string;
+}
 
-export function ImageCard() {
+export function ImageCard({ imageUrl }: ImageCardProps) {
   return (
     <div className="relative h-96 overflow-hidden rounded-3xl">
-      <Image
-        src="/images/carousel1.jpeg"
-        alt=""
-        fill
-        className="rounded-3xl object-cover"
-      />
+      <Image src={imageUrl} alt="" fill className="rounded-3xl object-cover" />
     </div>
   );
 }
 
-// app/page.tsx
+// 依照你原本排版設計的欄位結構 (對應 API 資料的 index)
+const columns = [
+  [
+    { type: "review", dataIndex: 0 },
+    { type: "image", dataIndex: 1 },
+  ],
+  [
+    { type: "image", dataIndex: 0 },
+    { type: "review", dataIndex: 1 },
+  ],
+  [
+    { type: "review", dataIndex: 2 },
+    { type: "image", dataIndex: 3 },
+  ],
+  [
+    { type: "image", dataIndex: 2 },
+    { type: "review", dataIndex: 3 },
+  ],
+];
 
 export default function Home() {
+  const [reviewsData, setReviewsData] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true); // 1. 宣告載入狀態
+
+  useEffect(() => {
+    fetch("http://localhost:3001/api/location")
+      .then((res) => res.json())
+      .then((data) => {
+        setReviewsData(data.data || data);
+        setIsLoading(false); // 2. 資料回來後關閉載入狀態
+      })
+      .catch((err) => {
+        console.error("Failed to fetch reviews:", err);
+        setIsLoading(false);
+      });
+  }, []);
+
+  // 3. 載入中先回傳畫面，避免直接去跑 map
+  if (isLoading) {
+    return <div className="py-20 text-center text-gray-500">載入中...</div>;
+  }
+
   return (
     <section className="mx-auto max-w-7xl px-6 py-20">
       <div className="mb-10 text-center">
@@ -72,18 +103,30 @@ export default function Home() {
         </p>
       </div>
       <div className="grid grid-cols-2 gap-8 xl:grid-cols-4">
-        {columns.map((column, index) => (
+        {columns.map((column, colIndex) => (
           <div
-            key={index}
-            className={`space-y-8 ${index % 2 === 0 ? "md:pt-24" : ""}`}
+            key={colIndex}
+            className={`space-y-8 ${colIndex % 2 === 0 ? "md:pt-24" : ""}`}
           >
-            {column.map((item) =>
-              item.type === "review" ? (
-                <ReviewCard key={item.id} />
+            {column.map((item, itemIndex) => {
+              const reviewItem = reviewsData[item.dataIndex];
+
+              // 4. 防呆：如果 API 回傳的資料筆數不夠對應這個 index，直接跳過不渲染
+              if (!reviewItem) return null;
+
+              return item.type === "review" ? (
+                <ReviewCard
+                  key={itemIndex}
+                  rating={reviewItem.rating}
+                  comment={reviewItem.comment}
+                />
               ) : (
-                <ImageCard key={item.id} />
-              ),
-            )}
+                <ImageCard
+                  key={itemIndex}
+                  imageUrl={reviewItem.image_url || "/images/carousel1.jpeg"}
+                />
+              );
+            })}
           </div>
         ))}
       </div>
