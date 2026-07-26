@@ -6,10 +6,8 @@ const destinations = [
   { name: "巴黎", image: "/images/carousel1.jpeg" },
   { name: "慕尼黑", image: "/images/carousel1.jpeg" },
   { name: "阿姆斯特丹", image: "/images/carousel1.jpeg" },
-  { name: "羅馬", image: "/images/carousel1.jpeg" },
+  { name: "威尼斯", image: "/images/carousel1.jpeg" },
   { name: "巴賽隆納", image: "/images/carousel1.jpeg" },
-
-  // ... 其他資料
 ];
 export default function PopularDestinations() {
   return (
@@ -50,7 +48,7 @@ export default function PopularDestinations() {
       <div className="hidden grid-cols-3 gap-6 md:grid lg:grid-cols-6">
         {destinations.map((dest) => (
           <div key={dest.name} className="flex flex-col items-center">
-            <div className="relative mb-4 aspect-[2/3] w-full overflow-hidden rounded-[176px]">
+            <div className="relative mb-4 aspect-[2/3] w-full overflow-hidden rounded-[176px] duration-500 ease-out will-change-transform md:h-[340px] md:hover:-translate-y-2 md:hover:shadow-[0_16px_34px_rgba(39,68,72,0.16)]">
               <Image
                 src={dest.image}
                 alt={dest.name}
