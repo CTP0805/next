@@ -1,131 +1,128 @@
+"use client";
+
 import Image from "next/image";
-interface Props {
-  image: string;
+import Link from "next/link";
+import { useFavorites } from "@/contexts/FavoriteContext";
+import { useState, useEffect } from "react";
+import { HiStar, HiHeart, HiOutlineHeart } from "react-icons/hi";
+
+type ExperienceCardProps = {
+  id: number;
   title: string;
-  description: string;
+  city: string;
+  categoryName: string | null;
   price: number;
+  imageUrl: string | null;
   rating: number;
   reviewCount: number;
-}
-import { Star } from "lucide-react";
+};
 
-interface StarProps {
-  score: number;
-  count: number;
-}
-import { Heart } from "lucide-react"; // 建議使用 lucide-react
+type Experience = {
+  id: number;
+  title: string;
+  city: string;
+  category_name: string | null;
+  price: number;
+  image_url: string | null;
+  rating: number;
+  review_count: number;
+};
 
-export const FavoriteButton = () => (
-  <button className="absolute top-3 right-3 rounded-full bg-white/80 p-2 transition-colors hover:bg-white">
-    <Heart className="h-5 w-5 text-gray-600" />
-  </button>
-);
-export const RatingBadge = ({ score, count }: StarProps) => (
-  <div className="absolute top-3 left-3 flex items-center gap-1 rounded-md bg-white/90 px-2 py-1 text-sm font-medium shadow-sm">
-    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-    <span>
-      {score} ({count})
-    </span>
-  </div>
-);
-export const ExperienceCard = ({
-  image,
+export function ExperienceCard({
+  id,
   title,
-  description,
+  city,
+  categoryName,
   price,
+  imageUrl,
   rating,
   reviewCount,
-}: Props) => (
-  <div className="group relative overflow-hidden rounded-xl border bg-white shadow-sm transition-all hover:shadow-lg">
-    <div className="relative h-64 w-full overflow-hidden">
-      <Image
-        src={image}
-        alt={title}
-        width={234}
-        height={369}
-        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-      />
-      <RatingBadge score={rating} count={reviewCount} />
-      <FavoriteButton />
-    </div>
+}: ExperienceCardProps) {
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const favorite = isFavorite(id);
 
-    <div className="p-4">
-      <h3 className="mb-2 text-lg font-bold text-gray-900">{title}</h3>
-      <p className="mb-4 line-clamp-2 text-sm text-gray-600">{description}</p>
-      <p className="font-semibold text-teal-600">
-        TWD {price.toLocaleString()}起
-      </p>
-    </div>
-  </div>
-);
+  return (
+    <article className="card relative flex w-full flex-col overflow-hidden bg-white shadow-sm transition-all duration-500 ease-out will-change-transform md:h-[340px] md:hover:-translate-y-2 md:hover:shadow-[0_16px_34px_rgba(39,68,72,0.16)]">
+      <Link href={`/experiences/${id}`} className="flex flex-1 flex-col">
+        <figure className="relative aspect-[16/10] w-full shrink-0 overflow-hidden md:aspect-auto md:h-[190px]">
+          <Image
+            src={imageUrl ?? "/images/placeholder.jpg"}
+            alt={title}
+            fill
+            sizes="(max-width: 640px) calc(100vw - 32px), (max-width: 1024px) 45vw, 300px"
+            className="object-cover"
+          />
+        </figure>
+
+        <div className="flex flex-1 flex-col px-4 pt-3 pb-6">
+          <p className="text-[12px] font-medium text-[#858C91]">
+            {city}
+            {categoryName && `・${categoryName}`}
+          </p>
+
+          <p className="mt-1 line-clamp-2 h-auto text-[16px] leading-6 font-extrabold text-[#2E3338] max-md:leading-tight md:h-[48px]">
+            {title}
+          </p>
+
+          <p className="mt-1 flex items-center gap-1 text-[12px] font-bold">
+            {reviewCount > 0 ? (
+              <>
+                <HiStar
+                  className="size-3 shrink-0 text-[#FFA938]"
+                  aria-hidden="true"
+                />
+                <span className="text-[#F4A629]">{rating}</span>
+                <span className="font-medium text-[#8A9196]">
+                  ({reviewCount} 則評價)
+                </span>
+              </>
+            ) : (
+              <span className="font-medium text-[#8A9196]">尚無評價</span>
+            )}
+          </p>
+
+          <p className="mt-4 text-[16px] font-extrabold text-[#30353A] md:mt-auto">
+            NT$ {price.toLocaleString()} 起
+          </p>
+        </div>
+      </Link>
+
+      <button
+        type="button"
+        aria-label={favorite ? "取消收藏" : "加入最愛"}
+        aria-pressed={favorite}
+        className="absolute top-3 right-3 z-10 cursor-pointer p-1 transition-transform duration-300 hover:scale-110 active:scale-95"
+        onClick={async () => {
+          try {
+            await toggleFavorite(id);
+          } catch (error) {
+            const message =
+              error instanceof Error ? error.message : "收藏操作失敗";
+
+            alert(message);
+          }
+        }}
+      >
+        {favorite ? (
+          <HiHeart className="size-6 text-red-500 drop-shadow-[0_2px_5px_rgba(0,0,0,0.2)]" />
+        ) : (
+          <HiOutlineHeart className="size-6 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]" />
+        )}
+      </button>
+    </article>
+  );
+}
+
 export default function Page() {
-  const experiences = [
-    {
-      title: "雲霧山林...",
-      description: "攀登不為人知的...",
-      price: 2800,
-      rating: 4.8,
-      reviewCount: 190,
-      image: "/images/carousel1.jpeg",
-    },
-    {
-      title: "雲霧山林...",
-      description: "攀登不為人知的...",
-      price: 2800,
-      rating: 4.8,
-      reviewCount: 190,
-      image: "/images/carousel1.jpeg",
-    },
-    {
-      title: "雲霧山林...",
-      description: "攀登不為人知的...",
-      price: 2800,
-      rating: 4.8,
-      reviewCount: 190,
-      image: "/images/carousel1.jpeg",
-    },
-    {
-      title: "雲霧山林...",
-      description: "攀登不為人知的...",
-      price: 2800,
-      rating: 4.8,
-      reviewCount: 190,
-      image: "/images/carousel1.jpeg",
-    },
-    {
-      title: "雲霧山林...",
-      description: "攀登不為人知的...",
-      price: 2800,
-      rating: 4.8,
-      reviewCount: 190,
-      image: "/images/carousel1.jpeg",
-    },
-    {
-      title: "雲霧山林...",
-      description: "攀登不為人知的...",
-      price: 2800,
-      rating: 4.8,
-      reviewCount: 190,
-      image: "/images/carousel1.jpeg",
-    },
-    {
-      title: "雲霧山林...",
-      description: "攀登不為人知的...",
-      price: 2800,
-      rating: 4.8,
-      reviewCount: 190,
-      image: "/images/carousel1.jpeg",
-    },
-    {
-      title: "雲霧山林...",
-      description: "攀登不為人知的...",
-      price: 2800,
-      rating: 4.8,
-      reviewCount: 190,
-      image: "/images/carousel1.jpeg",
-    },
-  ];
+  const [experiences, setExperiences] = useState<Experience[]>([]);
 
+  useEffect(() => {
+    fetch("http://localhost:3001/api/experiences")
+      .then((data) => data.json())
+      .then((data) => setExperiences(data.data.slice(0, 8)))
+      .catch((err) => console.error(err));
+  }, [experiences]);
+  console.log(experiences);
   return (
     <section className="mx-auto max-w-7xl px-4 py-12">
       <div className="mb-10 text-center">
@@ -135,10 +132,21 @@ export default function Page() {
         <p className="mt-4 text-gray-500">
           探險者們最推薦的深度體驗，這週就出發！
         </p>
-      </div>{" "}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {experiences.map((exp, i) => (
-          <ExperienceCard key={i} {...exp} />
+      </div>
+
+      <div className="grid grid-cols-4 gap-x-6 gap-y-14 max-md:grid-cols-2 max-sm:grid-cols-1">
+        {experiences.map((experience) => (
+          <ExperienceCard
+            key={experience.id}
+            id={experience.id}
+            title={experience.title}
+            city={experience.city}
+            categoryName={experience.category_name}
+            price={experience.price}
+            imageUrl={experience.image_url}
+            rating={experience.rating}
+            reviewCount={experience.review_count}
+          />
         ))}
       </div>
     </section>
