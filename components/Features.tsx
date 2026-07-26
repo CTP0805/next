@@ -25,11 +25,11 @@ export default function Features() {
   ];
 
   return (
-    <div className="mx-auto grid max-w-[1280px] grid-cols-2 items-center justify-center gap-2 md:grid-cols-4">
+    <div className="mx-auto grid max-w-[1280px] grid-cols-2  md:gap-20 md:grid-cols-4">
       {data.map((v, i) => {
         return (
-          <div key={i} className="flex w-full flex-col items-center">
-            <div className="relative h-[70px] w-[70px] md:h-[128px] md:w-[128px]">
+          <div key={i} className="flex w-full flex-col mb-10 items-center">
+            <div className="relative h-[70px] w-[70px]  md:h-[128px] md:w-[128px]">
               <Image src={v.image} alt="" fill />
             </div>
 
