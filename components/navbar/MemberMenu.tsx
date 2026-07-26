@@ -5,11 +5,14 @@ import { FiLogOut } from "react-icons/fi";
 import type { MemberList } from "@/types/navbar";
 
 type MemberMenuProps = {
-  auth: { name?: string };
+  auth: {
+    name?: string;
+    imageURL?: string;
+    member_level: string;
+  };
   logout: () => void;
   memberLists: MemberList[];
 };
-
 export default function MemberMenu({
   auth,
   logout,
@@ -19,10 +22,10 @@ export default function MemberMenu({
     <li className="dropdown dropdown-end dropdown-hover relative p-4 pr-0">
       <div
         tabIndex={0}
-        className="flex cursor-pointer items-center gap-2 rounded-lg p-4 hover:bg-white/10"
+        className="flex cursor-pointer items-center gap-2 rounded-lg p-4 hover:bg-zinc-50"
       >
         <Image
-          src="/images/avatar-test.png"
+          src={auth.imageURL || "/images/member-avatar/angry-man.jpg"}
           alt={auth.name || "User Avatar"}
           className="h-8 w-8 rounded-full object-cover"
           width={32}
@@ -38,7 +41,7 @@ export default function MemberMenu({
         <li className="mb-2 border-b">
           <div className="flex items-center gap-3 px-4 py-3">
             <Image
-              src="/images/avatar-test.png"
+              src={auth.imageURL || "/images/member-avatar/angry-man.jpg"}
               alt="用戶頭像"
               width={48}
               height={48}
@@ -47,7 +50,7 @@ export default function MemberMenu({
             <div>
               <div className="font-semibold">{auth.name || "王大明"}</div>
               <div className="flex items-center gap-1.5 text-sm text-orange-400">
-                Lv.3 鑽石會員 <span>👑</span>
+                <span>{auth.member_level}級</span>會員
               </div>
             </div>
           </div>
@@ -61,7 +64,7 @@ export default function MemberMenu({
                 if (elem) elem.blur();
               }}
               href={v.href}
-              className="flex items-center gap-3 rounded-lg px-4 py-2 hover:bg-blue-600 hover:text-white"
+              className="flex items-center gap-3 rounded-lg px-4 py-2 text-[#ACACAC] hover:bg-zinc-50"
             >
               {v.icon}
               <span>{v.label}</span>
@@ -72,7 +75,7 @@ export default function MemberMenu({
         <li className="mt-2 border-t border-gray-200 pt-2">
           <button
             onClick={logout}
-            className="flex w-full items-center gap-3 rounded-lg px-4 py-2 hover:bg-red-600 hover:text-white"
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-2 text-[#ACACAC] hover:bg-zinc-50"
           >
             <FiLogOut /> <span>登出</span>
           </button>

@@ -24,10 +24,10 @@ import CartDropdown from "./CartDropdown";
 import MemberMenu from "./MemberMenu";
 
 export default function Navbar() {
-  const { auth, isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const { totalQty } = useCart();
   const pathname = usePathname();
-
+  const [member, setMember] = useState([]);
   const navLinks: NavLink[] = [
     { name: "所有體驗", href: "/experiences/search" },
     { name: "品牌介紹", href: "/about" },
@@ -51,7 +51,16 @@ export default function Navbar() {
 
   const isHomePage = pathname === "/";
   const [isScrolled, setIsScrolled] = useState(false);
-
+  useEffect(() => {
+    fetch(`http://localhost:3001/api/member/profile`, {
+      method: "GET",
+      credentials: "include", //帶上cookie驗證身份
+    })
+      .then((data) => data.json())
+      .then((data) => setMember(data.data))
+      .catch((error) => console.error(error));
+  }, []);
+  console.log(member);
   useEffect(() => {
     if (!isHomePage) return;
     const handleScroll = () => {
@@ -92,7 +101,7 @@ export default function Navbar() {
         {isAuthenticated && <CartDropdown />}
 
         {isAuthenticated ? (
-          <MemberMenu auth={auth} logout={logout} memberLists={memberLists} />
+          <MemberMenu auth={member} logout={logout} memberLists={memberLists} />
         ) : (
           <li className="flex items-center">
             <div className="px-2">
@@ -182,19 +191,10 @@ export default function Navbar() {
 
             {isAuthenticated && (
               <>
-                <div className="my-2 border-t border-gray-100"></div>
-                {memberLists.map((v) => (
-                  <li key={v.href}>
-                    <Link href={v.href} className="flex items-center gap-2">
-                      {v.icon}
-                      <span>{v.label}</span>
-                    </Link>
-                  </li>
-                ))}
                 <li className="mt-2 border-t border-gray-100 pt-2">
                   <button
                     onClick={logout}
-                    className="flex w-full items-center text-red-500"
+                    className="flex w-full items-center "
                   >
                     <FiLogOut className="mr-2" />
                     <span>登出</span>
