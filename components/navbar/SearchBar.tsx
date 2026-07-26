@@ -23,7 +23,7 @@ export default function SearchBar() {
     <form
       onSubmit={handleSearch}
       role="search"
-      className="relative w-40 md:w-80"
+      className="relative w-60 md:w-80"
     >
       <button
         type="submit"
