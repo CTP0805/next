@@ -1,13 +1,38 @@
+import Link from "next/link";
 import Image from "next/image";
 
 // components/PopularDestinations.js
 const destinations = [
-  { name: "倫敦", image: "/images/carousel1.jpeg" },
-  { name: "巴黎", image: "/images/carousel1.jpeg" },
-  { name: "慕尼黑", image: "/images/carousel1.jpeg" },
-  { name: "阿姆斯特丹", image: "/images/carousel1.jpeg" },
-  { name: "威尼斯", image: "/images/carousel1.jpeg" },
-  { name: "巴賽隆納", image: "/images/carousel1.jpeg" },
+  {
+    name: "倫敦",
+    image: "/images/carousel1.jpeg",
+    href: "/experiences/search?city=倫敦",
+  },
+  {
+    name: "巴黎",
+    image: "/images/carousel1.jpeg",
+    href: "/experiences/search?city=巴黎",
+  },
+  {
+    name: "慕尼黑",
+    image: "/images/carousel1.jpeg",
+    href: "/experiences/search?city=慕尼黑",
+  },
+  {
+    name: "阿姆斯特丹",
+    image: "/images/carousel1.jpeg",
+    href: "/experiences/search?city=阿姆斯特丹",
+  },
+  {
+    name: "威尼斯",
+    image: "/images/carousel1.jpeg",
+    href: "/experiences/search?city=威尼斯",
+  },
+  {
+    name: "巴賽隆納",
+    image: "/images/carousel1.jpeg",
+    href: "/experiences/search?city=巴賽隆納",
+  },
 ];
 export default function PopularDestinations() {
   return (
@@ -24,40 +49,42 @@ export default function PopularDestinations() {
         {/* flex + w-max 是實現滑動的核心 */}
         <div className="flex w-max gap-4 pb-4">
           {destinations.map((dest, index) => (
-            <div
-              key={index}
-              className="flex items-center rounded-full border border-gray-200 bg-white p-2 shadow-sm"
-            >
-              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
-                <Image
-                  src={dest.image}
-                  alt={dest.name}
-                  fill
-                  className="object-cover"
-                />
+            <Link key={index} href={dest.href}>
+              <div className="flex items-center rounded-full border border-gray-200 bg-white p-2 shadow-sm">
+                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full">
+                  <Image
+                    src={dest.image}
+                    alt={dest.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <span className="ml-3 pr-4 font-medium whitespace-nowrap text-gray-700">
+                  {dest.name}
+                </span>
               </div>
-              <span className="ml-3 pr-4 font-medium whitespace-nowrap text-gray-700">
-                {dest.name}
-              </span>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
 
       {/* 桌機版：卡片網格 (md 以上才顯示) */}
+      {/* 桌機版 */}
       <div className="hidden grid-cols-3 gap-6 md:grid lg:grid-cols-6">
         {destinations.map((dest) => (
-          <div key={dest.name} className="flex flex-col items-center">
-            <div className="relative mb-4 aspect-[2/3] w-full overflow-hidden rounded-[176px] duration-500 ease-out will-change-transform md:h-[340px] md:hover:-translate-y-2 md:hover:shadow-[0_16px_34px_rgba(39,68,72,0.16)]">
-              <Image
-                src={dest.image}
-                alt={dest.name}
-                fill
-                className="h-full w-full object-cover"
-              />
+          <Link key={dest.name} href={dest.href} className="group">
+            <div className="flex flex-col items-center">
+              <div className="relative mb-4 aspect-[2/3] w-full overflow-hidden rounded-[176px] duration-500 ease-out will-change-transform md:h-[340px] md:group-hover:-translate-y-2 md:group-hover:shadow-[0_16px_34px_rgba(39,68,72,0.16)]">
+                <Image
+                  src={dest.image}
+                  alt={dest.name}
+                  fill
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <span className="font-medium text-gray-700">{dest.name}</span>
             </div>
-            <span className="font-medium text-gray-700">{dest.name}</span>
-          </div>
+          </Link>
         ))}
       </div>
     </section>

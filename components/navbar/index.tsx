@@ -27,10 +27,9 @@ export default function Navbar() {
   const pathname = usePathname();
   const [member, setMember] = useState([]);
   const navLinks: NavLink[] = [
-    { name: "所有體驗", href: "/experiences/search" },
     { name: "品牌介紹", href: "/about" },
-    { name: "部落格", href: "/blog" },
     { name: "聯絡我們", href: "/contact" },
+    { name: "部落格", href: "/blog" },
   ];
 
   const memberListsBase: MemberList[] = [
