@@ -1,17 +1,19 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
-// 1. 匯入 Navigation 和 Autoplay
-import { Navigation, Autoplay } from "swiper/modules";
+import { Autoplay } from "swiper/modules"; // 不需要再載入 Navigation
+import type { Swiper as SwiperType } from "swiper";
+import { IoMdArrowDropleft, IoMdArrowDropright } from "react-icons/io";
 import IconMenu from "@/components/IconMenu";
 
 import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/autoplay"; // 2. 記得匯入 autoplay 的樣式
+import "swiper/css/autoplay";
+
 export default function HeroSwiper() {
-  // 可以將資料抽出來做成陣列，方便後續擴充
+  const swiperRef = useRef<SwiperType | null>(null);
+
   const slides = [
     { id: 1, title: "PARIS", image: "/images/banner/carousel1.avif" },
     { id: 2, title: "PARIS", image: "/images/banner/carousel2.avif" },
@@ -22,43 +24,59 @@ export default function HeroSwiper() {
 
   return (
     <>
-      <div className="w-full">
+      <div className="relative w-full">
         <Swiper
-          navigation={true}
-          modules={[Navigation, Autoplay]}
-          // 4. 設定 autoplay 參數
+          modules={[Autoplay]}
+          onSwiper={(swiper) => {
+            swiperRef.current = swiper;
+          }}
           autoplay={{
             delay: 3000,
-            disableOnInteraction: false, // 使用者手動滑動後是否停止自動播放，建議設為 false
+            disableOnInteraction: false,
           }}
           loop={true}
           className="h-[362px] w-full md:h-[800px]"
         >
           {slides.map((slide) => (
             <SwiperSlide key={slide.id} className="relative">
-              {/* 背景層 */}
               <Image
                 src={slide.image}
                 alt={slide.title}
                 className="absolute inset-0 h-full w-full object-cover"
                 fill
-                priority // 首屏圖片建議加上 priority
+                priority
               />
 
-              {/* 遮罩層 */}
               <div
                 className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent"
                 aria-hidden="true"
               />
 
-              {/* 內容層 */}
               <div className="relative z-10 flex h-full flex-col items-center justify-center text-5xl font-bold text-white md:text-9xl">
                 {slide.title}
               </div>
             </SwiperSlide>
           ))}
         </Swiper>
+
+        {/* 自訂左右箭頭 */}
+        <button
+          onClick={() => swiperRef.current?.slidePrev()}
+          className="absolute top-1/2 left-4 z-30 -translate-y-1/2 transition md:left-8"
+          aria-label="Previous slide"
+        >
+          <IoMdArrowDropleft className="h-10 w-10 text-white/50 hover:text-zinc-50 md:h-14 md:w-14" />
+        </button>
+
+        <button
+          onClick={() => swiperRef.current?.slideNext()}
+          className="absolute top-1/2 right-4 z-30 -translate-y-1/2 transition md:right-8"
+          aria-label="Next slide"
+        >
+          <IoMdArrowDropright className="h-10 w-10 text-white/50 hover:text-zinc-50 md:h-14 md:w-14" />
+        </button>
       </div>
+
       <div className="relative z-20 md:-mt-18">
         <IconMenu />
       </div>
