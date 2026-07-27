@@ -24,12 +24,14 @@ export default function MemberMenu({
     <li
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
-      className="dropdown dropdown-end dropdown-hover relative p-4 pr-0"
+      className="dropdown dropdown-end dropdown-hover relative"
     >
       <div
         tabIndex={0}
-        className="flex cursor-pointer items-center gap-2 rounded-lg p-4 hover:bg-zinc-50"
+        className="relative flex cursor-pointer items-center gap-2 px-3 py-2"
       >
+        <div className="absolute top-full right-0 h-4 w-full bg-transparent"></div>
+
         <Image
           src={auth.image_url || "/images/member-avatar/angry-man.jpg"}
           alt={auth.name || "User Avatar"}
