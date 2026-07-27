@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { HiStar } from "react-icons/hi";
+import { API_SERVER } from "@/config/api-path";
 
 interface ReviewCardProps {
   rating: number;
@@ -21,12 +22,7 @@ export function ReviewCard({
     <div className="rounded-3xl bg-gray-100 p-6 shadow-sm">
       <div className="flex items-center gap-3">
         <div className="relative aspect-square h-12 w-12 rounded-full bg-gray-300">
-          <Image
-            src={avatarUrl}
-            alt=""
-            className="rounded-full object-cover"
-            fill
-          />
+          <img src={avatarUrl} alt="" className="rounded-full object-cover" />
         </div>
         <div>
           <p className="font-medium">{memberName}</p>
@@ -53,8 +49,14 @@ interface ImageCardProps {
 
 export function ImageCard({ imageUrl }: ImageCardProps) {
   return (
-    <div className="relative h-96 overflow-hidden rounded-3xl">
-      <Image src={imageUrl} alt="" fill className="rounded-3xl object-cover" />
+    <div className="relative h-96 w-full overflow-hidden rounded-3xl">
+      <Image
+        src={imageUrl}
+        alt=""
+        sizes="100vw"
+        fill
+        className="rounded-3xl object-cover"
+      />
     </div>
   );
 }
@@ -78,9 +80,18 @@ const columns = [
     { type: "review", dataIndex: 3 },
   ],
 ];
+interface reviewsData {
+  id: number;
+  name: string;
+  rating: number;
+  avatar_url: string;
+  comment: string;
+  created_at: string;
+  experience_image: string;
+}
 
 export default function Home() {
-  const [reviewsData, setReviewsData] = useState<any[]>([]);
+  const [reviewsData, setReviewsData] = useState<reviewsData[]>([]);
   const [isLoading, setIsLoading] = useState(true); // 1. 宣告載入狀態
 
   useEffect(() => {
@@ -95,6 +106,7 @@ export default function Home() {
         setIsLoading(false);
       });
   }, []);
+  console.log(reviewsData);
 
   // 3. 載入中先回傳畫面，避免直接去跑 map
   if (isLoading) {
@@ -119,20 +131,24 @@ export default function Home() {
           >
             {column.map((item, itemIndex) => {
               const reviewItem = reviewsData[item.dataIndex];
-
+              console.log(reviewItem);
               // 4. 防呆：如果 API 回傳的資料筆數不夠對應這個 index，直接跳過不渲染
               if (!reviewItem) return null;
 
               return item.type === "review" ? (
                 <ReviewCard
                   key={itemIndex}
+                  memberName={reviewItem.name}
                   rating={reviewItem.rating}
                   comment={reviewItem.comment}
+                  avatarUrl={`${API_SERVER}${reviewItem.avatar_url}`}
                 />
               ) : (
                 <ImageCard
                   key={itemIndex}
-                  imageUrl={reviewItem.image_url || "/images/carousel1.jpeg"}
+                  imageUrl={
+                    reviewItem.experience_image || "/images/carousel1.jpeg"
+                  }
                 />
               );
             })}
