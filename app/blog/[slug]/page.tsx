@@ -17,6 +17,7 @@ import { fetchBlogPostBySlug, fetchBlogPosts } from "../_lib/api";
 import {
   BLOG_STATUS_LABEL,
   blogCategoryLabel,
+  blogCityLabel,
 } from "../_lib/types";
 import type { BlogPost } from "../_lib/types";
 
@@ -87,6 +88,7 @@ export default async function BlogDetail({
       })
     : null;
   const categoryLabel = blogCategoryLabel(post);
+  const cityLabel = blogCityLabel(post);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -114,6 +116,9 @@ export default async function BlogDetail({
             <article className="overflow-hidden rounded-[12px] border border-gray-100 bg-white shadow-sm">
               <div className="px-5 py-8 sm:px-8 sm:py-10 md:px-10">
                 <div className="mb-5 flex flex-wrap items-center gap-2">
+                  <span className="rounded-[12px] bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700 sm:text-sm">
+                    {cityLabel}
+                  </span>
                   <span className="rounded-[12px] bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 sm:text-sm">
                     {categoryLabel}
                   </span>
@@ -205,6 +210,12 @@ export default async function BlogDetail({
                         />
                       </div>
                       <div className="mb-1 flex flex-wrap items-center gap-1.5 text-xs">
+                        <span className="text-teal-600">
+                          {blogCityLabel(rec)}
+                        </span>
+                        <span className="text-gray-300" aria-hidden>
+                          ·
+                        </span>
                         <span className="text-amber-600">
                           {blogCategoryLabel(rec)}
                         </span>

@@ -1,36 +1,18 @@
 "use client";
 
-/**
- * 【新手】留言區（目前為前端 mock／本機 state，未接後端 API）
- * postSlug 用來區分不同文章的本機留言 key
- */
-import { FormEvent, useMemo, useState } from "react";
-
-interface Comment {
-  id: string;
-  author: string;
-  content: string;
-  createdAt: string;
-}
+import Link from "next/link";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { getApiServer } from "@/config/api-path";
+import { useAuth } from "@/contexts/auth-context";
+import {
+  createBlogComment,
+  fetchBlogComments,
+} from "../_lib/api";
+import type { BlogComment } from "../_lib/types";
 
 interface BlogCommentSectionProps {
   postSlug: string;
 }
-
-const seedComments: Comment[] = [
-  {
-    id: "c1",
-    author: "旅人小陳",
-    content: "這篇整理得很實用，下次去會照著路線走！",
-    createdAt: "2026-06-20T10:30:00Z",
-  },
-  {
-    id: "c2",
-    author: "Amy",
-    content: "封面照好美，想知道附近有沒有推薦的咖啡店？",
-    createdAt: "2026-06-22T15:12:00Z",
-  },
-];
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("zh-TW", {
@@ -45,50 +27,124 @@ function formatDate(iso: string) {
 const fieldClass =
   "w-full rounded-[12px] border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#45cad5] focus:ring-2 focus:ring-[#45cad5]/20";
 
+function resolveAvatarUrl(avatarUrl?: string | null) {
+  const value = avatarUrl?.trim();
+  if (!value) return null;
+  if (/^(https?:|data:|blob:)/i.test(value)) return value;
+  return `${getApiServer()}${value.startsWith("/") ? value : `/${value}`}`;
+}
+
+function MemberAvatar({
+  name,
+  avatarUrl,
+  sizeClass = "h-9 w-9",
+}: {
+  name: string;
+  avatarUrl?: string | null;
+  sizeClass?: string;
+}) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const resolvedAvatar =
+    resolveAvatarUrl(avatarUrl) ?? "/images/avatar-test.png";
+
+  return (
+    <div
+      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#45cad5]/15 text-sm font-bold text-[#36b3be] ${sizeClass}`}
+    >
+      {!imageFailed ? (
+        // 頭貼可能來自 Express 上傳目錄或 Google，因此使用原生 img。
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={resolvedAvatar}
+          alt={`${name}的頭貼`}
+          className="h-full w-full object-cover"
+          onError={() => setImageFailed(true)}
+        />
+      ) : (
+        <span aria-hidden>{name.trim().slice(0, 1) || "旅"}</span>
+      )}
+    </div>
+  );
+}
+
 export default function BlogCommentSection({
   postSlug,
 }: BlogCommentSectionProps) {
-  const [comments, setComments] = useState<Comment[]>(seedComments);
-  const [author, setAuthor] = useState("");
+  const { auth, authInit, isAuthenticated } = useAuth();
+  const [comments, setComments] = useState<BlogComment[]>([]);
   const [content, setContent] = useState("");
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [submitError, setSubmitError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void fetchBlogComments(postSlug)
+      .then((items) => {
+        if (!cancelled) {
+          setComments(items);
+          setLoadError("");
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setComments([]);
+          setLoadError(
+            error instanceof Error ? error.message : "讀取留言失敗",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [postSlug]);
 
   const countLabel = useMemo(
     () => `${comments.length} 則留言`,
     [comments.length],
   );
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError("");
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmitError("");
     setSubmitted(false);
 
-    const name = author.trim();
+    if (!isAuthenticated) {
+      setSubmitError("請先登入後再留言");
+      return;
+    }
+
     const body = content.trim();
-
-    if (!name || !body) {
-      setError("請填寫暱稱與留言內容");
+    if (body.length < 2 || body.length > 500) {
+      setSubmitError("留言內容需為 2 至 500 個字");
       return;
     }
 
-    if (body.length < 2) {
-      setError("留言內容至少 2 個字");
-      return;
+    setSubmitting(true);
+    try {
+      const created = await createBlogComment(postSlug, body);
+      setComments((previous) => [created, ...previous]);
+      setContent("");
+      setSubmitted(true);
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : "送出留言失敗",
+      );
+    } finally {
+      setSubmitting(false);
     }
-
-    const next: Comment = {
-      id: `${postSlug}-${Date.now()}`,
-      author: name,
-      content: body,
-      createdAt: new Date().toISOString(),
-    };
-
-    setComments((prev) => [next, ...prev]);
-    setAuthor("");
-    setContent("");
-    setSubmitted(true);
   }
+
+  const loginHref = `/auth/login?next=${encodeURIComponent(
+    `/blog/${postSlug}`,
+  )}`;
 
   return (
     <section className="rounded-[12px] border border-gray-100 bg-white p-5 shadow-sm sm:p-8">
@@ -102,74 +158,107 @@ export default function BlogCommentSection({
             留言區
           </h2>
           <p className="mt-2 text-sm text-gray-500">
-            分享你的想法，與其他旅人交流心得
+            登入後即可分享想法，留言名稱會使用會員帳號名稱
           </p>
         </div>
         <span className="rounded-[12px] bg-teal-50 px-3 py-1 text-sm font-medium text-teal-700">
-          {countLabel}
+          {loading ? "載入中…" : countLabel}
         </span>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="mb-8 rounded-[12px] border border-gray-100 bg-gray-50/80 p-4 sm:p-6"
-      >
-        <div className="mb-4">
-          <label
-            htmlFor="comment-author"
-            className="mb-1.5 block text-sm font-medium text-gray-700"
-          >
-            暱稱
-          </label>
-          <input
-            id="comment-author"
-            type="text"
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
-            maxLength={24}
-            placeholder="你的暱稱"
-            className={`h-11 ${fieldClass}`}
-          />
+      {!authInit ? (
+        <div className="mb-8 rounded-[12px] border border-gray-100 bg-gray-50 px-5 py-6 text-sm text-gray-500">
+          正在確認登入狀態…
         </div>
-
-        <div className="mb-4">
-          <label
-            htmlFor="comment-content"
-            className="mb-1.5 block text-sm font-medium text-gray-700"
+      ) : !isAuthenticated ? (
+        <div className="mb-8 rounded-[12px] border border-teal-100 bg-teal-50/70 px-5 py-6">
+          <p className="font-medium text-gray-800">登入後才能留言</p>
+          <p className="mt-1 text-sm text-gray-500">
+            留言會顯示會員帳號名稱，不能自行輸入或更改暱稱。
+          </p>
+          <Link
+            href={loginHref}
+            className="mt-4 inline-flex rounded-[12px] bg-[#45cad5] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#36b3be]"
           >
-            留言內容
-          </label>
-          <textarea
-            id="comment-content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={4}
-            maxLength={500}
-            placeholder="寫下你的留言…"
-            className={`resize-y py-3 ${fieldClass}`}
-          />
-          <div className="mt-1 text-right text-xs text-gray-400">
-            {content.length}/500
+            前往登入
+          </Link>
+        </div>
+      ) : (
+        <form
+          onSubmit={handleSubmit}
+          className="mb-8 rounded-[12px] border border-gray-100 bg-gray-50/80 p-4 sm:p-6"
+        >
+          <div className="mb-4 flex items-center gap-3 text-sm">
+            <MemberAvatar
+              name={auth.name}
+              avatarUrl={auth.avatar_url}
+              sizeClass="h-10 w-10"
+            />
+            <div>
+              <span className="block text-xs text-gray-500">留言身分</span>
+              <span className="font-semibold text-gray-800">{auth.name}</span>
+            </div>
           </div>
-        </div>
 
-        {error ? <p className="mb-3 text-sm text-red-500">{error}</p> : null}
-        {submitted ? (
-          <p className="mb-3 text-sm text-teal-600">留言已送出，感謝分享！</p>
-        ) : null}
+          <div className="mb-4">
+            <label
+              htmlFor="comment-content"
+              className="mb-1.5 block text-sm font-medium text-gray-700"
+            >
+              留言內容
+            </label>
+            <textarea
+              id="comment-content"
+              value={content}
+              onChange={(event) => setContent(event.target.value)}
+              rows={4}
+              maxLength={500}
+              placeholder="寫下你的留言…"
+              className={`resize-y py-3 ${fieldClass}`}
+            />
+            <div className="mt-1 text-right text-xs text-gray-400">
+              {content.length}/500
+            </div>
+          </div>
 
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            className="rounded-[12px] bg-[#45cad5] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#36b3be]"
-          >
-            送出留言
-          </button>
-        </div>
-      </form>
+          {submitError ? (
+            <p className="mb-3 text-sm text-red-500">{submitError}</p>
+          ) : null}
+          {submitted ? (
+            <p className="mb-3 text-sm text-teal-600">
+              留言已送出，感謝分享！
+            </p>
+          ) : null}
+
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="rounded-[12px] bg-[#45cad5] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#36b3be] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {submitting ? "送出中…" : "送出留言"}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {loadError ? (
+        <p className="mb-3 rounded-[12px] border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {loadError}
+        </p>
+      ) : null}
 
       <div className="space-y-3">
-        {comments.length === 0 ? (
+        {loading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 2 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-24 animate-pulse rounded-[12px] bg-gray-100"
+              />
+            ))}
+          </div>
+        ) : comments.length === 0 ? (
           <p className="rounded-[12px] border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center text-sm text-gray-500">
             還沒有留言，成為第一個留言的人吧！
           </p>
@@ -180,17 +269,18 @@ export default function BlogCommentSection({
               className="rounded-[12px] border border-gray-100 bg-gray-50/60 px-4 py-4 sm:px-5"
             >
               <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-                <div className="flex h-9 w-9 items-center justify-center rounded-[12px] bg-[#45cad5]/15 text-sm font-bold text-[#36b3be]">
-                  {comment.author.slice(0, 1)}
-                </div>
+                <MemberAvatar
+                  name={comment.author_name}
+                  avatarUrl={comment.author_avatar}
+                />
                 <span className="font-semibold text-gray-900">
-                  {comment.author}
+                  {comment.author_name}
                 </span>
                 <span className="text-xs text-gray-400">
-                  {formatDate(comment.createdAt)}
+                  {formatDate(comment.created_at)}
                 </span>
               </div>
-              <p className="pl-12 text-[15px] leading-relaxed text-gray-700">
+              <p className="pl-12 text-[15px] leading-relaxed whitespace-pre-wrap text-gray-700">
                 {comment.content}
               </p>
             </article>

@@ -66,3 +66,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ---
 
 **有效跡象：** 不必要的 diff 少、不因過度複雜重寫、釐清發生在實作之前。
+
+<!-- BEGIN:codex-mao-rules -->
+## Codex 專用規則
+
+當執行者是 OpenAI Codex 時：
+
+1. 新 session／重新開啟專案時，必須完整讀取同目錄的 `mao.md` 一次；同一 session 內保留於工作記憶，不要每項工作重讀。
+2. 分析、修改、測試及交付都必須遵守 `mao.md`。
+3. 完成工作前，再次核對結果是否符合 `mao.md`。
+4. 其他 agent 忽略本節及 `mao.md`。
+<!-- END:codex-mao-rules -->

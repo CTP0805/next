@@ -27,6 +27,7 @@ import { getApiServer } from "@/config/api-path";
 
 // 型別：./types.ts（文章、可寫訂單、送出 body）
 import type {
+  BlogComment,
   BlogEligibleOrder,
   BlogPost,
   BlogPostInput,
@@ -51,6 +52,18 @@ type OrdersResponse = {
   success?: boolean;
   message?: string;
   orders?: BlogEligibleOrder[];
+};
+
+type CommentsResponse = {
+  success?: boolean;
+  message?: string;
+  comments?: BlogComment[];
+};
+
+type CommentResponse = {
+  success?: boolean;
+  message?: string;
+  comment?: BlogComment;
 };
 
 /**
@@ -129,6 +142,46 @@ export async function fetchBlogPosts(params?: {
     throw new Error(data.message || "讀取文章失敗");
   }
   return data.posts ?? [];
+}
+
+export async function fetchBlogComments(
+  postSlug: string,
+): Promise<BlogComment[]> {
+  const response = await fetch(
+    `${apiBase()}/api/blog/slug/${encodeURIComponent(postSlug)}/comments`,
+    {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    },
+  );
+  const data = await readJson<CommentsResponse>(response);
+  if (!response.ok) {
+    throw new Error(data.message || "讀取留言失敗");
+  }
+  return data.comments ?? [];
+}
+
+export async function createBlogComment(
+  postSlug: string,
+  content: string,
+): Promise<BlogComment> {
+  const response = await fetch(
+    `${apiBase()}/api/blog/slug/${encodeURIComponent(postSlug)}/comments`,
+    {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ content }),
+    },
+  );
+  const data = await readJson<CommentResponse>(response);
+  if (!response.ok || !data.comment) {
+    throw new Error(data.message || "送出留言失敗");
+  }
+  return data.comment;
 }
 
 /**

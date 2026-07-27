@@ -9,8 +9,15 @@
  * 這是 Blog 在會員區的主入口（/blog/manage 會轉來這裡）
  * =============================================================================
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "@/contexts/auth-context";
 import BlogMediaImage from "@/app/blog/_components/BlogMediaImage";
@@ -23,6 +30,7 @@ import type { BlogPost, BlogPostStatus } from "@/app/blog/_lib/types";
 import {
   BLOG_STATUS_LABEL,
   blogCategoryLabel,
+  blogCityLabel,
 } from "@/app/blog/_lib/types";
 
 type PageTab = "manage" | "create";
@@ -54,9 +62,12 @@ function formatDate(iso: string | null) {
   });
 }
 
-export default function MemberEditPostPage() {
+function MemberEditPostContent() {
+  const searchParams = useSearchParams();
   const { auth, isAuthenticated, authInit } = useAuth();
-  const [activeTab, setActiveTab] = useState<PageTab>("manage");
+  const [activeTab, setActiveTab] = useState<PageTab>(
+    searchParams.get("tab") === "create" ? "create" : "manage",
+  );
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -125,6 +136,9 @@ export default function MemberEditPostPage() {
           p.title.toLowerCase().includes(q) ||
           p.slug.toLowerCase().includes(q) ||
           (p.order_title ?? "").toLowerCase().includes(q) ||
+          (p.experience_title ?? "").toLowerCase().includes(q) ||
+          (p.city ?? "").toLowerCase().includes(q) ||
+          (p.category_name ?? "").toLowerCase().includes(q) ||
           (p.excerpt ?? "").toLowerCase().includes(q)
         );
       })
@@ -306,6 +320,9 @@ export default function MemberEditPostPage() {
                           >
                             {BLOG_STATUS_LABEL[post.status]}
                           </span>
+                          <span className="rounded-[12px] bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
+                            {blogCityLabel(post)}
+                          </span>
                           <span className="rounded-[12px] bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
                             {blogCategoryLabel(post)}
                           </span>
@@ -427,5 +444,17 @@ export default function MemberEditPostPage() {
         </div>
       ) : null}
     </section>
+  );
+}
+
+export default function MemberEditPostPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-48 animate-pulse rounded-[12px] bg-gray-100" />
+      }
+    >
+      <MemberEditPostContent />
+    </Suspense>
   );
 }

@@ -20,7 +20,10 @@ import {
   reviewBlogPost,
 } from "@/app/blog/_lib/api";
 import type { BlogPost } from "@/app/blog/_lib/types";
-import { blogCategoryLabel } from "@/app/blog/_lib/types";
+import {
+  blogCategoryLabel,
+  blogCityLabel,
+} from "@/app/blog/_lib/types";
 
 export default function MemberBlogReviewPage() {
   const { auth, authInit, isAuthenticated } = useAuth();
@@ -148,6 +151,8 @@ export default function MemberBlogReviewPage() {
                         ? `作者：${post.author_name}`
                         : `作者 ID ${post.author_id}`}
                       {" · "}
+                      {blogCityLabel(post)}
+                      {" · "}
                       {blogCategoryLabel(post)}
                     </p>
                   </button>
@@ -161,6 +166,9 @@ export default function MemberBlogReviewPage() {
               <div className="mb-3 flex flex-wrap gap-2 text-xs">
                 <span className="rounded-[12px] bg-amber-100 px-2.5 py-0.5 font-medium text-amber-800">
                   待審核
+                </span>
+                <span className="rounded-[12px] bg-teal-50 px-2.5 py-0.5 text-teal-700">
+                  {blogCityLabel(selected)}
                 </span>
                 <span className="rounded-[12px] bg-slate-100 px-2.5 py-0.5 text-slate-600">
                   {blogCategoryLabel(selected)}
