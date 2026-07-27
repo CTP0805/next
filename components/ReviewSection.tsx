@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { HiStar } from "react-icons/hi";
 
 interface ReviewCardProps {
   rating: number;
@@ -29,7 +30,15 @@ export function ReviewCard({
         </div>
         <div>
           <p className="font-medium">{memberName}</p>
-          <div className="text-yellow-500">{"⭐".repeat(rating)}</div>
+          <div className="flex flex-wrap">
+            {Array.from({ length: rating }).map((_, index) => (
+              <HiStar
+                key={index}
+                className="size-3 shrink-0 text-[#FFA938]"
+                aria-hidden="true"
+              />
+            ))}
+          </div>
         </div>
       </div>
 
