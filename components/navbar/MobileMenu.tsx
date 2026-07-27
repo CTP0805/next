@@ -70,7 +70,7 @@ export default function MobileMenu({
 
         <ul
           tabIndex={0}
-          className="menu dropdown-content fixed right-0 z-50 bg-white p-4 text-[#ACACAC] shadow-xl"
+          className="dropdown-content fixed right-0 z-50 w-screen bg-white p-4 text-center text-[#ACACAC] shadow-xl"
         >
           {!isAuthenticated && (
             <>
