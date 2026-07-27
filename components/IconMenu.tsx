@@ -44,13 +44,10 @@ export default function IconMenu() {
     // 外層容器：確保在不同螢幕寬度下都能置中
     <section className="flex justify-center">
       {/* 核心容器：設定最大寬度、左右內距與背景樣式 */}
-      <div className="w-full max-w-[1280px] px-[30px]">
+      <div className="w-full max-w-[1280px]">
         <div className="flex scrollbar-none items-center gap-6 overflow-x-auto rounded-[32px] bg-white p-6 backdrop-blur md:justify-between md:gap-4 md:shadow-2xl">
           {features.map((item, index) => (
-            <div
-              key={index}
-              className="flex min-w-[100px] flex-col items-center justify-center gap-3"
-            >
+            <div key={index} className="flex min-w-[100px] gap-3">
               <Link
                 href={item.href}
                 className="flex flex-col items-center justify-center"
