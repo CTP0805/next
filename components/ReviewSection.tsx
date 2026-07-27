@@ -106,7 +106,6 @@ export default function Home() {
         setIsLoading(false);
       });
   }, []);
-  console.log(reviewsData);
 
   // 3. 載入中先回傳畫面，避免直接去跑 map
   if (isLoading) {
@@ -131,7 +130,6 @@ export default function Home() {
           >
             {column.map((item, itemIndex) => {
               const reviewItem = reviewsData[item.dataIndex];
-              console.log(reviewItem);
               // 4. 防呆：如果 API 回傳的資料筆數不夠對應這個 index，直接跳過不渲染
               if (!reviewItem) return null;
 
