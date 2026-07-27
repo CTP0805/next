@@ -88,7 +88,6 @@ export default function Navbar() {
           } satisfies MemberList,
         ]),
   ];
-  console.log(auth);
   const isHomePage = pathname === "/";
   const [isScrolled, setIsScrolled] = useState(false);
   useEffect(() => {
@@ -100,7 +99,6 @@ export default function Navbar() {
       .then((data) => setMember(data.data))
       .catch((error) => console.error(error));
   }, []);
-  console.log(member);
   useEffect(() => {
     if (!isHomePage) return;
     const handleScroll = () => {
