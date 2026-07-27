@@ -91,7 +91,7 @@ export function ExperienceCard({
         type="button"
         aria-label={favorite ? "取消收藏" : "加入最愛"}
         aria-pressed={favorite}
-        className="absolute top-3 right-3 z-10 cursor-pointer p-1 transition-transform duration-300 hover:scale-110 active:scale-95"
+        className="absolute top-2 right-2 z-10 cursor-pointer p-1 transition-transform duration-300 hover:scale-110 active:scale-95"
         onClick={async () => {
           try {
             await toggleFavorite(id);
@@ -104,7 +104,7 @@ export function ExperienceCard({
         }}
       >
         {favorite ? (
-          <HiHeart className="size-6 text-red-500 drop-shadow-[0_2px_5px_rgba(0,0,0,0.2)]" />
+          <HiHeart className="size-6 [stroke:white] [stroke-width:1.5] text-red-500 drop-shadow-[0_2px_5px_rgba(0,0,0,0.2)]" />
         ) : (
           <HiOutlineHeart className="size-6 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]" />
         )}
