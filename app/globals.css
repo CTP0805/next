@@ -91,16 +91,14 @@
     @apply mb-4 block text-[16px] text-black;
   }
 
-  .button-blue {
-    @apply inline-block rounded-md bg-blue-600 px-5 py-3 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70;
-  }
+  
 
   .button-green {
-    @apply inline-block rounded-md bg-green-300 px-5 py-3 text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70;
+    @apply inline-block rounded-md bg-green-600 px-5 py-3 text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70;
   }
 
   .button-red {
-    @apply inline-block rounded-md bg-red-500 px-5 py-3 text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70;
+    @apply inline-block rounded-md bg-red-600 px-5 py-3 text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70;
   }
 
   .button-main-1 {
@@ -122,6 +120,8 @@
   .button-people {
     @apply grid size-7 place-items-center rounded-full border border-[#D9DFE1] text-[#697178] hover:border-[#68BBC3];
   }
+
+  
 }
 
 /* @media (prefers-color-scheme: dark) {

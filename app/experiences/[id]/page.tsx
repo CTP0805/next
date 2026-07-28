@@ -26,6 +26,10 @@ import NotesSection from "@/app/experiences/_components/NotesSection";
 import BookingCard from "@/app/experiences/_components/BookingCard";
 import Loading from "@/components/Loading";
 
+// 最近瀏覽
+import { API_SERVER } from "@/config/api-path";
+import { useAuth } from "@/contexts/auth-context";
+
 // 💡 調整 Type 定義，以符合後端資料庫回傳的真實欄位
 type ExperienceNote = {
   title: string;
@@ -152,6 +156,9 @@ export default function ExperienceDetailPage() {
     : null;
   const favorite = experience ? isFavorite(experience.id) : false;
 
+  // 最近瀏覽
+  const { authInit, isAuthenticated } = useAuth();
+
   const handleFavoriteClick = async () => {
     if (!experience) return;
 
@@ -208,6 +215,51 @@ export default function ExperienceDetailPage() {
 
     getExperience();
   }, [id]);
+
+  // 最近瀏覽
+  useEffect(() => {
+  // authInit：確認前端已完成向後端確認登入狀態
+  // isAuthenticated：確認目前確實是登入會員
+  // experience：確認體驗詳細資料成功載入
+  if (!authInit || !isAuthenticated || !experience) {
+    return;
+  }
+
+  const saveRecentlyViewed = async (): Promise<void> => {
+    try {
+      const response = await fetch(
+        `${API_SERVER}/api/member/recently-viewed`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          // 前端只送體驗 ID，不送 memberId
+          body: JSON.stringify({
+            experienceId: experience.id,
+          }),
+        },
+      );
+
+      // 未登入或 Cookie 過期時，不記錄即可。
+      // 登入保護元件會負責處理會員頁面的權限。
+      if (response.status === 401) {
+        return;
+      }
+
+      if (!response.ok) {
+        console.error("記錄最近瀏覽失敗");
+      }
+    } catch (error) {
+      // 不讓紀錄失敗影響使用者正常看體驗內容
+      console.error("記錄最近瀏覽時發生網路錯誤", error);
+    }
+  };
+
+  void saveRecentlyViewed();
+  }, [authInit, isAuthenticated, experience]);
 
   // 2. 監聽滾動距離
   useEffect(() => {

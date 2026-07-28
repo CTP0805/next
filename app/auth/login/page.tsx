@@ -4,7 +4,6 @@ import { SyntheticEvent, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
-import { z } from "zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import toast from "react-hot-toast";
@@ -13,17 +12,16 @@ import useFirebase, {
   type GoogleProviderData,
 } from "../_hook/use-firebase/index";
 
-// 還不確定用不用的到
-type LoginRequest = {
-  email: string;
-  password: string;
-};
-
-type LoginResponse = {
+// TS 型別專區
+type GoogleLoginResponse = {
   success: boolean;
   message: string;
-  token?: string;
-  user?: User;
+  data?: {
+    id: number;
+    name: string;
+    email: string;
+    token: string;
+  };
 };
 
 export default function LoginPage() {
@@ -127,8 +125,8 @@ export default function LoginPage() {
 
       // 後端回什麼？
       // success、message、data，並且後端會順便把 JWT 寫進 HttpOnly Cookie
-      const result = await response.json();
-
+      const result = (await response.json()) as GoogleLoginResponse;
+      
       if (!response.ok) {
         toast.error(result.message || "Google 登入失敗");
         return;

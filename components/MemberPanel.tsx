@@ -78,12 +78,21 @@ interface AvatarUploadResponse {
   };
 }
 
+interface AvatarDeleteResponse {
+  success: boolean;
+  message: string;
+}
+
 interface ProfileResponse {
   success: boolean;
   data?: {
+    name: string;
     avatar_url: string | null;
   };
 }
+
+// 沒有自訂頭像時，一律顯示這張預設圖片
+const DEFAULT_AVATAR_URL = "/images/member-avatar/angry-man.jpg";
 
 /**
  * 將裁切區域輸出為 500 x 500 的 JPEG File。
@@ -175,9 +184,7 @@ export default function MemberPanel() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 目前顯示在會員面板上的頭像
-  const [avatarUrl, setAvatarUrl] = useState(
-    "/images/member-avatar/angry-man.jpg",
-  );
+  const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR_URL);
 
   const [name, setName] = useState("");
 
@@ -191,20 +198,25 @@ export default function MemberPanel() {
         });
 
         const result = (await response.json()) as ProfileResponse;
-        console.log(result);
-        setName(result.data.name);
 
-        const absoluteUrl = result.data.avatar_url.trim();
-        const isAbsoluteUrl = /^(?:https?:)?\/\//i.test(absoluteUrl);
+        // 先確認 API 成功，而且真的有會員資料
+        if (response.ok && result.success && result.data) {
+          setName(result.data.name);
 
-        if (response.ok && result.success && result.data.avatar_url) {
-          // 判斷是否為絕對路徑 是的話直接顯示 不是的話要加 API_SERVER
-          // 資料庫儲存的是 /images/xxx.jpg，前面要補上 API_SERVER
-          setAvatarUrl(isAbsoluteUrl? `${absoluteUrl}` : `${API_SERVER}${result.data.avatar_url}`);
+          // avatar_url 可能是 null；有值才需要 trim 與組合後端網址
+          const savedAvatarUrl = result.data.avatar_url?.trim();
+
+          if (savedAvatarUrl) {
+            const isAbsoluteUrl = /^(?:https?:)?\/\//i.test(savedAvatarUrl);
+
+            setAvatarUrl(
+              isAbsoluteUrl ? savedAvatarUrl : `${API_SERVER}${savedAvatarUrl}`,
+            );
+          } else {
+            // 資料庫沒有頭像時，恢復預設頭像
+            setAvatarUrl(DEFAULT_AVATAR_URL);
+          }
         }
-          
-        
-        
       } catch (error) {
         console.error("讀取大頭貼失敗：", error);
       }
@@ -239,6 +251,10 @@ export default function MemberPanel() {
 
   // 顯示格式錯誤、檔案太大、裁切失敗等訊息
   // const [errorMessage, setErrorMessage] = useState("");
+
+  // 確認是否要移除目前照片
+  // 控制「確認移除頭像」Modal 是否顯示
+  const [isRemoveAvatarModalOpen, setIsRemoveAvatarModalOpen] = useState(false);
 
   // 點頭像右下角相機時，先開啟「選檔／拖放」彈窗
   const handleOpenUploadDialog = () => {
@@ -367,13 +383,13 @@ export default function MemberPanel() {
       });
 
       const result = (await response.json()) as AvatarUploadResponse;
-      
+
       // 失敗時丟出錯誤，統一交給 catch 顯示一次 toast
       if (!response.ok || !result.success || !result.data) {
         throw new Error(result.message || "大頭貼更新失敗");
       }
 
-      toast.success(result.message || "大頭貼更新成功(前端)")
+      toast.success(result.message || "大頭貼更新成功(前端)");
 
       // step4. 後端成功存檔與更新資料庫後，才換畫面上的大頭貼
       setAvatarUrl(`${API_SERVER}${result.data.avatarUrl}`);
@@ -384,7 +400,45 @@ export default function MemberPanel() {
     } catch (error) {
       console.error(error);
       // setErrorMessage(error instanceof Error ? error.message : "大頭貼更新失敗，請稍後再試",);
-      const message = error instanceof Error ? error.message : "大頭貼更新失敗，請稍後再試";
+      const message =
+        error instanceof Error ? error.message : "大頭貼更新失敗，請稍後再試";
+      toast.error(message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // 移除目前照片確認 modal
+  const handleRemoveAvatar = () => {
+    // 使用者點擊移除按鈕時，先顯示 DaisyUI Modal
+    setIsRemoveAvatarModalOpen(true);
+  };
+
+  // 真正的移除目前照片
+  const handleConfirmRemoveAvatar = async () => {
+    try {
+      setIsSaving(true);
+
+      const response = await fetch(`${API_SERVER}/api/member/avatar`, {
+        method: "DELETE",
+        credentials: "include", // 帶上 Cookie，讓後端知道目前是哪位會員
+      });
+
+      const result = (await response.json()) as AvatarDeleteResponse;
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "移除頭像失敗");
+      }
+
+      // API 成功後，立刻把畫面頭像換回預設圖片
+      setAvatarUrl(DEFAULT_AVATAR_URL);
+
+      // 關閉確認視窗
+      setIsRemoveAvatarModalOpen(false);
+
+      toast.success(result.message || "已恢復預設頭像");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "移除頭像失敗";
       toast.error(message);
     } finally {
       setIsSaving(false);
@@ -411,14 +465,48 @@ export default function MemberPanel() {
               className="h-[105px] w-[105px] rounded-full object-cover"
             />
 
-            <button
+            {/* <button
               type="button"
               aria-label="更換會員頭像"
               onClick={handleOpenUploadDialog}
               className="absolute right-0 bottom-0 flex h-8 w-8 items-center justify-center rounded-full bg-white text-black shadow-md transition hover:scale-105 hover:bg-zinc-100"
             >
               <FaCamera className="text-sm" />
-            </button>
+            </button> */}
+
+            <div className="dropdown dropdown-top">
+              <div
+                tabIndex={0}
+                role="button"
+                className="absolute bottom-3 left-18 flex h-8 w-8 items-center justify-center rounded-full bg-white text-black shadow-md transition hover:scale-105 hover:cursor-pointer hover:bg-zinc-100"
+              >
+                <FaCamera className="text-sm" />
+              </div>
+              <div
+                tabIndex={-1}
+                className="dropdown-content menu bg-base-100 rounded-box z-1 w-32 translate-x-24 translate-y-19 p-2 shadow-sm"
+              >
+                <li>
+                  <button
+                    type="button"
+                    aria-label="更換會員頭像"
+                    onClick={handleOpenUploadDialog}
+                  >
+                    更新會員頭像
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    aria-label="移除目前照片"
+                    onClick={handleRemoveAvatar}
+                    disabled={isSaving}
+                  >
+                    移除目前照片
+                  </button>
+                </li>
+              </div>
+            </div>
 
             <input
               ref={fileInputRef}
@@ -430,7 +518,7 @@ export default function MemberPanel() {
             />
           </div>
 
-          <h4 className="mt-4">{name}</h4>
+          <h4>{name}</h4>
           {/*  
           {errorMessage && !isUploadDialogOpen && !selectedImage && (
             <p className="mt-3 text-sm text-red-500">{errorMessage}</p>
@@ -464,6 +552,52 @@ export default function MemberPanel() {
           })}
         </nav>
       </aside>
+      
+      {/* 確認 移除目前照片 彈窗 */}
+      {isRemoveAvatarModalOpen && (
+        <dialog open className="modal">
+          <div className="modal-box">
+            <h3 className="text-lg font-bold">移除目前照片？</h3>
+
+            <p className="py-4 text-sm text-gray-500">
+              移除後會恢復成預設頭像，之後仍可重新上傳照片。
+            </p>
+
+            <div className="modal-action">
+              {/* 取消：只關閉 Modal，不呼叫後端 */}
+              <button
+                type="button"
+                className="btn"
+                disabled={isSaving}
+                onClick={() => setIsRemoveAvatarModalOpen(false)}
+              >
+                取消
+              </button>
+
+              {/* 確認：才會呼叫 DELETE API */}
+              <button
+                type="button"
+                className="button-red"
+                disabled={isSaving}
+                onClick={handleConfirmRemoveAvatar}
+              >
+                {isSaving ? "移除中..." : "確認移除"}
+              </button>
+            </div>
+          </div>
+
+          {/* 點背景也能關閉 Modal；傳送中則不能關閉 */}
+          <button
+            type="button"
+            className="modal-backdrop"
+            disabled={isSaving}
+            aria-label="關閉確認視窗"
+            onClick={() => setIsRemoveAvatarModalOpen(false)}
+          >
+            關閉
+          </button>
+        </dialog>
+      )}
 
       {/* 第一層：選檔／拖放圖片彈窗 */}
       {isUploadDialogOpen && (
@@ -540,7 +674,7 @@ export default function MemberPanel() {
                 </p>
               )}
               */}
-              
+
               <p className="mt-5 text-center text-xs leading-5 text-zinc-400">
                 建議使用正面清楚、光線充足的照片。上傳後仍可調整裁切範圍。
               </p>
@@ -614,7 +748,7 @@ export default function MemberPanel() {
               {errorMessage && (
                 <p className="mt-4 text-sm text-red-500">{errorMessage}</p>
               )}
-              */}    
+              */}
             </div>
 
             <div className="flex justify-end gap-3 px-6 py-5">
