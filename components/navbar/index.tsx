@@ -28,7 +28,6 @@ export default function Navbar() {
   const [member, setMember] = useState([]);
   const navLinks: NavLink[] = [
     { name: "品牌介紹", href: "/about" },
-    { name: "聯絡我們", href: "/contact" },
     { name: "部落格", href: "/blog" },
   ];
 
@@ -98,7 +97,7 @@ export default function Navbar() {
       .then((data) => data.json())
       .then((data) => setMember(data.data))
       .catch((error) => console.error(error));
-  }, []);
+  }, [isAuthenticated]);
   useEffect(() => {
     if (!isHomePage) return;
     const handleScroll = () => {

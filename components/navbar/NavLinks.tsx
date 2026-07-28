@@ -91,7 +91,7 @@ export default function NavLinks({ links }: NavLinksProps) {
   return (
     <div className="hidden items-center md:flex">
       <div
-        className="relative px-3 py-4"
+        className="relative py-4"
         onMouseEnter={() => setIsOpen(true)}
         onMouseLeave={() => setIsOpen(false)}
       >
@@ -99,7 +99,7 @@ export default function NavLinks({ links }: NavLinksProps) {
         <div
           tabIndex={0}
           role="button"
-          className={`m-1 cursor-pointer select-none ${isOpen &&"text-gray-300"}`}
+          className={`cursor-pointer border-r px-5 select-none ${isOpen && "text-gray-300"}`}
         >
           所有體驗
         </div>
@@ -111,13 +111,13 @@ export default function NavLinks({ links }: NavLinksProps) {
             <div className="absolute -top-2 left-0 h-2 w-full bg-transparent" />
 
             <ul className="menu w-1/2 p-0">
-              <li className="menu-title">體驗分類</li>
+              <li className="menu-title text-black">體驗分類</li>
               {features.map((v) => (
                 <li key={v.name}>
                   <Link
                     href={v.href}
                     onClick={handleLinkClick}
-                    className="flex items-center gap-3 rounded-lg px-4 py-2 text-[#ACACAC] hover:bg-zinc-50"
+                    className="flex items-center gap-3 rounded-lg px-4 py-2 text-[#ACACAC]  hover:bg-zinc-50"
                   >
                     {v.name}
                   </Link>
@@ -126,7 +126,7 @@ export default function NavLinks({ links }: NavLinksProps) {
             </ul>
 
             <ul className="menu w-1/2 p-0">
-              <li className="menu-title">熱門地區</li>
+              <li className="menu-title text-black">熱門地區</li>
               {destinations.map((v) => (
                 <li key={v.name}>
                   <Link
