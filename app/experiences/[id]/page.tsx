@@ -223,7 +223,7 @@ export default function ExperienceDetailPage() {
 
         const res = await fetch(`http://localhost:3001/api/experiences/${id}`);
         const resData = await res.json();
-
+        console.log(resData);
         if (resData.status !== "success") {
           setErrorMessage(resData.message ?? "找不到此體驗");
           return;

@@ -55,11 +55,15 @@ export default function ReviewsSection({
               <div className="flex items-center gap-3">
                 <div className="relative size-11 shrink-0 overflow-hidden rounded-full border-2 border-white bg-[#EAF7F7] shadow-[0_2px_8px_rgba(34,57,61,0.12)]">
                   <Image
-                    src={review.member_avatar ?? "/images/default-avatar.jpg"}
-                    alt={`${review.member_name ?? "旅人"} 的頭貼`}
-                    fill
-                    sizes="44px"
-                    className="object-cover"
+                    src={
+                      review.member_avatar
+                        ? `http://localhost:3001${review.member_avatar}`
+                        : "/images/member-avatar/angry-man.jpg"
+                    }
+                    alt={`${review.member_name ?? "會員"}的頭像`}
+                    width={48}
+                    height={48}
+                    className="h-12 w-12 rounded-full object-cover"
                   />
                 </div>
                 <div className="flex flex-col">
