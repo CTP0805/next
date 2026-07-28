@@ -15,6 +15,14 @@ export default function SuccessPage() {
     searchParams.get("MerchantTradeNo") ||
     "";
 
+   // 精準判斷：預設一律為信用卡 credit_card，只有明確含有 line 或 transactionId 才是 LINE Pay
+  const rawPaymentParam = searchParams.get("payment_method") || "";
+  const transactionId = searchParams.get("transactionId"); // LINE Pay 特有參數
+  const paymentMethod = 
+    rawPaymentParam.toLowerCase().includes("line") || transactionId
+      ? "line_pay"
+      : "credit_card";
+
     const [contactEmail, setContactEmail] = useState<string>("");
   
     useEffect(() => {
@@ -24,7 +32,7 @@ export default function SuccessPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ order_id: orderId }),
+        body: JSON.stringify({ order_id: orderId , payment_method: paymentMethod}),
       })
         .then((res) => res.json())
         .then((result) => {
@@ -50,7 +58,7 @@ export default function SuccessPage() {
   return (
     <>
       {/* 最外層淺灰底容器 */}
-      <div className="min-h-[calc(100vh-160px)] w-full bg-slate-50 py-10 text-gray-800">
+      <div className="min-h-[calc(100vh-160px)] w-full py-10 text-gray-800">
         {/* 核心主容器：最大寬度 1280px，mx-auto 負責在大螢幕下置中 */}
         <div className="mx-auto w-full max-w-7xl px-4">
           {/* ==================== 1. 頂部步驟進度條 (DaisyUI Steps) ==================== */}

@@ -1,7 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 interface OrderItem {
   item_id: number;
@@ -21,6 +22,7 @@ interface OrderItem {
 }
 
 export default function OrderPage() {
+  const router = useRouter();
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [activeTab, setActiveTab] = useState<
     "all" | "paid" | "pending" | "cancelled"
@@ -29,6 +31,10 @@ export default function OrderPage() {
     null,
   );
   const [loading, setLoading] = useState<boolean>(true);
+  // 綁定 DaisyUI 取消訂單 Modal 的 ref
+  const cancelModalRef = useRef<HTMLDialogElement>(null);
+  // 記錄當前準備要取消的 itemId
+  const [cancelingItemId, setCancelingItemId] = useState<number | null>(null);
 
   // 1. 撈取真實訂單資料
   const fetchOrders = async () => {
@@ -51,15 +57,16 @@ export default function OrderPage() {
     fetchOrders();
   }, []);
 
-  // 2. 取消訂單與退還 M 幣功能
-  const handleCancelOrder = async (orderId: string) => {
-    if (
-      !confirm(
-        "確定要取消此訂單嗎？取消後實付金額將全額轉換為 M 幣退還至您的帳戶。",
-      )
-    ) {
-      return;
-    }
+  // 2-1. 點擊卡片上的「取消」按鈕，打開 DaisyUI Modal
+  const handleCancelClick = (itemId: number) => {
+    setCancelingItemId(itemId);
+    cancelModalRef.current?.showModal();
+  };
+
+  // 2-2. 在 DaisyUI Modal 裡面點擊「確定取消」時執行真正的取消 API
+  const confirmCancelOrder = async () => {
+    if (!cancelingItemId) return;
+    cancelModalRef.current?.close();
 
     try {
       const res = await fetch(
@@ -68,7 +75,7 @@ export default function OrderPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ order_id: orderId }),
+          body: JSON.stringify({ item_id: cancelingItemId }),
         },
       );
       const data = await res.json();
@@ -81,13 +88,16 @@ export default function OrderPage() {
       }
     } catch (err) {
       toast.error("系統連線錯誤");
+    } finally {
+      setCancelingItemId(null);
     }
   };
 
   // 3. 過濾頁籤資料
   const filteredOrders = orders.filter((item) => {
     if (activeTab === "all") return true;
-    if (activeTab === "paid") return item.order_status === "paid";
+    if (activeTab === "paid")
+      return item.order_status === "paid" || item.order_status === "confirmed";
     if (activeTab === "pending") return item.order_status === "pending";
     if (activeTab === "cancelled") return item.order_status === "cancelled";
     return true;
@@ -96,7 +106,9 @@ export default function OrderPage() {
   // 計算分類數量
   const counts = {
     all: orders.length,
-    paid: orders.filter((o) => o.order_status === "paid").length,
+    paid: orders.filter(
+      (o) => o.order_status === "paid" || o.order_status === "confirmed",
+    ).length,
     pending: orders.filter((o) => o.order_status === "pending").length,
     cancelled: orders.filter((o) => o.order_status === "cancelled").length,
   };
@@ -189,11 +201,28 @@ export default function OrderPage() {
                       ? new Date(order.booking_date).toLocaleDateString()
                       : "未指定"}
                   </p>
-                  <p>數量：共 {order.quantity} 項</p>
+                  <p>參加人數：共 {order.quantity} 人</p>
                   <p>
                     付款方式：
-                    {order.payment_method === "linepay" ? "LINE Pay" : "信用卡"}
+                    {order.payment_method?.toLowerCase().includes("line")
+                      ? "LINE Pay"
+                      : "信用卡"}
                   </p>
+
+                  {/*  M 幣折抵 (點數 > 0 才顯示) */}
+                  {Number(order.points_redeemed) > 0 && (
+                    <p className="font-mediu">
+                      M幣折抵：{order.points_redeemed} 點
+                    </p>
+                  )}
+
+                  {/* 優惠券折抵 (金額 > 0 才顯示) */}
+                  {Number(order.coupon_discount) > 0 && (
+                    <p className="font-medium">
+                      優惠券：NT${" "}
+                      {Number(order.coupon_discount).toLocaleString()}
+                    </p>
+                  )}
                   <p>下單時間：{new Date(order.order_date).toLocaleString()}</p>
                 </div>
 
@@ -211,7 +240,8 @@ export default function OrderPage() {
                     訂單編號：{order.order_id}
                   </span>
 
-                  {order.order_status === "paid" && (
+                  {(order.order_status === "paid" ||
+                    order.order_status === "confirmed") && (
                     <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-600">
                       已確認
                     </span>
@@ -230,21 +260,39 @@ export default function OrderPage() {
 
                 {/* 操作按鈕群（憑證 / 取消） */}
                 <div className="mt-3 flex items-center gap-2">
-                  <button
-                    onClick={() => setSelectedVoucher(order)}
-                    className="btn btn-sm btn-outline rounded-lg border-gray-300 px-4 text-xs font-medium text-gray-700 hover:bg-gray-100"
-                  >
-                    訂單憑證
-                  </button>
-
-                  {order.order_status !== "cancelled" && (
+                  {/* 情況 A：待付款狀態 (pending) -> 顯示【前往付款】 */}
+                  {order.order_status === "pending" && (
                     <button
                       type="button"
-                      onClick={() => handleCancelOrder(order.order_id)}
-                      className="btn btn-sm rounded-lg border-red-200 bg-white px-3 text-xs text-red-500 hover:border-red-300 hover:bg-red-50"
+                      onClick={() =>
+                        router.push(`/payment?order_id=${order.order_id}`)
+                      }
+                      className="btn btn-sm rounded-lg bg-[#45cad5] px-4 text-xs font-medium text-white hover:bg-teal-600"
                     >
-                      取消
+                      前往付款
                     </button>
+                  )}
+
+                  {/* 情況 B：已付款 / 已確認狀態 (paid / confirmed) -> 顯示【訂單憑證】與【取消行程】 */}
+                  {(order.order_status === "paid" ||
+                    order.order_status === "confirmed") && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedVoucher(order)}
+                        className="btn btn-sm btn-outline rounded-lg border-gray-300 px-4 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                      >
+                        訂單憑證
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleCancelClick(order.item_id)}
+                        className="btn btn-sm rounded-lg border-red-200 bg-white px-3 text-xs text-red-500 hover:border-red-300 hover:bg-red-50"
+                      >
+                        取消
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -262,7 +310,8 @@ export default function OrderPage() {
                   />
                 </div>
 
-                {order.order_status === "paid" && (
+                {(order.order_status === "paid" ||
+                  order.order_status === "confirmed") && (
                   <Link href={`/member/review?id=${order.experience_id}`}>
                     <span className="cursor-pointer text-xs font-medium text-gray-400 underline underline-offset-4 transition hover:text-cyan-500">
                       立即評價
@@ -318,6 +367,27 @@ export default function OrderPage() {
           </div>
         </div>
       )}
+      {/* 🌟 專屬取消行程的 DaisyUI Modal */}
+      <dialog ref={cancelModalRef} className="modal">
+        <div className="modal-box">
+          <h3 className="text-lg font-bold text-gray-900">確認取消行程</h3>
+          <p className="py-4 text-sm text-gray-600">
+            確定要取消此行程嗎？取消後實付金額將全額轉換為 M 幣退還至您的帳戶。
+          </p>
+          <div className="modal-action">
+            <form method="dialog">
+              <button className="btn btn-ghost btn-sm">取消</button>
+            </form>
+            <button
+              type="button"
+              className="btn btn-error btn-sm text-white"
+              onClick={confirmCancelOrder}
+            >
+              確定取消
+            </button>
+          </div>
+        </div>
+      </dialog>
     </div>
   );
 }

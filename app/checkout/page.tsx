@@ -15,6 +15,12 @@ type CouponType = {
   discount_amount: number;
 };
 
+// 📱 驗證台灣手機號碼格式 (09開頭 + 8位數字 = 共10碼)
+const isValidTaiwanMobile = (phone: string) => {
+  const phoneRegex = /^09\d{8}$/;
+  return phoneRegex.test(phone.trim());
+};
+
 export default function CheckPage() {
   const router = useRouter();
   const { items, totalAmount } = useCart();
@@ -38,22 +44,28 @@ export default function CheckPage() {
 
   // 優惠折扣狀態 , 單選優惠券 (通常一筆訂單只能用一張)
   const [selectedCouponId, setSelectedCouponId] = useState<string | null>(null);
-  const [useLevelDiscount, setUseLevelDiscount] = useState(true); // 是否套用會員等級折扣 Checkbox
-  const [mCoinsInput, setMCoinsInput] = useState<number>(0); // M 幣折抵控制狀態
 
-  //會員最新資料
-  const [userProfile, setUserProfile] = useState<{
-    member_level: string;
-    current_points: number;
-  }>({
-    member_level: auth.member_level || "銅",
-    current_points: auth.current_points || 0,
-  });
+  // 是否套用會員等級折扣 Checkbox
+  const [useLevelDiscount, setUseLevelDiscount] = useState(true);
+
+  // M 幣折抵控制狀態
+  const [mCoinsInput, setMCoinsInput] = useState<number>(0);
 
   // 計算後的金額金額狀態
   const [levelDiscountAmount, setLevelDiscountAmount] = useState(0);
   const [couponDiscountAmount, setCouponDiscountAmount] = useState(0);
   const [finalPrice, setFinalPrice] = useState(0);
+
+  // 讀取會員資料
+  const [userProfile, setUserProfile] = useState<{
+    member_level: string;
+    current_points: number;
+    phone: string;
+  }>({
+    member_level: auth.member_level || "銅",
+    current_points: auth.current_points || 0,
+    phone: "",
+  });
 
   // 歷史資料安全攔截：當登入狀態確認完畢 (authInit === true)
   // 發現這個人根本沒有登入 (isAuthenticated === false)，直接把他踢回登入頁
@@ -64,21 +76,21 @@ export default function CheckPage() {
     }
   }, [authInit, isAuthenticated, router]);
 
-  // 主動撈取最新的會員 Profile 與 優惠券
+  //會員Profile API
   useEffect(() => {
     if (isAuthenticated) {
-      // 1. 撈取會員 profile 資料
-      fetch(`http://localhost:3001/api/member/profile`, {
+      fetch("http://localhost:3001/api/member/profile", {
         method: "GET",
         credentials: "include",
       })
         .then((res) => res.json())
         .then((result) => {
-          if (result.success || result.id) {
+          if (result.success || result.data) {
             const data = result.data || result;
             setUserProfile({
               member_level: data.member_level || "銅",
               current_points: Number(data.current_points) || 0,
+              phone: data.phone || "",
             });
           }
         })
@@ -118,7 +130,7 @@ export default function CheckPage() {
       lastName: autoLastName.toUpperCase(),
       firstName: autoFirstName.toUpperCase(),
       phoneCode: "+886",
-      phone: (auth as any).phone || (auth as any).mobile || "",
+      phone: userProfile.phone || "",
       email: auth.email || "",
     });
     setShowForm(true);
@@ -138,7 +150,6 @@ export default function CheckPage() {
     let currentPrice = totalAmount;
     let levelDiscount = 0;
     let couponDiscount = 0;
-
 
     // A. 優先判定並套用會員階級折抵
     if (useLevelDiscount) {
@@ -181,18 +192,33 @@ export default function CheckPage() {
 
   // --- M 幣全部折抵使用  userProfile.current_points---
   const handleMCoinsChange = (val: number) => {
-    const maxCoins = userProfile.current_points;
+    const maxUserCoins = userProfile.current_points;
+
+    // 計算扣除「會員等級折扣」與「優惠券」後，還剩下的應付金額
+    const amountAfterDiscounts = Math.max(
+      0,
+      totalAmount - levelDiscountAmount - couponDiscountAmount,
+    );
+
+    // 🚀 核心邏輯：單筆訂單最多折抵剩餘金額的 50% (四捨五入)
+    const maxFiftyPercentAllowed = Math.floor(amountAfterDiscounts * 0.5);
+
+    // 🚀 最終允許折抵的最大 M 幣上限 = 取 (用戶擁有的幣) 與 (50%上限) 的較小值
+    const absoluteMaxAllowed = Math.min(maxUserCoins, maxFiftyPercentAllowed);
 
     // 限制：不能是負數
     if (val < 0) val = 0;
-    // 限制：不能超過會員手頭擁有的最大上限
-    if (val > maxCoins) val = maxCoins;
-
-    // 計算出在扣除會員折和優惠券後的剩餘可折抵最大金額
-    const currentMaxAllowed =
-      totalAmount - levelDiscountAmount - couponDiscountAmount;
-    if (val > currentMaxAllowed)
-      val = currentMaxAllowed > 0 ? currentMaxAllowed : 0;
+    // 2. 限制：如果輸入超過上限，自動卡在最大上限並跳出 Toast 提示
+    if (val > absoluteMaxAllowed) {
+      val = absoluteMaxAllowed;
+      if (maxUserCoins > maxFiftyPercentAllowed) {
+        toast.error(
+          `單筆訂單 M 幣折抵上限為金額的 50% (最高可折抵 NT$ ${maxFiftyPercentAllowed})`,
+        );
+      } else {
+        toast.error(`您最多只有 ${maxUserCoins} M幣可用！`);
+      }
+    }
 
     setMCoinsInput(val);
   };
@@ -201,6 +227,13 @@ export default function CheckPage() {
   const handleSubmitOrder = async () => {
     if (!formData.lastName || !formData.firstName || !formData.phone) {
       toast.error("請填寫完整的聯絡人英文姓名與手機號碼！");
+      setShowForm(true);
+      return;
+    }
+
+    // 驗證手機號碼格式 (09開頭 + 8碼數字)
+    if (!isValidTaiwanMobile(formData.phone)) {
+      toast.error("請輸入有效的台灣手機號碼（格式：09xxxxxxxx）");
       setShowForm(true);
       return;
     }
@@ -218,7 +251,7 @@ export default function CheckPage() {
             contact_email: formData.email || auth.email,
             coupon_id: selectedCouponId ? Number(selectedCouponId) : null, // 選中的券 ID
             points_redeemed: mCoinsInput, // 扣除的點數
-            payment_method: "credit_card", // 預設付款方式
+            payment_method: "credit_card" // 預設帶入信用卡
           }),
         },
       );
@@ -226,7 +259,7 @@ export default function CheckPage() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success("訂單建立成功！準備前往付款...");
+        toast.success("訂單建立成功！準備前往付款");
         // 🚀 建立訂單成功！後端此時已清空購物車與扣點數。
         // 立刻將使用者引導至下一步的付款畫面
         router.push(`/payment?order_id=${result.order_id}`);
@@ -238,6 +271,17 @@ export default function CheckPage() {
       toast.error("系統連線錯誤，請確認網路或後端服務是否正常。");
     }
   };
+
+  // 在 return 畫面之前計算給 UI 顯示用
+  const amountAfterDiscounts = Math.max(
+    0,
+    totalAmount - levelDiscountAmount - couponDiscountAmount,
+  );
+  const maxFiftyPercentAllowed = Math.floor(amountAfterDiscounts * 0.5);
+  const maxUsableMCoins = Math.min(
+    userProfile.current_points,
+    maxFiftyPercentAllowed,
+  );
 
   // 正確計算獲取的 M 幣 (最終付款金額 * 會員回饋率)
   const earnedMCoins = Math.round(finalPrice * levelConfig.rewardRate);
@@ -252,7 +296,7 @@ export default function CheckPage() {
 
   return (
     <>
-      <div className="min-h-[calc(100vh-160px)] w-full bg-slate-50 py-10 text-gray-800">
+      <div className="min-h-[calc(100vh-160px)] w-full py-10 text-gray-800">
         <div className="mx-auto w-full max-w-[1280px] px-4">
           {/* ==================== 1. 頂部步驟進度條 ==================== */}
           <div className="mb-10 flex w-full justify-center">
@@ -283,8 +327,7 @@ export default function CheckPage() {
                       // 正確計算大人/小孩小計金額
                       const adultQty = Number(item.adultQuantity) || 0;
                       const childQty = Number(item.childQuantity) || 0;
-                      const adultP =
-                        Number(item.adultPrice) || Number(item.price) || 0;
+                      const adultP = Number(item.adultPrice) || 0;
                       const childP = Number(item.childPrice) || 0;
                       const itemSubtotal =
                         adultQty * adultP + childQty * childP;
@@ -447,11 +490,15 @@ export default function CheckPage() {
                           </span>
                         </label>
                         <input
-                          type="text"
+                          type="tel" // 1. 改成 tel 類型（手機輸入法會自動切換成數字鍵盤）
+                          maxLength={10} // 2. 限制最多只能輸入 10 個字元
                           value={formData.phone}
-                          onChange={(e) =>
-                            setFormData({ ...formData, phone: e.target.value })
-                          }
+                          onChange={(e) => {
+                            // 3. 只保留數字，自動過濾掉英文字母與特殊符號
+                            const onlyNums = e.target.value.replace(/\D/g, "");
+                            setFormData({ ...formData, phone: e.target.value });
+                          }}
+                          placeholder="0912345678"
                           className="input input-bordered input-sm w-full rounded-md bg-white text-gray-800"
                         />
                       </div>
@@ -497,8 +544,8 @@ export default function CheckPage() {
                       已套用尊榮會員階級折扣
                     </span>
                     <p className="text-[11px] text-gray-400">
-                      {auth.member_level
-                        ? `${auth.member_level}牌會員特權`
+                      {userProfile.member_level
+                        ? `${userProfile.member_level}牌會員特權`
                         : "一般會員權益"}
                     </p>
                   </div>
@@ -516,42 +563,43 @@ export default function CheckPage() {
                     使用折價券：
                   </span>
 
-
                   {coupons.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                    {coupons.map((coupon) => (
-                      <label
-                        key={coupon.coupon_id}
-                        className={`flex cursor-pointer flex-col justify-between rounded-xl border p-3.5 text-left transition-all ${
-                          selectedCouponId === String(coupon.coupon_id)
-                            ? "border-[#45cad5] bg-[#45cad5]/5 ring-1 ring-[#45cad5]"
-                            : "border-gray-200 bg-white hover:bg-gray-50"
-                        }`}
-                      >
-                        <div className="mb-2 flex items-start gap-2.5">
-                          <input
-                            type="radio"
-                            name="checkout-coupon"
-                            className="radio radio-xs radio-accent mt-0.5"
-                            checked={
-                              selectedCouponId === String(coupon.coupon_id)
-                            }
-                            onChange={() =>
-                              setSelectedCouponId(String(coupon.coupon_id))
-                            }
-                          />
-                          <span className="text-xs leading-tight font-bold text-gray-700">
-                            {coupon.coupon_name}
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                      {coupons.map((coupon) => (
+                        <label
+                          key={coupon.coupon_id}
+                          className={`flex cursor-pointer flex-col justify-between rounded-xl border p-3.5 text-left transition-all ${
+                            selectedCouponId === String(coupon.coupon_id)
+                              ? "border-[#45cad5] bg-[#45cad5]/5 ring-1 ring-[#45cad5]"
+                              : "border-gray-200 bg-white hover:bg-gray-50"
+                          }`}
+                        >
+                          <div className="mb-2 flex items-start gap-2.5">
+                            <input
+                              type="radio"
+                              name="checkout-coupon"
+                              className="radio radio-xs radio-accent mt-0.5"
+                              checked={
+                                selectedCouponId === String(coupon.coupon_id)
+                              }
+                              onChange={() =>
+                                setSelectedCouponId(String(coupon.coupon_id))
+                              }
+                            />
+                            <span className="text-xs leading-tight font-bold text-gray-700">
+                              {coupon.coupon_name}
+                            </span>
+                          </div>
+                          <span className="text-right text-sm font-black text-orange-500">
+                            -NT$ {coupon.discount_amount}
                           </span>
-                        </div>
-                        <span className="text-right text-sm font-black text-orange-500">
-                          -NT$ {coupon.discount_amount}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
+                        </label>
+                      ))}
+                    </div>
                   ) : (
-                    <p className="text-xs text-gray-400">目前沒有可用的優惠券</p>
+                    <p className="text-xs text-gray-400">
+                      目前沒有可用的優惠券
+                    </p>
                   )}
 
                   {selectedCouponId && (
@@ -573,13 +621,18 @@ export default function CheckPage() {
                       <HiCurrencyDollar className="size-4 text-orange-400" /> M
                       幣點數折抵：
                     </span>
-                    <span className="text-xs text-gray-400">
-                      目前可用餘額：
-                      <strong className="text-gray-600">
-                        {auth.current_points ?? 0}
-                      </strong>{" "}
-                      M幣
-                    </span>
+                    <div className="text-right text-xs text-gray-400">
+                      <span>
+                        目前可用：
+                        <strong className="text-gray-600">
+                          {userProfile.current_points}
+                        </strong>{" "}
+                        M幣
+                      </span>
+                      <span className="ml-2 font-medium text-orange-500">
+                        (本單上限折抵 50%：最高 {maxUsableMCoins} M幣)
+                      </span>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-3 rounded-xl border border-orange-100/60 bg-orange-50/50 p-3">
@@ -587,19 +640,18 @@ export default function CheckPage() {
                       <input
                         type="number"
                         value={mCoinsInput === 0 ? "" : mCoinsInput} // 關鍵防護：如果值是 0 就給空字串，方便使用者直接打字，不用先刪除 0
-                        placeholder="輸入折抵點數 (1M幣 = 1元)"
+                        placeholder={`最高可折 NT$ ${maxUsableMCoins}`}
                         onChange={(e) =>
                           handleMCoinsChange(Number(e.target.value))
                         }
                         className="input input-sm input-bordered w-full max-w-[200px] border-gray-300 bg-white px-3 text-xs font-bold text-gray-800 shadow-sm outline-none focus:border-[#45cad5]"
                       />
                       <button
-                        onClick={() =>
-                          handleMCoinsChange(userProfile.current_points)
-                        }
+                        type="button"
+                        onClick={() => handleMCoinsChange(maxUsableMCoins)} // 點擊全部折抵時帶入 50% 限制後的最佳折抵點數
                         className="btn btn-xs border-gray-300 bg-white px-2.5 text-[11px] font-bold text-gray-500 transition-colors hover:border-[#45cad5] hover:bg-gray-50"
                       >
-                        全部折抵
+                        最大折抵
                       </button>
                     </div>
                     <span className="shrink-0 text-xs font-bold text-orange-600">
@@ -638,7 +690,9 @@ export default function CheckPage() {
                   </div>
                   {useLevelDiscount && (
                     <div className="flex justify-between text-emerald-600">
-                      <span>會員階級折抵({auth.member_level ?? "銅"})</span>
+                      <span>
+                        會員階級折抵({userProfile.member_level ?? "銅"})
+                      </span>
                       <span>-NT$ {levelDiscountAmount}</span>
                     </div>
                   )}
@@ -684,7 +738,8 @@ export default function CheckPage() {
                   輕鬆享M幣回饋！
                 </h5>
                 <p className="text-[11px] text-gray-400">
-                  {userProfile.member_level}牌會員】獨享 {levelConfig.rewardRate * 100}% 回饋：
+                  【{userProfile.member_level}牌會員】獨享{" "}
+                  {levelConfig.rewardRate * 100}% 回饋：
                 </p>
                 <div className="mt-1 flex items-center">
                   <div className="flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-600">

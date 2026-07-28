@@ -199,7 +199,7 @@ export default function Navbar() {
                     購物車暫無商品
                   </h4>
                   <Link href="/experiences/search">
-                    <p className="mb-8 cursor-pointer text-[12px] text-[#45cad5]">
+                    <p className="mb-8 cursor-pointer text-[12px] text-[#45cad5] hover:text-[#028B9E]">
                       您的購物車目前是空的，
                       <br />
                       快去尋找下一個冒險目的地吧！
@@ -217,7 +217,7 @@ export default function Navbar() {
                   <h4 className="mb-3 flex items-center justify-between border-b border-gray-100 pb-2 text-xs font-bold text-gray-400">
                     <span>最近加入的商品</span>
                     <span className="font-black text-[#45cad5]">
-                      共 {totalQty} 件
+                      共 {items.length} 件
                     </span>
                   </h4>
 

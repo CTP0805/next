@@ -3,6 +3,7 @@
 
 import { createContext, useState, useContext, useEffect } from "react";
 import { API_SERVER } from "@/config/api-path";
+import toast from "react-hot-toast";
 
 //定義商品項目型別
 export interface ProductItem {
@@ -31,6 +32,7 @@ export interface CartItem {
   sessionName?: string; //可讀的場次資訊 (例如：2026-08-01 14:00)
   image?: string;
   isSoldOut?: boolean; //新增：是否完售/過期
+  maxParticipants?: number; // 接收後端的上限人數
 }
 
 //要使用context共享的value類型
@@ -113,15 +115,46 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     let targetAdult = Number(currentItem.adultQuantity) || 0;
     let targetChild = Number(currentItem.childQuantity) || 0;
+    const maxLimit = Number(currentItem.maxParticipants) || 8;
+
+    // 如果是在「增加」人數，檢查總人數是否會超過上限
+  if (delta > 0 && maxLimit > 0) {
+    const nextTotal = targetAdult + targetChild + delta;
+    if (nextTotal > maxLimit) {
+      toast.error(`該場次最多只能預訂 ${maxLimit} 位！`);
+      return; // 阻擋繼續增加
+    }
+  }
     
     if (type === "adult") {
-      targetAdult = Math.max(0, targetAdult + delta);
+      const nextAdult = targetAdult + delta;
+      
+    // 核心防呆：如果兒童 > 0，成人不能被按到少於 1 人！
+      if (targetChild > 0 && nextAdult < 1) {
+        toast.error("兒童需有至少一位成人陪同");
+        return; // 阻止變更成 0 人大人
+      }
+
+      targetAdult = Math.max(0, nextAdult);
     } else {
-      targetChild = Math.max(0, targetChild + delta);
+      const nextChild = Math.max(0, targetChild + delta);
+
+    // 核心防呆：當增加兒童 (nextChild > 0) 時，如果大人原本是 0，自動幫忙補 1 位大人！
+      if (nextChild > 0 && targetAdult === 0) {
+      // 補 1 位大人後再次檢查是否超過總上限
+      if (maxLimit > 0 && 1 + nextChild > maxLimit) {
+        toast.error(`該場次最多只能預訂 ${maxLimit} 位！`);
+        return;
+      }
+      targetAdult = 1;
     }
 
-    // 至少要有一位成人或兒童
+      targetChild = nextChild;
+    }
+
+    // 至少要有一位成人或兒童 (若都變 0 則不處理，讓使用者透過刪除按鈕刪除)
     if (targetAdult + targetChild < 1) return;
+
 
     // 2. 先更新前端狀態，讓使用者點擊時數字瞬間改變
     const nextItems = items.map((v) => {

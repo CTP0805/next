@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import Stepper from "./Stepper";
 import { HiOutlineCalendar, HiChevronDown } from "react-icons/hi";
+import toast from "react-hot-toast";
 
 type ExperienceSession = {
   id: number;
@@ -83,6 +84,46 @@ export default function BookingCard({
         selectedSession.end_time,
       )}`
     : "";
+  
+  // 🚀 取得當前選中場次的人數上限 (若資料庫沒給預設 8 人)
+  const maxLimit = selectedSession?.max_participants ?? 8;
+
+  // 🚀 處理成人數量變更防呆
+  const handleAdultChange = (nextAdults: number) => {
+    // 增加人數時，檢查總人數是否超過上限
+    if (nextAdults > adults && nextAdults + children > maxLimit) {
+      toast.error(`該場次最多只能選擇 ${maxLimit} 位！`);
+      return;
+    }
+    // 防呆：如果有兒童，成人至少 1 人
+    if (children > 0 && nextAdults < 1) {
+      toast.error("兒童需有至少一位成人陪同");
+      return;
+    }
+    setAdults(Math.max(1, nextAdults));
+  };
+
+  // 🚀 處理兒童數量變更防呆
+  const handleChildChange = (nextChildren: number) => {
+    const validChildren = Math.max(0, nextChildren);
+    
+    // 增加兒童且目前大人是 0 時，會自動補 1 大人的情況檢查
+    let neededAdults = adults;
+    if (validChildren > 0 && adults === 0) {
+      neededAdults = 1;
+    }
+
+    if (validChildren > children && neededAdults + validChildren > maxLimit) {
+      toast.error(`該場次最多只能選擇 ${maxLimit} 位！`);
+      return;
+    }
+
+    if (validChildren > 0 && adults === 0) {
+      setAdults(1);
+    }
+    setChildren(validChildren);
+  };
+
 
   return (
     <aside className="sticky top-28 rounded-lg border border-[#DDE3E5] bg-white p-6 shadow-[0_8px_24px_rgba(34,57,61,0.10)]">
@@ -167,7 +208,7 @@ export default function BookingCard({
         <p className="text-[14px] font-bold text-[#656D72]">參加人數</p>
         <Stepper
           value={adults}
-          onChange={setAdults}
+          onChange={handleAdultChange}
           label="成人"
           price={adultPrice}
           min={1}
@@ -175,7 +216,7 @@ export default function BookingCard({
 
         <Stepper
           value={children}
-          onChange={setChildren}
+          onChange={handleChildChange}
           label="孩童"
           price={childPrice}
           min={0}
