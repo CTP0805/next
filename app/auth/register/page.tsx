@@ -13,20 +13,24 @@ import useFirebase, {
   type GoogleProviderData,
 } from "../_hook/use-firebase/index";
 
-/* 還不確定用不用的到
-type LoginRequest = {
-  email: string;
-  password: string;
-};
-
-type LoginResponse = {
+// TS 型別專區
+type RegisterResponse = {
   success: boolean;
   message: string;
-  token?: string;
-  user?: User;
 };
-*/
 
+type GoogleLoginResponse = {
+  success: boolean;
+  message: string;
+  data?: {
+    id: number;
+    name: string;
+    email: string;
+    token: string;
+  };
+};
+
+// 格式驗證專區
 const registerSchema = z
   .object({
     name: z.string().trim().min(1, {
@@ -114,7 +118,7 @@ export default function RegisterPage() {
           password,
         }),
       });
-      const result = await response.json();
+      const result = (await response.json()) as RegisterResponse;
 
       // step3. 解析回應、toast
 
@@ -146,7 +150,7 @@ export default function RegisterPage() {
   }
 
   // google 第三方登入
-  async function handleGoogleLogin(providerData: GoogleProviderData) {
+  async function handleGoogleLogin(providerData: GoogleProviderData): Promise<void> {
     const next = searchParams.get("next");
     try {
       setIsGoogleLoading(true);
@@ -165,7 +169,7 @@ export default function RegisterPage() {
 
       // 後端回什麼？
       // success、message、data，並且後端會順便把 JWT 寫進 HttpOnly Cookie
-      const result = await response.json();
+      const result = (await response.json()) as GoogleLoginResponse;
 
       if (!response.ok) {
         toast.error(result.message || "Google 登入失敗");

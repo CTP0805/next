@@ -13,7 +13,9 @@ import toast from "react-hot-toast";
 import { useRouter, useSearchParams } from "next/navigation";
 import { IoIosWarning } from "react-icons/io";
 
-// 接收進來的資料類型
+// TS 型別專區
+
+// 後端回傳的資料類型
 export type Auth = {
   id: number;
   name: string;
@@ -33,10 +35,26 @@ export const emptyAuth: Auth = {
   role: "",
 };
 
-type AuthApiResponse = {
+
+// 成功時 
+type AuthSuccessResponse = {
+  success: true;
+  message: string;
+  data: Auth; // 成功時一定有會員資料
+};
+
+// 失敗時
+type AuthFailureResponse = {
+  success: false;
+  message: string;
+};
+
+// 成功與失敗的聯合型別
+type AuthResponse = AuthSuccessResponse | AuthFailureResponse;
+
+type MessageResponse = {
   success: boolean;
-  message?: string;
-  data?: Auth;
+  message: string;
 };
 
 // 要廣播的資料
@@ -54,7 +72,7 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 AuthContext.displayName = "MyAuthContext"; // 方便除錯
 
-// 前端格式驗證
+// 格式驗證專區
 const loginSchema = z.object({
   email: z
     .string()
@@ -89,7 +107,7 @@ export function AuthContextProvider({
         return;
       }
 
-      const result = (await response.json()) as AuthApiResponse;
+      const result = (await response.json()) as AuthResponse;
 
       if (result.success && result.data) {
         setAuth(result.data);
@@ -128,7 +146,7 @@ export function AuthContextProvider({
       );
 
       // 後端會回傳 { success, message }
-      const result = (await response.json()) as AuthApiResponse;
+      const result = (await response.json()) as MessageResponse;
 
       if (!response.ok || !result.success) {
         toast.error(result.message || "驗證信寄送失敗，請稍後再試");
@@ -172,7 +190,7 @@ export function AuthContextProvider({
           password,
         }),
       });
-      const result = (await response.json()) as AuthApiResponse;
+      const result = (await response.json()) as AuthResponse;
 
       // TODO 特殊情況 : 使用者尚未進行信箱驗證
       if (response.status === 403) {
@@ -202,18 +220,18 @@ export function AuthContextProvider({
       }
 
       // 如果後端說登入失敗
-      if (!response.ok) {
+      if (!response.ok || !result.success) {
         toast.error(result.message || "登入失敗(前端)");
         return false;
       }
 
-      if (response.ok) {
-        setAuth(result.data); // 刷新狀態
-        setAuthInit(true); // 刷新狀態
-        toast.success(result.message || "登入成功(前端)");
-        router.replace(next ?? "/"); // 登入成功後跳轉到首頁(💡看有沒有要換成其他的)
-        return true; // ❓❓❓為什麼要回傳 true 目的是甚麼?
-      }
+      
+      setAuth(result.data); // 刷新狀態
+      setAuthInit(true); // 刷新狀態
+      toast.success(result.message || "登入成功(前端)");
+      router.replace(next ?? "/"); // 登入成功後跳轉到首頁(💡看有沒有要換成其他的)
+      return true; // ❓❓❓為什麼要回傳 true 目的是甚麼?
+      
     } catch (error) {
       // 如果網路壞掉、後端沒開，會進到這裡
       console.warn(error);

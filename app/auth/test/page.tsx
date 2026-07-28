@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import Loading from "@/components/Loading";
 import Link from "next/link";
+import Image from "next/image";
 
 
 export default function TestPage() {
@@ -50,6 +51,7 @@ export default function TestPage() {
         <Link className="button-pagination inline-flex gap-1.5" href="#">›</Link>
         <Link className="button-people inline-flex gap-1.5" href="#">+</Link>
       </div>
+
     </>
   );
 }
