@@ -23,7 +23,7 @@ import { createPortal } from "react-dom";
 import { ArrowLeft, X, Crown } from "lucide-react";
 
 // 型別來自 ./api（前端 API 層定義，對齊 GET /api/member-level）
-import type { MemberLevel, MemberLevelPayload } from "./api";
+import type { MemberLevelPayload } from "./api";
 
 /** props 介面 */
 interface MemberLevelDetailDrawerProps {
@@ -32,12 +32,12 @@ interface MemberLevelDetailDrawerProps {
   onClose: () => void;
 }
 
-// 各等級標題顏色 class（Tailwind）
-const LEVEL_HEADER_CLASS: Record<MemberLevel, string> = {
-  銅: "text-amber-700",
-  銀: "text-slate-500",
-  金: "text-yellow-600",
-};
+// 顏色依後端 levels 陣列順序套用，前端不硬編碼資料庫等級名稱。
+const LEVEL_HEADER_CLASSES = [
+  "text-amber-700",
+  "text-slate-500",
+  "text-yellow-600",
+];
 
 /**
  * 【主要元件】MemberLevelDetailDrawer
@@ -57,9 +57,10 @@ export default function MemberLevelDetailDrawer({
   // mounted：避免 SSR 時存取 document 報錯；client 掛上後才 portal
   const [mounted, setMounted] = useState(false);
 
-  // 空依賴 []：只在「第一次掛載」跑一次
+  // 空依賴 []：只在「第一次掛載」排程一次，確認 document 已可使用。
   useEffect(() => {
-    setMounted(true);
+    const timer = window.setTimeout(() => setMounted(true), 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   // 抽屜打開時：鎖捲動、聚焦關閉鈕、Esc 關閉
@@ -139,15 +140,6 @@ export default function MemberLevelDetailDrawer({
             <ArrowLeft className="h-5 w-5" aria-hidden />
             <span className="font-medium">返回</span>
           </button>
-          <button
-            ref={closeBtnRef}
-            type="button"
-            onClick={onClose}
-            aria-label="關閉會員詳情"
-            className="flex min-h-11 min-w-11 items-center justify-center rounded-[12px] p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-          >
-            <X className="h-5 w-5" />
-          </button>
         </div>
 
         <div className="flex-1 space-y-10 overflow-y-auto overscroll-contain px-4 py-6 text-gray-800 sm:px-6 sm:py-8">
@@ -159,7 +151,7 @@ export default function MemberLevelDetailDrawer({
               </span>
             </div>
             <h2 id={titleId} className="mb-4 text-3xl font-bold tracking-tight">
-              {data.current_level}級會員
+              {data.member_level}
             </h2>
 
             <div className="mb-2 flex justify-between text-sm">
@@ -168,7 +160,7 @@ export default function MemberLevelDetailDrawer({
                 下一級：
                 <span className="font-semibold text-teal-600">
                   {data.next_level
-                    ? `${data.next_level}級會員`
+                    ? data.next_level
                     : "已達最高等級"}
                 </span>
               </span>
@@ -215,7 +207,7 @@ export default function MemberLevelDetailDrawer({
 
           <section>
             <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-              <h3 className="text-2xl font-bold">銅銀金 會員權益</h3>
+              <h3 className="text-2xl font-bold">旅人會員權益</h3>
               <span className="rounded-[12px] bg-gray-100 px-3 py-1 text-xs text-gray-500">
                 會員分級權益懶人包
               </span>
@@ -228,15 +220,15 @@ export default function MemberLevelDetailDrawer({
                     <th className="px-3 py-3 text-left font-semibold text-gray-600">
                       等級/權益
                     </th>
-                    {data.levels.map((level) => (
+                    {data.levels.map((level, index) => (
                       <th
                         key={level}
-                        className={`px-3 py-3 text-center font-semibold ${LEVEL_HEADER_CLASS[level]} ${
-                          level === data.current_level ? "bg-amber-50" : ""
+                        className={`px-3 py-3 text-center font-semibold ${LEVEL_HEADER_CLASSES[index] ?? "text-gray-600"} ${
+                          level === data.member_level ? "bg-amber-50" : ""
                         }`}
                       >
                         {level}
-                        {level === data.current_level ? (
+                        {level === data.member_level ? (
                           <span className="mt-0.5 block text-[10px] font-medium text-amber-500">
                             目前等級
                           </span>
@@ -257,7 +249,7 @@ export default function MemberLevelDetailDrawer({
                       {data.levels.map((level) => {
                         const value = row.values[level];
                         const isEmpty = value === "-";
-                        const isCurrent = level === data.current_level;
+                        const isCurrent = level === data.member_level;
                         return (
                           <td
                             key={level}
@@ -281,7 +273,7 @@ export default function MemberLevelDetailDrawer({
             <div className="space-y-3 text-sm leading-relaxed text-gray-600">
               <p>會員等級資格以「完成參加訂單活動」為準計算。</p>
               <p>
-                目前為{data.current_level}級會員
+                目前為{data.member_level}
                 {data.next_level && goalOrders != null && goalSpent != null ? (
                   <>
                     。升級進度：已完成{" "}
@@ -303,37 +295,11 @@ export default function MemberLevelDetailDrawer({
                 )}
               </p>
               <p className="text-xs text-gray-500">
-                *
-                銅→銀：已完成 3 筆訂單或已消費 NT$5,000（其一即可）；銀→金：6
-                筆或 NT$15,000。數字來自 member.total_orders／total_spent（付款成功頁會累加）。
+                * 等級名稱、升級門檻與累積數字皆由後端會員資料提供。
               </p>
             </div>
           </section>
-
-          <section id="level-faq">
-            <h3 className="mb-4 text-2xl font-bold">常見問題</h3>
-            <div className="space-y-3">
-              {data.faqs.map((item) => (
-                <details
-                  key={item.q}
-                  className="group rounded-[12px] border border-gray-200 px-5 py-4"
-                >
-                  <summary className="flex cursor-pointer list-none items-center justify-between font-medium text-gray-800 group-open:mb-3">
-                    {item.q}
-                    <span
-                      className="text-gray-400 transition-transform group-open:rotate-180"
-                      aria-hidden
-                    >
-                      ⌄
-                    </span>
-                  </summary>
-                  <p className="pr-6 text-sm text-gray-600">{item.a}</p>
-                </details>
-              ))}
-            </div>
-          </section>
         </div>
-
         <div className="flex flex-shrink-0 gap-4 border-t border-gray-100 px-4 py-4 text-xs text-gray-400 sm:px-6">
           <a href="#" className="hover:text-gray-600">
             隱私權政策

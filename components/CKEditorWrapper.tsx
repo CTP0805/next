@@ -101,12 +101,7 @@ export default function CKEditorWrapper({
 
   return (
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-      <div className="border-b border-gray-100 bg-slate-50 px-3 py-2 text-[11px] leading-relaxed text-gray-500">
-        工具列：復原／標題／字型字級顏色／粗斜底線刪除線／上下標／對齊縮排／清單待辦／引用分隔線／連結書籤／圖片（本機
-        Base64 或網址）／表格／YouTube 等媒體／程式碼區塊／螢光筆／尋找取代／原始碼／全螢幕
-      </div>
-
-      <div className="[&_.ck-editor__editable]:min-h-[360px] [&_.ck-editor__editable]:text-gray-900 [&_.ck-editor__editable_inline]:px-4 [&_.ck-editor__editable_inline]:py-3 [&_.ck-toolbar]:flex-wrap">
+      <div className="[&_.ck-editor__editable]:min-h-[360px] [&_.ck-editor__editable]:text-gray-900 [&_.ck-editor__editable_inline]:px-4 [&_.ck-editor__editable_inline]:py-3 [&_.ck-toolbar__items]:flex-wrap [&_.ck-toolbar__items]:gap-y-1">
         <CKEditor
           editor={ClassicEditor}
           data={data}

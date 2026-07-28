@@ -17,7 +17,8 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { X } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "@/contexts/auth-context";
 import BlogMediaImage from "@/app/blog/_components/BlogMediaImage";
@@ -63,8 +64,15 @@ function formatDate(iso: string | null) {
 }
 
 function MemberEditPostContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { auth, isAuthenticated, authInit } = useAuth();
+  const draftParam = searchParams.get("draft");
+  const parsedDraftId = draftParam ? Number(draftParam) : NaN;
+  const draftId =
+    Number.isInteger(parsedDraftId) && parsedDraftId > 0
+      ? parsedDraftId
+      : null;
   const [activeTab, setActiveTab] = useState<PageTab>(
     searchParams.get("tab") === "create" ? "create" : "manage",
   );
@@ -74,9 +82,17 @@ function MemberEditPostContent() {
   const [filter, setFilter] = useState<ManageFilter>("all");
   const [keyword, setKeyword] = useState("");
   const [actingId, setActingId] = useState<number | null>(null);
+  const [deletePost, setDeletePost] = useState<BlogPost | null>(null);
   const [notePost, setNotePost] = useState<BlogPost | null>(null);
 
   const isAdmin = auth.role === "管理者";
+  const currentTab: PageTab = draftId != null ? "create" : activeTab;
+  const editingPost =
+    draftId == null
+      ? null
+      : posts.find((post) => post.id === draftId) ?? null;
+  const isLoadingPosts =
+    loading && authInit && isAuthenticated && !isAdmin;
 
   const loadPosts = useCallback(async () => {
     setLoading(true);
@@ -96,18 +112,19 @@ function MemberEditPostContent() {
 
   useEffect(() => {
     if (!authInit) return;
-    if (!isAuthenticated) {
-      setLoading(false);
-      return;
+    if (!isAuthenticated || isAdmin) return;
+    if (currentTab === "manage" || draftId != null) {
+      const timeoutId = window.setTimeout(() => void loadPosts(), 0);
+      return () => window.clearTimeout(timeoutId);
     }
-    if (isAdmin) {
-      setLoading(false);
-      return;
-    }
-    if (activeTab === "manage") {
-      void loadPosts();
-    }
-  }, [authInit, isAuthenticated, isAdmin, activeTab, loadPosts]);
+  }, [
+    authInit,
+    isAuthenticated,
+    isAdmin,
+    currentTab,
+    draftId,
+    loadPosts,
+  ]);
 
   const counts = useMemo(() => {
     const base = {
@@ -149,15 +166,11 @@ function MemberEditPostContent() {
   }, [posts, filter, keyword]);
 
   async function handleDelete(post: BlogPost) {
-    const ok = window.confirm(
-      `確定要刪除「${post.title}」嗎？此操作無法復原。`,
-    );
-    if (!ok) return;
-
     setActingId(post.id);
     try {
       await deleteBlogPost(post.id);
       setPosts((prev) => prev.filter((item) => item.id !== post.id));
+      setDeletePost(null);
       toast.success(`「${post.title}」已刪除`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "網路錯誤，請稍後再試");
@@ -192,9 +205,12 @@ function MemberEditPostContent() {
         <div className="flex gap-8">
           <button
             type="button"
-            onClick={() => setActiveTab("manage")}
+            onClick={() => {
+              setActiveTab("manage");
+              router.replace("/member/edit-post");
+            }}
             className={`px-3 pb-3 text-[18px] ${
-              activeTab === "manage"
+              currentTab === "manage"
                 ? "border-b border-[#7fc4cf] text-[#6fb8c4]"
                 : "text-[#d4d4d4]"
             }`}
@@ -203,9 +219,12 @@ function MemberEditPostContent() {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("create")}
+            onClick={() => {
+              setActiveTab("create");
+              router.replace("/member/edit-post?tab=create");
+            }}
             className={`px-3 pb-3 text-[18px] ${
-              activeTab === "create"
+              currentTab === "create"
                 ? "border-b border-[#7fc4cf] text-[#6fb8c4]"
                 : "text-[#d4d4d4]"
             }`}
@@ -216,11 +235,11 @@ function MemberEditPostContent() {
       </div>
 
       {/* —— 管理文章：列表 —— */}
-      {activeTab === "manage" ? (
+      {currentTab === "manage" ? (
         <div className="mt-9">
           <p className="mb-4 text-sm text-gray-500">
             僅顯示您自己的文章 · 可撰寫／編輯／刪除
-            {!loading ? (
+            {!isLoadingPosts ? (
               <span className="ml-2 font-medium text-slate-700">
                 · 共 {posts.length} 篇
               </span>
@@ -271,7 +290,7 @@ function MemberEditPostContent() {
             </div>
           ) : null}
 
-          {loading ? (
+          {isLoadingPosts ? (
             <div className="space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
                 <div
@@ -305,13 +324,22 @@ function MemberEditPostContent() {
                   >
                     <div className="flex flex-col gap-4 p-4 sm:flex-row">
                       <div className="relative h-32 w-full shrink-0 overflow-hidden rounded-[12px] bg-gray-100 sm:h-24 sm:w-36">
-                        <BlogMediaImage
-                          src={post.cover_image}
-                          alt={post.title}
-                          fill
-                          className="object-cover object-center"
-                          sizes="144px"
-                        />
+                        {post.status === "draft" ? (
+                          <div
+                            className="flex h-full w-full items-center justify-center bg-[#e5e7eb] text-4xl font-light text-[#9ca3af]"
+                            aria-label="草稿沒有封面圖片"
+                          >
+                            <X aria-hidden="true" size={38} strokeWidth={1.5} />
+                          </div>
+                        ) : (
+                          <BlogMediaImage
+                            src={post.cover_image}
+                            alt={post.title}
+                            fill
+                            className="object-cover object-center"
+                            sizes="144px"
+                          />
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="mb-1.5 flex flex-wrap items-center gap-2">
@@ -345,8 +373,7 @@ function MemberEditPostContent() {
                               查看
                             </Link>
                           ) : null}
-                          {post.status === "rejected" ||
-                          (post.review_note && post.review_note.trim()) ? (
+                          {post.status === "rejected" ? (
                             <button
                               type="button"
                               onClick={() => setNotePost(post)}
@@ -356,7 +383,7 @@ function MemberEditPostContent() {
                             </button>
                           ) : null}
                           <Link
-                            href={`/blog/${post.slug}/edit`}
+                            href={`/member/edit-post?tab=create&draft=${post.id}`}
                             className="rounded-[12px] border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-800 hover:bg-teal-100"
                           >
                             編輯
@@ -364,7 +391,7 @@ function MemberEditPostContent() {
                           <button
                             type="button"
                             disabled={busy}
-                            onClick={() => void handleDelete(post)}
+                            onClick={() => setDeletePost(post)}
                             className="rounded-[12px] border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-60"
                           >
                             {busy ? "刪除中…" : "刪除"}
@@ -381,21 +408,78 @@ function MemberEditPostContent() {
       ) : null}
 
       {/* —— 新增文章：框內編輯表單 —— */}
-      {activeTab === "create" ? (
+      {currentTab === "create" ? (
         <div className="mt-9">
           <p className="mb-5 text-sm text-gray-500">
-            依已完成訂單撰寫文章；封面可裁切調整後再送出審查。
+            {draftId != null
+              ? "已載入草稿內容，可接續修改後再次儲存或送出審查。"
+              : "依已完成訂單撰寫文章；封面可裁切調整後再送出審查。"}
           </p>
-          <BlogPostEditor
-            mode="create"
-            variant="member"
-            hideToaster
-            onSuccess={() => {
-              setActiveTab("manage");
-              void loadPosts();
-            }}
-          />
+          {draftId != null && isLoadingPosts ? (
+            <div className="space-y-4 py-8">
+              <div className="h-12 animate-pulse rounded-[12px] bg-gray-100" />
+              <div className="h-24 animate-pulse rounded-[12px] bg-gray-100" />
+              <div className="h-48 animate-pulse rounded-[12px] bg-gray-100" />
+            </div>
+          ) : draftId != null && !editingPost ? (
+            <div className="rounded-[12px] border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+              找不到這篇草稿，或它不屬於目前登入的會員。
+            </div>
+          ) : (
+            <BlogPostEditor
+              key={editingPost?.id ?? "new-post"}
+              mode={editingPost ? "edit" : "create"}
+              initial={editingPost ?? undefined}
+              variant="member"
+              hideToaster
+              onSuccess={() => {
+                setActiveTab("manage");
+                router.replace("/member/edit-post");
+                void loadPosts();
+              }}
+            />
+          )}
         </div>
+      ) : null}
+
+      {deletePost ? (
+        <dialog open className="modal">
+          <div className="modal-box rounded-[12px] border border-[#e5e7eb] bg-[#ffffff] text-[#111827] shadow-2xl">
+            <h2 className="text-lg font-bold text-[#111827]">
+              確認刪除文章
+            </h2>
+            <p className="py-4 text-sm text-[#4b5563]">
+              確定要刪除「{deletePost.title}」嗎？此操作無法復原。
+            </p>
+            <div className="modal-action">
+              <button
+                type="button"
+                className="rounded-[12px] border border-[#d1d5db] bg-[#ffffff] px-5 py-2.5 text-sm font-semibold text-[#374151] hover:bg-[#f3f4f6]"
+                disabled={actingId === deletePost.id}
+                onClick={() => setDeletePost(null)}
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                className="rounded-[12px] border border-[#dc2626] bg-[#dc2626] px-5 py-2.5 text-sm font-semibold text-[#ffffff] hover:border-[#b91c1c] hover:bg-[#b91c1c]"
+                disabled={actingId === deletePost.id}
+                onClick={() => void handleDelete(deletePost)}
+              >
+                {actingId === deletePost.id ? "刪除中…" : "確認刪除"}
+              </button>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="modal-backdrop bg-[#000000]/40"
+            disabled={actingId === deletePost.id}
+            aria-label="關閉刪除確認視窗"
+            onClick={() => setDeletePost(null)}
+          >
+            關閉
+          </button>
+        </dialog>
       ) : null}
 
       {notePost ? (
@@ -433,7 +517,7 @@ function MemberEditPostContent() {
                 關閉
               </button>
               <Link
-                href={`/blog/${notePost.slug}/edit`}
+                href={`/member/edit-post?tab=create&draft=${notePost.id}`}
                 className="rounded-[12px] bg-[#45cad5] px-4 py-2 text-sm font-semibold text-white hover:bg-[#36b3be]"
                 onClick={() => setNotePost(null)}
               >

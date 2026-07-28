@@ -88,7 +88,12 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
   return (
     <div className="w-full min-w-0">
       {/* ELITE STATUS 卡片 */}
-      <div className="relative mb-8 rounded-[12px] bg-gradient-to-r from-teal-400 via-cyan-500 to-teal-500 p-6 text-white sm:p-8">
+      <div
+        className="relative mb-8 rounded-[12px] p-6 text-slate-900 shadow-lg transition-[background-image] duration-500 sm:p-8"
+        style={{
+          backgroundImage: `linear-gradient(110deg, ${data.card_theme.start} 0%, ${data.card_theme.middle} 52%, ${data.card_theme.end} 100%)`,
+        }}
+      >
         <div className="flex items-start justify-between">
           <div>
             <div className="mb-1 flex items-center gap-2">
@@ -98,7 +103,7 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
               </span>
             </div>
             <h2 className="text-4xl font-bold tracking-tight">
-              {data.current_level}級會員
+              {data.member_level}
             </h2>
           </div>
 
@@ -109,7 +114,7 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
               e.stopPropagation();
               onOpenDetail();
             }}
-            className="relative z-10 flex min-h-11 shrink-0 items-center gap-1.5 rounded-[12px] bg-white/20 px-4 py-2 text-sm transition-all hover:bg-white/30 active:bg-white/40 sm:px-5"
+            className="relative z-10 flex min-h-11 shrink-0 items-center gap-1.5 rounded-[12px] bg-white/35 px-4 py-2 text-sm transition-all hover:bg-white/50 active:bg-white/60 sm:px-5"
           >
             會員詳情 <span className="text-lg leading-none">→</span>
           </button>
@@ -121,17 +126,17 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
             <span>
               下一級：
               <span className="font-semibold">
-                {data.next_level ? `${data.next_level}級會員` : nextLabel}
+                {data.next_level ? `${data.next_level}` : nextLabel}
               </span>
             </span>
           </div>
-          <div className="mb-3 h-2.5 overflow-hidden rounded-[12px] bg-white/30">
+          <div className="mb-3 h-2.5 overflow-hidden rounded-[12px] bg-slate-900/15">
             <div
-              className="h-full rounded-[12px] bg-white transition-all"
+              className="h-full rounded-[12px] bg-slate-900/75 transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>
-          <div className="space-y-1 text-sm text-white/90">
+          <div className="space-y-1 text-sm text-slate-900/85">
             {data.next_level && goalOrders != null && goalSpent != null ? (
               <>
                 <p>
@@ -147,7 +152,7 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
                     {doneSpentText}/{goalSpentText}
                   </span>
                 </p>
-                <p className="text-white/80">
+                <p className="text-slate-900/75">
                   完成<span className="font-semibold">其一</span>
                   條件即可升級為{data.next_level}級。
                 </p>
@@ -162,7 +167,7 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
       {/* 權益摘要（維持三欄版面） */}
       <div className="mb-8">
         <h3 className="mb-5 text-xl font-bold text-gray-900">
-          {data.current_level}級會員權益
+          {data.member_level}權益
         </h3>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="rounded-[12px] border border-gray-200 p-5 transition-all hover:shadow-md">
@@ -171,7 +176,7 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
             </div>
             <h4 className="mb-1 font-semibold">專屬回饋</h4>
             <p className="text-sm text-gray-600">
-              {data.benefit_rows[0]?.values[data.current_level] ?? "會員回饋"}
+              {data.benefit_rows[0]?.values[data.member_level] ?? "會員回饋"}
             </p>
           </div>
 
@@ -181,7 +186,7 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
             </div>
             <h4 className="mb-1 font-semibold">會員專屬優惠券</h4>
             <p className="text-sm text-gray-600">
-              {data.benefit_rows[3]?.values[data.current_level] ??
+              {data.benefit_rows[3]?.values[data.member_level] ??
                 "升等禮優惠券"}
             </p>
           </div>
@@ -192,7 +197,7 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
             </div>
             <h4 className="mb-1 font-semibold">專屬會員折扣</h4>
             <p className="text-sm text-gray-600">
-              {data.benefit_rows[2]?.values[data.current_level] ?? "會員價"}
+              {data.benefit_rows[2]?.values[data.member_level] ?? "會員價"}
             </p>
           </div>
         </div>
