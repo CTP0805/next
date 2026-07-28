@@ -31,7 +31,7 @@ export default function ExperienceCard({
   const favorite = isFavorite(id);
 
   return (
-    <article className="card relative flex w-full flex-col overflow-hidden rounded-[14px] bg-white shadow-sm transition-all duration-500 ease-out will-change-transform md:h-[340px] md:hover:-translate-y-2 md:hover:shadow-[0_16px_34px_rgba(39,68,72,0.16)]">
+    <article className="card relative flex w-full flex-col overflow-hidden rounded-[12px] bg-white shadow-sm transition-all duration-500 ease-out will-change-transform md:h-[340px] md:hover:-translate-y-2 md:hover:shadow-[0_16px_34px_rgba(39,68,72,0.16)]">
       <Link href={`/experiences/${id}`} className="flex flex-1 flex-col">
         <figure className="relative aspect-[16/10] w-full shrink-0 overflow-hidden md:aspect-auto md:h-[190px]">
           <Image
