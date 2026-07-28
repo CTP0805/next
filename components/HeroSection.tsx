@@ -15,11 +15,31 @@ export default function HeroSwiper() {
   const swiperRef = useRef<SwiperType | null>(null);
 
   const slides = [
-    { id: 1, title: "PARIS", image: "/images/banner/carousel1.avif" },
-    { id: 2, title: "PARIS", image: "/images/banner/carousel2.avif" },
-    { id: 3, title: "PARIS", image: "/images/banner/carousel3.jpg" },
-    { id: 4, title: "PARIS", image: "/images/banner/carousel4.webp" },
-    { id: 5, title: "PARIS", image: "/images/banner/carousel5.jpeg" },
+    {
+      id: 1,
+      title: "Play Like a Local",
+      image: "/images/banner/carousel1.avif",
+    },
+    {
+      id: 2,
+      title: "More Than Travel",
+      image: "/images/banner/carousel2.avif",
+    },
+    {
+      id: 3,
+      title: "Explore the Real City",
+      image: "/images/banner/carousel3.jpg",
+    },
+    {
+      id: 4,
+      title: "Connect with Locals",
+      image: "/images/banner/carousel4.webp",
+    },
+    {
+      id: 5,
+      title: "See the City Through Local Eyes",
+      image: "/images/banner/carousel5.jpeg",
+    },
   ];
 
   return (
@@ -52,7 +72,7 @@ export default function HeroSwiper() {
                 aria-hidden="true"
               />
 
-              <div className="relative z-10 flex h-full flex-col items-center justify-center text-5xl font-bold text-white md:text-9xl">
+              <div className="relative z-10 flex h-full flex-col items-center justify-center text-5xl font-bold text-white md:text-[64px]">
                 {slide.title}
               </div>
             </SwiperSlide>
@@ -65,7 +85,7 @@ export default function HeroSwiper() {
           className="absolute top-1/2 left-4 z-30 -translate-y-1/2 transition md:left-8"
           aria-label="Previous slide"
         >
-          <IoMdArrowDropleft className="h-10 w-10 text-white/50 hover:text-zinc-50 md:h-14 md:w-14" />
+          <IoMdArrowDropleft className="h-10 w-10 text-white/30 hover:text-zinc-50 md:h-14 md:w-14" />
         </button>
 
         <button
@@ -73,7 +93,7 @@ export default function HeroSwiper() {
           className="absolute top-1/2 right-4 z-30 -translate-y-1/2 transition md:right-8"
           aria-label="Next slide"
         >
-          <IoMdArrowDropright className="h-10 w-10 text-white/50 hover:text-zinc-50 md:h-14 md:w-14" />
+          <IoMdArrowDropright className="h-10 w-10 text-white/30 hover:text-zinc-50 md:h-14 md:w-14" />
         </button>
       </div>
 
