@@ -58,7 +58,7 @@ export default function MemberMenu({
             <div>
               <div className="font-semibold">{auth.name || "王大明"}</div>
               <div className="flex items-center gap-1.5 text-sm text-orange-400">
-                <span>{auth.member_level}牌</span>會員
+                <span>{auth.member_level}</span>
               </div>
             </div>
           </div>
