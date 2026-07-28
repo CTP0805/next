@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useFavorites } from "@/contexts/FavoriteContext";
 import { useState, useEffect } from "react";
 import { HiStar, HiHeart, HiOutlineHeart } from "react-icons/hi";
+import toast from "react-hot-toast";
 
 type ExperienceCardProps = {
   id: number;
@@ -40,7 +41,21 @@ export function ExperienceCard({
 }: ExperienceCardProps) {
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorite = isFavorite(id);
+  const handleFavoriteClick = async () => {
+    try {
+      await toggleFavorite(id);
 
+      if (favorite) {
+        toast.success("已從「心願清單」移除");
+      } else {
+        toast.success("已收藏至「心願清單」");
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "收藏操作失敗";
+
+      toast.error(message);
+    }
+  };
   return (
     <article className="card relative flex w-full flex-col overflow-hidden bg-white shadow-sm transition-all duration-500 ease-out will-change-transform md:h-[340px] md:hover:-translate-y-2 md:hover:shadow-[0_16px_34px_rgba(39,68,72,0.16)]">
       <Link href={`/experiences/${id}`} className="flex flex-1 flex-col">
@@ -92,16 +107,7 @@ export function ExperienceCard({
         aria-label={favorite ? "取消收藏" : "加入最愛"}
         aria-pressed={favorite}
         className="absolute top-2 right-2 z-10 cursor-pointer p-1 transition-transform duration-300 hover:scale-110 active:scale-95"
-        onClick={async () => {
-          try {
-            await toggleFavorite(id);
-          } catch (error) {
-            const message =
-              error instanceof Error ? error.message : "收藏操作失敗";
-
-            alert(message);
-          }
-        }}
+        onClick={handleFavoriteClick}
       >
         {favorite ? (
           <HiHeart className="size-6 [stroke:white] [stroke-width:1.5] text-red-500 drop-shadow-[0_2px_5px_rgba(0,0,0,0.2)]" />
