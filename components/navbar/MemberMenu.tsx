@@ -9,7 +9,7 @@ type MemberMenuProps = {
   auth: {
     name?: string;
     avatar_url?: string;
-    member_level: string;
+    member_level?: string;
   };
   logout: () => void;
   memberLists: MemberList[];
@@ -20,7 +20,9 @@ export default function MemberMenu({
   memberLists,
 }: MemberMenuProps) {
   const [open, setOpen] = useState(false);
-
+  if (!auth) {
+    return null;
+  }
   return (
     <li
       onMouseEnter={() => setOpen(true)}

@@ -25,7 +25,7 @@ export default function Navbar() {
   const { auth, isAuthenticated, logout } = useAuth();
   const { totalQty } = useCart();
   const pathname = usePathname();
-  const [member, setMember] = useState([]);
+  const [member, setMember] = useState(null);
   const navLinks: NavLink[] = [
     { name: "關於我們", href: "/about" },
     { name: "部落格", href: "/blog" },
@@ -97,7 +97,7 @@ export default function Navbar() {
       .then((data) => data.json())
       .then((data) => setMember(data.data))
       .catch((error) => console.error(error));
-  }, [isAuthenticated]);
+  }, [member, isAuthenticated]);
   useEffect(() => {
     if (!isHomePage) return;
     const handleScroll = () => {
