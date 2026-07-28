@@ -5,32 +5,33 @@ import Image from "next/image";
 const destinations = [
   {
     name: "倫敦",
-    image: "/images/carousel1.jpeg",
+    image: "/images/city/london.webp",
     href: "/experiences/search?city=倫敦",
   },
   {
-    name: "巴黎",
-    image: "/images/carousel1.jpeg",
-    href: "/experiences/search?city=巴黎",
+    name: "威尼斯",
+    image: "/images/city/venice.jpeg",
+    href: "/experiences/search?city=威尼斯",
   },
   {
     name: "慕尼黑",
-    image: "/images/carousel1.jpeg",
+    image: "/images/city/munich.jpg",
     href: "/experiences/search?city=慕尼黑",
   },
   {
     name: "阿姆斯特丹",
-    image: "/images/carousel1.jpeg",
+    image: "/images/city/amsterdam.jpg",
     href: "/experiences/search?city=阿姆斯特丹",
   },
+
   {
-    name: "威尼斯",
-    image: "/images/carousel1.jpeg",
-    href: "/experiences/search?city=威尼斯",
+    name: "巴黎",
+    image: "/images/city/paris.jpg",
+    href: "/experiences/search?city=巴黎",
   },
   {
     name: "巴賽隆納",
-    image: "/images/carousel1.jpeg",
+    image: "/images/city/barcelona.jpg",
     href: "/experiences/search?city=巴賽隆納",
   },
 ];

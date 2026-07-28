@@ -116,18 +116,29 @@ export default function Navbar() {
       className={`${navPosition} top-0 left-0 z-50 box-border flex h-[60px] w-full items-center justify-between p-2 text-white xl:px-37.5 ${navStyle}`}
     >
       {/* 1. 左側 Logo */}
-      <div className="items-left relative flex aspect-square h-[40px] w-[40px] shrink-0">
-        <Link href="/" className="absolute inset-0">
+      <div className="group relative flex aspect-square h-[40px] w-[120px] shrink-0 items-start">
+        <Link href="/" className="absolute inset-0 block">
+          {/* 預設顯示的 Logo (hover 時淡出或隱藏) */}
           <Image
             src="/icon/logo.svg"
             alt="Logo"
             fill
             priority
             sizes="(max-width: 768px) 20px, 40px"
+            className="transition-opacity duration-300 group-hover:opacity-0"
+          />
+
+          {/* Hover 時顯示的 Logo (預設透明或隱藏) */}
+          <Image
+            src="/icon/logoopen.svg"
+            alt="Logo Open"
+            fill
+            priority
+            sizes="(max-width: 768px) 80px, 80px"
+            className="opacity-0 transition-opacity duration-300 group-hover:opacity-100"
           />
         </Link>
       </div>
-
       {/* 2. 搜尋欄 */}
       <SearchBar />
 
