@@ -119,7 +119,7 @@ export default function PaymentPage() {
   return (
     <>
       {/* 最外層淺灰底容器 */}
-      <div className="min-h-[calc(100vh-160px)] w-full bg-slate-50 py-10 text-gray-800">
+      <div className="min-h-[calc(100vh-160px)] w-full py-10 text-gray-800">
         {/* 核心主容器：最大寬度 1280px，mx-auto 負責在大螢幕下置中 */}
         <div className="mx-auto w-full max-w-[1280px] px-4">
           {/* ==================== 1. 頂部步驟進度條 (DaisyUI Steps) ==================== */}

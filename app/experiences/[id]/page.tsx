@@ -138,7 +138,7 @@ export default function ExperienceDetailPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { onAdd, onEdit } = useCart();
+  const { items, onAdd, onEdit } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
   const id = params.id as string;
   const [experience, setExperience] = useState<Experience | null>(null);
@@ -293,6 +293,26 @@ export default function ExperienceDetailPage() {
 
     // 找出使用者選中的 Session 以確保拿到正確金額
   const targetSession = experience.sessions.find((s) => s.id === sessionId);
+  const maxLimit = targetSession?.max_participants ?? 8;
+
+    // 🚀 核心防呆：檢查購物車裡面「原本是否已經有這一個場次」
+    const existingCartItem = items.find(
+      (item) => item.experienceId === experience.id && item.sessionId === sessionId
+    );
+
+    // 如果不是編輯模式，需要把購物車舊數量與這次選擇的新數量相加
+    if (!isEditMode && existingCartItem) {
+      const existingTotal = Number(existingCartItem.adultQuantity || 0) + Number(existingCartItem.childQuantity || 0);
+      const newTotal = existingTotal + adultQty + childQty;
+
+      if (newTotal > maxLimit) {
+        toast.error(`購物車內已有 ${existingTotal} 位，此場次最多預訂 ${maxLimit} 位！`);
+        return; // ⛔ 阻擋發送請求
+      }
+    } else if (adultQty + childQty > maxLimit) {
+      toast.error(`該場次最多只能預訂 ${maxLimit} 位！`);
+      return;
+    }
 
     const productInfo = {
       experienceId: experience.id,
@@ -338,6 +358,13 @@ export default function ExperienceDetailPage() {
   if (!experience) return;
 
   const targetSession = experience.sessions.find((s) => s.id === sessionId);
+  const maxLimit = targetSession?.max_participants ?? 8;
+
+  // 🚀 核心防呆
+    if (adultQty + childQty > maxLimit) {
+      toast.error(`該場次最多只能預訂 ${maxLimit} 位！`);
+      return;
+    }
 
   const productInfo = {
     experienceId: experience.id,
@@ -352,7 +379,7 @@ export default function ExperienceDetailPage() {
     // 1. 寫入購物車後跳轉
     await onAdd(productInfo, sessionId, adultQty, childQty, sessionName);
     // 2. 順暢跳轉至結帳頁面
-    toast.success("正在前往結帳頁面...");
+    toast.success("正在前往結帳頁面");
     router.push("/checkout");
   } catch (error) {
     console.error("立即預訂失敗:", error);

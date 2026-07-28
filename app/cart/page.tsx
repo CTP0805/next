@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCart } from "@/contexts/cart";
 import { useEffect, useState, useRef } from "react";
 import toast from "react-hot-toast";
+import { HiStar } from "react-icons/hi";
 
 //定義從後端拿到的推薦商品型別
 interface RecommendProduct {
@@ -35,8 +36,6 @@ export default function CartPage() {
   const { items, setItems, totalQty, totalAmount, onUpdateQuantity, onRemove } =
     useCart();
 
-  // 進入購物車載入中(轉圈圈)
-  const [pageLoading, setPageLoading] = useState(true);
   // 記錄全選勾選
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   // 存推薦商品的state
@@ -47,45 +46,72 @@ export default function CartPage() {
   //綁定daisyUI Modal 的 ref
   const deleteModalRef = useRef<HTMLDialogElement>(null);
 
-  // 刪除選中活動
+  // 記錄當前準備要刪除的單一商品 (如果為 null 代表是批量多選刪除)
+  const [itemToDelete, setItemToDelete] = useState<CartItem | null>(null);
+
+  // ==========================================
+  // 🗑️ 觸發 DaisyUI Modal 彈窗
+  // ==========================================
+
+  // 1. 點擊卡片旁邊的「刪除」按鈕 (單一商品刪除)
+  const handleRemoveSingleClick = (item: any) => {
+    setItemToDelete(item); // 記錄準備刪除的這一筆商品
+    deleteModalRef.current?.showModal();
+  };
+
+  // 2. 點擊「刪除選中活動」按鈕 (批量刪除)
   const handleRemoveSelected = async () => {
     if (selectedKeys.length === 0) {
       toast.error("請先勾選要刪除的商品！");
       return;
     }
     // 代替 confirm(...)，跳出 daisyUI Modal 讓使用者確認
+    setItemToDelete(null); // 設為 null 代表批量刪除
     deleteModalRef.current?.showModal();
   };
 
-  const confirmDeleteSelected = async () => {
+  // 3. 點擊 Modal 裡面的「確定刪除」按鈕
+  const confirmDelete = async () => {
     deleteModalRef.current?.close();
+
     // 遍歷所有被選中的 key，例如 "2-101"
     try {
-      //直接在前端過濾掉「所有被勾選的項目」並更新畫面
-      // 這裡直接用 filter 過濾掉勾選的 key，保證畫面「一次性」同時刪除所有選中的商品
-      const remainingItems = items.filter(
-        (item) =>
-          !selectedKeys.includes(`${item.experienceId}-${item.sessionId}`),
-      );
+      if (itemToDelete) {
+        // === A. 刪除單一商品 ===
+        await onRemove(itemToDelete.experienceId, itemToDelete.sessionId);
 
-      const deletePromises = selectedKeys.map((key) => {
-        const [experienceId, sessionId] = key.split("-").map(Number);
-        // 執行onRemove（確保後端 fetch 有被發送去刪除）
-        return onRemove(experienceId, sessionId);
-      });
+        // 如果該商品原本有被勾選，順便清除其 selectedKeys 狀態
+        const itemKey = `${itemToDelete.experienceId}-${itemToDelete.sessionId}`;
+        setSelectedKeys((prev) => prev.filter((key) => key !== itemKey));
 
-      // 同時發送所有後端刪除請求
-      await Promise.all(deletePromises);
+        toast.success("已成功刪除活動！");
+      } else {
+        // === B. 批量刪除多個商品 ===
+        const remainingItems = items.filter(
+          (item) =>
+            !selectedKeys.includes(`${item.experienceId}-${item.sessionId}`),
+        );
 
-      // 重點：強行把前端 items 設定為我們過濾好的狀態
-      setItems(remainingItems);
+        const deletePromises = selectedKeys.map((key) => {
+          const [experienceId, sessionId] = key.split("-").map(Number);
+          // 執行onRemove（確保後端 fetch 有被發送去刪除）
+          return onRemove(experienceId, sessionId);
+        });
 
-      // 刪除完成後，清空勾選狀態
-      setSelectedKeys([]);
-      toast.success("已成功刪除選中活動！");
+        // 同時發送所有後端刪除請求
+        await Promise.all(deletePromises);
+
+        // 重點：強行把前端 items 設定為我們過濾好的狀態
+        setItems(remainingItems);
+        // 刪除完成後，清空勾選狀態
+        setSelectedKeys([]);
+        toast.success("已成功刪除選中活動！");
+      }
     } catch (error) {
       console.error("批次刪除失敗:", error);
       toast.error("刪除時發生錯誤，請重整網頁。");
+    } finally {
+      setItemToDelete(null); // 重設為 null
     }
   };
 
@@ -139,30 +165,11 @@ export default function CartPage() {
         if (resData.success) {
           setRecommendProducts(resData.data);
         }
-        // 資料成功載入後，過一小段時間關閉載入畫面
-        setTimeout(() => {
-          setPageLoading(false);
-        }, 500);
       })
       .catch((err) => {
         console.error("無法取得推薦商品:", err);
-        setPageLoading(false); //即使失敗也要關掉，不然使用者會永遠卡在轉圈圈
       });
   }, []);
-
-  // ==========================================
-  // 載入畫面中
-  if (pageLoading) {
-    return (
-      <div className="flex min-h-[60vh] w-full flex-col items-center justify-center gap-4">
-        {/* DaisyUI 經典轉圈圈 */}
-        <span className="loading loading-spinner loading-lg text-secondary"></span>
-        <p className="animate-pulse font-medium text-gray-500">
-          正在為您準備購物車...
-        </p>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -170,16 +177,14 @@ export default function CartPage() {
         <div className="min-h-[calc(100vh-160px)] w-full py-10">
           <div className="mx-auto w-full max-w-7xl bg-white px-4">
             <div className="flex flex-col items-start gap-8 lg:flex-row">
-
               {/* 左側購物車商品清單區域 */}
               <div className="w-full space-y-4 lg:flex-[2]">
-
                 {/* 全選與批次刪除工具列卡片 */}
                 <div className="flex w-full items-center justify-between rounded-xl bg-white p-4 shadow-sm">
                   <label className="flex cursor-pointer items-center gap-2">
                     <input
                       type="checkbox"
-                      className="checkbox checkbox-primary h-5 w-5 rounded-md"
+                      className="checkbox h-5 w-5 rounded-md border-[#DDE2E4] bg-white checked:border-[#68BBC3] checked:bg-[#68BBC3] checked:text-white"
                       checked={isAllSelected}
                       onChange={handleSelectAll}
                     />
@@ -207,32 +212,39 @@ export default function CartPage() {
                     ? 0
                     : Number(item.childQuantity) || 0;
 
-                  const adultPrice = Number(item.adultPrice) || Number(item.price) || 0;
+                  const adultPrice =
+                    Number(item.adultPrice) || Number(item.price) || 0;
                   const childPrice = Number(item.childPrice) || 0;
 
                   // 計算該卡片項目的總小計金額
-                 const itemSubtotal = adultQty * adultPrice + childQty * childPrice;
+                  const itemSubtotal =
+                    adultQty * adultPrice + childQty * childPrice;
 
                   return (
                     <div
                       key={itemKey}
-                      className={`relative overflow-hidden rounded-xl bg-white p-6 shadow-sm transition-all ${item.isSoldOut ? "opacity-60 bg-gray-50" : ""
-                    }`}
+                      className={`relative overflow-hidden rounded-xl bg-white p-6 shadow-sm transition-all ${
+                        item.isSoldOut ? "bg-gray-50 opacity-60" : ""
+                      }`}
                     >
                       <div className="flex flex-col justify-between gap-6 md:flex-row md:items-start">
-                      {/* 左側：勾選框 + 圖片 + 標題與單價 */}
-                      <div className="flex flex-1 items-start gap-4">
-                        <input
-                          type="checkbox"
-                          disabled={item.isSoldOut}
-                          className="checkbox checkbox-primary checkbox-sm mt-1"
-                          checked={selectedKeys.includes(itemKey)}
-                          onChange={() => handleSelectItem(item.experienceId, item.sessionId)
-                          }
-                        />
+                        {/* 左側：勾選框 + 圖片 + 標題與單價 */}
+                        <div className="flex flex-1 items-start gap-4">
+                          <input
+                            type="checkbox"
+                            disabled={item.isSoldOut}
+                            className="checkbox checkbox-sm mt-1 h-5 w-5 rounded-md border-[#DDE2E4] bg-white checked:border-[#68BBC3] checked:bg-[#68BBC3] checked:text-white"
+                            checked={selectedKeys.includes(itemKey)}
+                            onChange={() =>
+                              handleSelectItem(
+                                item.experienceId,
+                                item.sessionId,
+                              )
+                            }
+                          />
 
-                        {/* 商品縮圖 */}
-                        <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                          {/* 商品縮圖 */}
+                          <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-lg bg-gray-100">
                             {item.image ? (
                               <img
                                 src={item.image}
@@ -241,11 +253,11 @@ export default function CartPage() {
                               />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
-                              商品圖片
+                                商品圖片
                               </div>
                             )}
                             {item.isSoldOut && (
-                              <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-bold text-xs">
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-xs font-bold text-white">
                                 已完售
                               </div>
                             )}
@@ -253,7 +265,7 @@ export default function CartPage() {
 
                           {/* 名稱與場次 */}
                           <div className="min-w-0 flex-1">
-                            <h4 className="text-base font-bold text-gray-900 line-clamp-1">
+                            <h4 className="line-clamp-1 text-base font-bold text-gray-900">
                               {item.name}
                             </h4>
                             <p className="mt-1 text-sm text-gray-500">
@@ -262,129 +274,135 @@ export default function CartPage() {
                           </div>
                         </div>
 
-                       {/* 右側：成人與兒童加減按鈕控制器 */}
-                      <div className="flex flex-col gap-3 items-end shrink-0">
-                        {!item.isSoldOut ? (
-                          <>
-                            {/* 成人按鈕控制區 */}
-                            <div className="flex items-center gap-3 text-sm">
-                              <span className="text-gray-600">成人</span>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  className="btn btn-xs btn-circle btn-outline border-gray-300 text-gray-600 hover:bg-gray-100"
-                                  onClick={() =>
-                                    onUpdateQuantity(
-                                      item.experienceId,
-                                      item.sessionId,
-                                      "adult",
-                                      -1
-                                    )
-                                  }
-                                >
-                                  -
-                                </button>
-                                <span className="w-6 text-center font-bold text-gray-800">
-                                  {adultQty}
-                                </span>
-                                <button
-                                  type="button"
-                                  className="btn btn-xs btn-circle btn-outline border-gray-300 text-gray-600 hover:bg-gray-100"
-                                  onClick={() =>
-                                    onUpdateQuantity(
-                                      item.experienceId,
-                                      item.sessionId,
-                                      "adult",
-                                      1
-                                    )
-                                  }
-                                >
-                                  +
-                                </button>
-                              </div>
-                            </div>
+                        {/* 右側：成人與兒童加減按鈕控制器 */}
+                        <div className="flex shrink-0 flex-col items-end gap-3">
+                          {!item.isSoldOut ? (
+                            <>
+                              {/* 成人按鈕控制區 */}
+                              <div className="flex items-center gap-3 text-sm">
+                                <span className="text-gray-600">成人</span>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    className="btn btn-xs btn-circle btn-outline border-gray-300 text-gray-600 hover:bg-gray-100"
+                                    onClick={() => {
+                                      if (childQty > 0 && adultQty <= 1) {
+                                        toast.error("兒童需有至少一位成人陪同");
+                                        return;
+                                      }
 
-                            {/* 兒童按鈕控制區 */}
-                            <div className="flex items-center gap-3 text-sm">
-                              <span className="text-gray-600">兒童</span>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  className="btn btn-xs btn-circle btn-outline border-gray-300 text-gray-600 hover:bg-gray-100"
-                                  onClick={() =>
-                                    onUpdateQuantity(
-                                      item.experienceId,
-                                      item.sessionId,
-                                      "child",
-                                      -1
-                                    )
-                                  }
-                                >
-                                  -
-                                </button>
-                                <span className="w-6 text-center font-bold text-gray-800">
-                                  {childQty}
-                                </span>
-                                <button
-                                  type="button"
-                                  className="btn btn-xs btn-circle btn-outline border-gray-300 text-gray-600 hover:bg-gray-100"
-                                  onClick={() =>
-                                    onUpdateQuantity(
-                                      item.experienceId,
-                                      item.sessionId,
-                                      "child",
-                                      1
-                                    )
-                                  }
-                                >
-                                  +
-                                </button>
+                                      onUpdateQuantity(
+                                        item.experienceId,
+                                        item.sessionId,
+                                        "adult",
+                                        -1,
+                                      );
+                                    }}
+                                  >
+                                    -
+                                  </button>
+                                  <span className="w-6 text-center font-bold text-gray-800">
+                                    {adultQty}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className="btn btn-xs btn-circle btn-outline border-gray-300 text-gray-600 hover:bg-gray-100"
+                                    onClick={() =>
+                                      onUpdateQuantity(
+                                        item.experienceId,
+                                        item.sessionId,
+                                        "adult",
+                                        1,
+                                      )
+                                    }
+                                  >
+                                    +
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          </>
-                        ) : (
-                          <span className="text-xs text-red-400 font-medium">已截止</span>
-                        )}
+
+                              {/* 兒童按鈕控制區 */}
+                              <div className="flex items-center gap-3 text-sm">
+                                <span className="text-gray-600">兒童</span>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    className="btn btn-xs btn-circle btn-outline border-gray-300 text-gray-600 hover:bg-gray-100"
+                                    onClick={() =>
+                                      onUpdateQuantity(
+                                        item.experienceId,
+                                        item.sessionId,
+                                        "child",
+                                        -1,
+                                      )
+                                    }
+                                  >
+                                    -
+                                  </button>
+                                  <span className="w-6 text-center font-bold text-gray-800">
+                                    {childQty}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className="btn btn-xs btn-circle btn-outline border-gray-300 text-gray-600 hover:bg-gray-100"
+                                    onClick={() =>
+                                      onUpdateQuantity(
+                                        item.experienceId,
+                                        item.sessionId,
+                                        "child",
+                                        1,
+                                      )
+                                    }
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </div>
+                            </>
+                          ) : (
+                            <span className="text-xs font-medium text-red-400">
+                              已截止
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
 
-                    {/* 卡片底欄：左側編輯/刪除，右側單項總計金額 */}
-                    <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4">
-                      <div className="flex items-center gap-4 text-sm font-medium text-gray-500">
-                        {!item.isSoldOut && (
-                          <Link
-                            href={`/experiences/${item.experienceId}?edit=true&oldSession=${item.sessionId}&oldAdult=${adultQty}&oldChild=${childQty}`}
-                            className="hover:text-[#45cad5] hover:underline"
+                      {/* 卡片底欄：左側編輯/刪除，右側單項總計金額 */}
+                      <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4">
+                        <div className="flex items-center gap-4 text-sm font-medium text-gray-500">
+                          {!item.isSoldOut && (
+                            <Link
+                              href={`/experiences/${item.experienceId}?edit=true&oldSession=${item.sessionId}&oldAdult=${adultQty}&oldChild=${childQty}`}
+                              className="hover:text-[#45cad5] hover:underline"
+                            >
+                              編輯
+                            </Link>
+                          )}
+                          {/* 🚀 單一商品刪除按鈕，呼叫 handleRemoveSingleClick(item) */}
+                          <button
+                            type="button"
+                            className="hover:text-red-500 hover:underline"
+                            onClick={() => handleRemoveSingleClick(item)}
                           >
-                            編輯
-                          </Link>
-                        )}
-                        <button
-                          type="button"
-                          className="hover:text-red-500 hover:underline"
-                          onClick={async () => {
-                            await onRemove(item.experienceId, item.sessionId);
-                            toast.success("已成功刪除活動！");
-                          }}
-                        >
-                          刪除
-                        </button>
-                      </div>
+                            刪除
+                          </button>
+                        </div>
 
-                      {/* 右下角：精緻的單卡片小計金額 */}
-                      <div className="text-right text-lg font-black text-gray-900">
-                        NT$ {itemSubtotal.toLocaleString()}
+                        {/* 右下角：精緻的單卡片小計金額 */}
+                        <div className="text-right text-lg font-black text-gray-900">
+                          NT$ {itemSubtotal.toLocaleString()}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
 
               {/* 右側結帳卡片 */}
               <div className="w-full rounded-lg bg-white p-6 shadow-sm lg:flex-[1]">
                 <p className="mb-1 text-sm font-medium text-gray-500">
-                  {selectedKeys.length > 0 ? selectedKeys.length : items.length} 件總計
+                  {selectedKeys.length > 0 ? selectedKeys.length : items.length}{" "}
+                  件總計
                 </p>
                 <div className="mb-4 text-2xl font-bold text-gray-900">
                   NT$ {totalAmount.toLocaleString()}
@@ -394,18 +412,19 @@ export default function CartPage() {
                   <button
                     disabled={totalQty === 0}
                     className="btn w-full border-none bg-[#45cad5] text-white hover:bg-[#36b3be] disabled:bg-gray-300"
-                  >        
+                  >
                     前往結帳
                   </button>
                 </Link>
 
                 <p className="mt-2 text-center text-xs text-cyan-600">
-                  預估可獲得約 {Math.round(totalAmount * 0.01).toLocaleString()} M幣
+                  預估可獲得約 {Math.round(totalAmount * 0.01).toLocaleString()}{" "}
+                  M幣
                 </p>
               </div>
-          </div>
+            </div>
 
-              {/* 下方推薦商品區 */}
+            {/* 下方推薦商品區 */}
             <div className="mt-16">
               <h3 className="mb-6 border-l-4 border-red-500 pl-3 text-xl font-bold text-gray-800">
                 其他旅人也買了...
@@ -433,6 +452,26 @@ export default function CartPage() {
                   <h5 className="mt-1 line-clamp-2 min-h-[40px] text-sm font-bold text-gray-800">
                     {product.title}
                   </h5>
+
+                  <p className="mt-1 flex items-center gap-1 text-[12px] font-bold">
+                    {Number(product.review_count) > 0 ? (
+                      <>
+                        <HiStar
+                          className="size-3 shrink-0 text-[#FFA938]"
+                          aria-hidden="true"
+                        />
+                        <span className="text-[#F4A629]">{product.rating}</span>
+                        <span className="font-medium text-[#8A9196]">
+                          ({product.review_count} 則評價)
+                        </span>
+                      </>
+                    ) : (
+                      <span className="font-medium text-[#8A9196]">
+                        尚無評價
+                      </span>
+                    )}
+                  </p>
+                  
                   <p className="mt-3 text-sm font-bold text-gray-800">
                     NT${" "}
                     {product.minPrice
@@ -442,10 +481,10 @@ export default function CartPage() {
                   </p>
                 </div>
               ))}
-              </div>
+            </div>
           </div>
-      </div>
-        ) : (
+        </div>
+      ) : (
         /* 購物車空介面  */
         <div className="flex min-h-[calc(100vh-200px)] w-full flex-col items-center justify-center bg-white py-16">
           <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center bg-white px-4">
@@ -471,7 +510,9 @@ export default function CartPage() {
         <div className="modal-box">
           <h3 className="text-lg font-bold text-gray-900">確認刪除</h3>
           <p className="py-4 text-gray-600">
-            確定要刪除這 {selectedKeys.length} 項活動嗎？
+            {itemToDelete
+              ? `確定要刪除「${itemToDelete.name || itemToDelete.name}」嗎？`
+              : `確定要刪除這 ${selectedKeys.length} 項活動嗎？`}
           </p>
           <div className="modal-action">
             <form method="dialog">
@@ -479,7 +520,7 @@ export default function CartPage() {
             </form>
             <button
               className="btn btn-error text-white"
-              onClick={confirmDeleteSelected}
+              onClick={confirmDelete}
             >
               確定刪除
             </button>
@@ -489,4 +530,3 @@ export default function CartPage() {
     </>
   );
 }
-
