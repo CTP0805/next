@@ -71,21 +71,21 @@ export default function Navbar() {
   ];
   const memberLists: MemberList[] = [
     ...memberListsBase,
-    ...(member.role === "管理者"
-      ? [
-          {
-            label: "文章審查",
-            icon: <FaClipboardCheck />,
-            href: "/member/blog-review",
-          } satisfies MemberList,
-        ]
-      : [
-          {
-            label: "管理文章",
-            icon: <FaEdit />,
-            href: "/member/edit-post",
-          } satisfies MemberList,
-        ]),
+    // ...(member.role === "管理者"
+    //   ? [
+    //       {
+    //         label: "文章審查",
+    //         icon: <FaClipboardCheck />,
+    //         href: "/member/blog-review",
+    //       } satisfies MemberList,
+    //     ]
+    //   : [
+    //       {
+    //         label: "管理文章",
+    //         icon: <FaEdit />,
+    //         href: "/member/edit-post",
+    //       } satisfies MemberList,
+    //     ]),
   ];
 
   const isHomePage = pathname === "/";

@@ -35,8 +35,9 @@ export default function MemberMenu({
 
         <Image
           src={
-            `http://localhost:3001${auth.avatar_url}` ||
-            "/images/member-avatar/angry-man.jpg"
+            auth.avatar_url
+              ? `http://localhost:3001${auth.avatar_url}`
+              : "/images/member-avatar/angry-man.jpg"
           }
           alt={auth.name || "User Avatar"}
           className="h-8 w-8 rounded-full object-cover"
@@ -54,8 +55,9 @@ export default function MemberMenu({
           <div className="flex items-center gap-3 px-4 py-3">
             <Image
               src={
-                `http://localhost:3001${auth.avatar_url}` ||
-                "/images/member-avatar/angry-man.jpg"
+                auth.avatar_url
+                  ? `http://localhost:3001${auth.avatar_url}`
+                  : "/images/member-avatar/angry-man.jpg"
               }
               alt="用戶頭像"
               width={48}
