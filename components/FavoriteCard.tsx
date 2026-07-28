@@ -13,7 +13,12 @@ export default function FavoriteCard({ item }: { item: FavoriteItem }) {
   const handleFavoriteClick = async () => {
     try {
       await toggleFavorite(item.id);
-      toast.success("已從「心願清單」移除");
+
+      if (favorite) {
+        toast.success("已從「心願清單」移除");
+      } else {
+        toast.success("已收藏至「心願清單」");
+      }
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "心願清單操作失敗";
