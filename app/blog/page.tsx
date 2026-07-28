@@ -17,7 +17,7 @@ import BlogOwnerEditLink from "./_components/BlogOwnerEditLink";
 import BlogPostCard from "./_components/BlogPostCard";
 import { fetchBlogPosts } from "./_lib/api";
 import type { BlogPost } from "./_lib/types";
-import { BLOG_REGIONS, blogCategoryLabel } from "./_lib/types";
+import { BLOG_REGIONS, blogCategoryLabel, blogCityLabel } from "./_lib/types";
 import { useAuth } from "@/contexts/auth-context";
 
 /** 是否已上架（列表精選只用 published） */
@@ -28,6 +28,13 @@ function isPublished(post: BlogPost) {
 function formatDate(iso: string | null) {
   if (!iso) return "未上架";
   return new Date(iso).toLocaleDateString("zh-TW");
+}
+
+function postTimestamp(post: BlogPost) {
+  const timestamp = new Date(
+    post.published_at ?? post.updated_at ?? post.created_at,
+  ).getTime();
+  return Number.isNaN(timestamp) ? 0 : timestamp;
 }
 
 function CardSkeleton() {
@@ -80,46 +87,50 @@ export default function BlogListPage() {
     [allPosts],
   );
 
-  /** 地區篩選：DB 無 region 欄，改以標題／摘要／內文關鍵字比對 */
+  /** 優先使用 API 城市欄位；舊資料退回標題／摘要／內文關鍵字比對。 */
   const filteredPosts = useMemo(() => {
     if (!selectedCountry) return publishedPosts;
     return publishedPosts.filter((post) => {
+      if (post.city) {
+        return blogCityLabel(post) === selectedCountry;
+      }
       const hay = `${post.title}\n${post.excerpt ?? ""}\n${post.content}`;
       return hay.includes(selectedCountry);
     });
   }, [publishedPosts, selectedCountry]);
 
-  /** 精選：最新已上架文章（最多 6 篇）；有地區篩選時用篩選結果 */
+  /** 精選：每個城市各取最新一篇；有地區篩選時顯示該城市全部文章。 */
   const featuredPosts = useMemo(() => {
-    if (selectedCountry) return filteredPosts;
-    return [...publishedPosts]
-      .sort(
-        (a, b) =>
-          new Date(b.published_at ?? b.updated_at).getTime() -
-          new Date(a.published_at ?? a.updated_at).getTime(),
-      )
-      .slice(0, 6);
+    const postsByNewest = [...publishedPosts].sort(
+      (a, b) => postTimestamp(b) - postTimestamp(a),
+    );
+
+    if (selectedCountry) {
+      return [...filteredPosts].sort(
+        (a, b) => postTimestamp(b) - postTimestamp(a),
+      );
+    }
+
+    return BLOG_REGIONS.map((city) =>
+      postsByNewest.find((post) => blogCityLabel(post) === city),
+    ).filter((post): post is BlogPost => post != null);
   }, [filteredPosts, publishedPosts, selectedCountry]);
 
   const latestPosts = useMemo(() => {
     if (selectedCountry) return [];
     return [...publishedPosts]
-      .sort(
-        (a, b) =>
-          new Date(b.published_at ?? b.updated_at).getTime() -
-          new Date(a.published_at ?? a.updated_at).getTime(),
-      )
+      .sort((a, b) => postTimestamp(b) - postTimestamp(a))
       .slice(0, 8);
   }, [publishedPosts, selectedCountry]);
 
-  /** 熱門：取較早上架的精選（與最新錯開） */
+  /** 經典推薦：留言數由多至少；同票時較新的文章優先。 */
   const popularPosts = useMemo(() => {
     if (selectedCountry) return [];
     return [...publishedPosts]
       .sort(
         (a, b) =>
-          new Date(a.published_at ?? a.updated_at).getTime() -
-          new Date(b.published_at ?? b.updated_at).getTime(),
+          (b.comment_count ?? 0) - (a.comment_count ?? 0) ||
+          postTimestamp(b) - postTimestamp(a),
       )
       .slice(0, 5);
   }, [publishedPosts, selectedCountry]);
@@ -218,7 +229,7 @@ export default function BlogListPage() {
               管理文章
             </Link>
             {auth?.role === "會員" && (
-            <Link href="/blog/new" className="inline-flex items-center gap-1.5 rounded-[12px] bg-[#45cad5] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#36b3be] hover:shadow-lg">
+            <Link href="/member/edit-post?tab=create" className="inline-flex items-center gap-1.5 rounded-[12px] bg-[#45cad5] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#36b3be] hover:shadow-lg">
               <span aria-hidden>+</span> 新增文章
             </Link>) }
             </>
@@ -264,7 +275,7 @@ export default function BlogListPage() {
                   試試其他目的地，或寫一篇新文章
                 </p>
                 <Link
-                  href="/blog/new"
+                  href="/member/edit-post?tab=create"
                   className="mt-6 inline-flex rounded-[12px] bg-[#45cad5] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#36b3be]"
                 >
                   寫一篇新文章
@@ -306,6 +317,9 @@ export default function BlogListPage() {
                       </div>
                       <div className="flex min-w-0 flex-1 flex-col py-0.5 sm:py-1">
                         <div className="mb-2 flex flex-wrap items-center gap-2">
+                          <span className="rounded-[12px] bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
+                            {blogCityLabel(post)}
+                          </span>
                           <span className="rounded-[12px] bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
                             {blogCategoryLabel(post)}
                           </span>
@@ -352,6 +366,12 @@ export default function BlogListPage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="mb-1 flex flex-wrap items-center gap-1.5 text-xs">
+                          <span className="text-teal-600">
+                            {blogCityLabel(post)}
+                          </span>
+                          <span className="text-gray-300" aria-hidden>
+                            ·
+                          </span>
                           <span className="text-amber-600">
                             {blogCategoryLabel(post)}
                           </span>

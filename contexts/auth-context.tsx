@@ -24,6 +24,7 @@ export type Auth = {
   member_level?: string;
   current_points?: number;
   role?: string;
+  avatar_url?: string | null;
 };
 
 // 初始值
@@ -35,6 +36,7 @@ export const emptyAuth: Auth = {
   member_level: "銅",
   current_points: 0,
   role: "",
+  avatar_url: null,
 };
 
 

@@ -1,39 +1,39 @@
-# GROK.md — xAI Grok 專用（其他 agent 請忽略本檔）
+# mao.md — Codex 專用（其他 agent 請忽略本檔）
 
-本檔只給 **Grok（xAI / Grok Build）** 使用。  
-Claude、Cursor、Copilot 等其他 agent **不應讀取、不應覆寫、不應把本檔當成共用規範**。
+本檔只給 **Codex（目前與使用者協作的 OpenAI agent）** 使用。  
+Grok、Claude、Cursor、Copilot 等其他 agent **不應讀取、不應覆寫、不應把本檔當成共用規範**。
 
 ## 寫入規則（使用者約定 — 強制）
 
-**只要是在本專案與 Grok 對話中「新加」的規則／偏好／限制，一律只附加到本檔 `GROK.md`。**
+**只要是在本專案與 Codex 對話中「新加」的規則／偏好／限制，一律只附加到本檔 `mao.md`。**
 
-- **要寫**：本檔（優先「Grok 專用備註」；長期行為可另開小節）。
+- **要寫**：本檔（優先「Codex 專用備註」；長期行為可另開小節）。
 - **不要寫**：共用 `AGENTS.md`、子目錄 `AGENTS.md`、`CLAUDE.md`、`.vscode/_docs/**` 的共用準則（除非使用者**明確**要求改共用檔）。
-- **不要**為了「引導其他 agent」去改 `AGENTS.md`；Grok 靠自己讀本檔即可。
-- 下方「規則快照」只是把**既有共用 `AGENTS.md` 內容抄一份**方便重啟，**不是**在共用檔新增規則的地方。若共用檔被別人更新，可再同步快照；Grok 自己加的新約定只進本檔。
+- **不要**為了「引導其他 agent」去改 `AGENTS.md`；Codex 靠自己讀本檔即可。
+- 下方「規則快照」只是把**既有共用 `AGENTS.md` 內容抄一份**方便重啟，**不是**在共用檔新增規則的地方。若共用檔被別人更新，可再同步快照；Codex 自己加的新約定只進本檔。
 
 ## 何時讀本檔
 
-- **新 session／重開本專案後的第一輪**：讀一次本檔，載入專案記憶與準則快照。
-- 之後同一 session：**不要為了「經過 GROK.md」而每輪重讀**。
-- 僅在本檔或 `AGENTS.md` 真的有改、或任務需要「按需查閱」細則時再讀。
+- **新 session／重新開啟本專案時**：Codex 讀取本檔一次，載入專案記憶、工作範圍與規則快照。
+- **同一 session 內**：把本檔內容保留在工作記憶中；每項工作都必須遵守，但不要每次重讀或重新審視本檔。
+- 僅在本檔或 `AGENTS.md` 有變更、工作記憶不完整，或任務需要核對特定細節時重新讀取。
 
 ## 與 `AGENTS.md` 的關係（避免衝突）
 
 | 檔案 | 誰該讀 | 角色 |
 |------|--------|------|
-| `AGENTS.md` | 所有 agent | **既有共用**協作準則（Grok 遵守；Grok **不擅自改**） |
-| 子目錄 `AGENTS.md`（如 `app/experiences/AGENTS.md`） | 在該目錄工作時 | 更深層覆寫／補充（Grok **不擅自改**） |
-| **本檔 `GROK.md`** | **僅 Grok** | 重啟記憶；規則快照；**所有與 Grok 新約定的附加規則** |
+| `AGENTS.md` | 所有 agent | **既有共用**協作準則（Codex 遵守；Codex **不擅自改**） |
+| 子目錄 `AGENTS.md`（如 `app/experiences/AGENTS.md`） | 在該目錄工作時 | 更深層覆寫／補充（Codex **不擅自改**） |
+| **本檔 `mao.md`** | **僅 Codex** | 重啟記憶；規則快照；**所有與 Codex 新約定的附加規則** |
 
-**優先順序（Grok）：**
+**優先順序（Codex）：**
 
 1. 使用者當下明確指令  
-2. 本檔 `GROK.md` 內「寫入規則」與「Grok 專用備註」等**本對話／本專案為 Grok 新加的約定**  
+2. 本檔 `mao.md` 內「寫入規則」與「Codex 專用備註」等**本對話／本專案為 Codex 新加的約定**  
 3. `AGENTS.md`（含子目錄更深層 `AGENTS.md`）— 既有共用規則；**本檔新增內容不應要求其他 agent 做相反的事**  
 4. `.vscode/_docs/code-style` 細則（按需）
 
-**原則：** 不碰共用 agent 檔來塞 Grok 私規；新規則只 append 本檔。
+**原則：** 不碰共用 agent 檔來塞 Codex 私規；新規則只 append 本檔。
 
 ---
 
@@ -112,40 +112,40 @@ This is NOT the Next.js you know — APIs、慣例、目錄結構可能與訓練
 
 ---
 
-## Grok 專用備註（可往後追加 — 新規則只寫這裡）
+## Codex 專用備註（可往後追加 — 新規則只寫這裡）
 
-> 使用者與 Grok 新約定的偏好、分工、限制、流程，**一律 append 本節**（或本檔其他 Grok 小節），**不要**改 `AGENTS.md`。
+> 使用者與 Codex 新約定的偏好、分工、限制、流程，**一律 append 本節**（或本檔其他 Codex 小節），**不要**改 `AGENTS.md`。
 
 ### 已約定
 
-1. **新規則只進 `GROK.md`**：本專案與 Grok 對話中添加的規則，一律附加本檔；不寫入共用 `AGENTS.md`／其他 agent 檔（除非使用者明確要求改共用檔）。
-2. **`AGENTS.md` 保持原樣供其他人讀**：Grok 不為「引導自己」去改共用檔；重啟後自行讀本檔。
-3. **本人負責三大主題**：`blog`、`member/level`、`member/coupon`（見下方完整目錄條列）。預設工作範圍以此為主；改到範圍外路徑須使用者明確要求。
-4. **新手學習註解**：三大主題前後端要有 `【新手導讀】`／import 說明／函式對應路由／關鍵語法說明；新增邏輯沿用同風格，勿灌水到組員檔案。
+1. **新規則只進 `mao.md`**：本專案與 Codex 對話中添加的規則，一律附加本檔；不寫入共用 `AGENTS.md`／其他 agent 檔（除非使用者明確要求改共用檔）。
+2. **`AGENTS.md` 保持原樣供其他人讀**：Codex 不為「引導自己」去改共用檔；新 session／重新開啟專案時自行讀取本檔一次，之後保留於工作記憶。
+3. **本人負責一個主要功能與兩個小功能**：主要功能是 `blog`；兩個小功能是 `member/coupon`、`member/level`（見下方完整目錄條列）。預設工作範圍以此為主；改到範圍外路徑須使用者明確要求。
+4. **新手學習註解**：上述一個主要功能與兩個小功能的前後端要有 `【新手導讀】`／import 說明／函式對應路由／關鍵語法說明；新增邏輯沿用同風格，勿灌水到組員檔案。
    - 精讀範本：`member/level/*`、`member/coupon/api.ts`、`api-payment-success-rewards.ts`、`success/page.tsx`（接線 rewards）
 
 ### Session 重開檢查清單
 
-1. 讀本檔一次（含「寫入規則」、「Grok 專用備註」、**本人專案範圍**）。  
+1. 新 session／重新開啟專案時讀本檔一次（含「寫入規則」、「Codex 專用備註」、**本人專案範圍**），同一 session 不重複審視。  
 2. 套用本檔規則快照 + 現行共用 `AGENTS.md`（只讀、不擅自改）。  
 3. 使用者若再給新約定 → **只 append 本檔**。  
-4. 開始任務前確認：變更是否都對應使用者請求，且落在本人三大主題（或使用者明確授權的範圍）。
+4. 開始任務前確認：變更是否都對應使用者請求，且落在本人負責的一個主要功能與兩個小功能（或使用者明確授權的範圍）。
 
 ---
 
-## 本人專案範圍（使用者負責 — 三大主題）
+## 本人專案範圍（使用者負責 — 一個主要功能與兩個小功能）
 
-本 monorepo 中，使用者**最主要**負責下列三塊。Grok 協助開發時以這三主題為預設工作範圍。
+本 monorepo 中，使用者負責一個主要功能與兩個小功能。Codex 協助開發時以此為預設工作範圍。
 
 路徑以 workspace 根目錄（`期末-自己/`）為準：`next/` = 前端，`express/` = 後端。
 
-### 主題一覽
+### 功能一覽
 
-| 主題 | 前端主目錄 | 後端主路由 |
-|------|------------|------------|
-| **Blog** | `next/app/blog/` | `express/routes/api-blog.ts`、`api-blog-upload.ts` |
-| **Member / Level** | `next/app/member/level/` | `express/routes/api-member-level.ts` |
-| **Member / Coupon** | `next/app/member/coupon/` | `express/routes/api-member-coupon.ts` |
+| 規模 | 功能 | 前端主目錄 | 後端主路由 |
+|------|------|------------|------------|
+| **主要功能** | **Blog** | `next/app/blog/` | `express/routes/api-blog.ts`、`api-blog-upload.ts` |
+| **小功能** | **Member / Coupon** | `next/app/member/coupon/` | `express/routes/api-member-coupon.ts` |
+| **小功能** | **Member / Level** | `next/app/member/level/` | `express/routes/api-member-level.ts` |
 
 ---
 
@@ -228,7 +228,7 @@ express/routes/
 └── api-member-level.ts               # /api/member/level（或專案實際 mount 路徑）
 ```
 
-#### 2.3 會員殼層（level 掛在 member 下；非三大主題本體，改動需克制）
+#### 2.3 會員殼層（level 掛在 member 下；非本人負責功能本體，改動需克制）
 
 ```text
 next/app/member/
@@ -275,7 +275,7 @@ express/routes/
 
 ### 範圍外（預設不主動修改）
 
-下列模組**不是**本人三大主題主責；Grok **預設不改**，除非使用者當次明確要求：
+下列模組**不是**本人負責範圍；Codex **預設不改**，除非使用者當次明確要求：
 
 - `next/app/experiences/**`、`next/app/cart/**`、`next/app/checkout/**`、`next/app/payment/**`
 - `next/app/auth/**`（除非 blog／level／coupon 登入串接被明確要求）
@@ -288,11 +288,11 @@ express/routes/
 
 ### 目錄維護
 
-- 三大主題內**新增／移動／刪除檔案**後，請同步更新本節樹狀條列。
-- 只更新 `GROK.md`，不要把分工寫進共用 `AGENTS.md`。
+- 本人負責的一個主要功能與兩個小功能內**新增／移動／刪除檔案**後，請同步更新本節樹狀條列。
+- 只更新 `mao.md`，不要把分工寫進共用 `AGENTS.md`。
 
 ---
 
 **維護：**  
 - 共用 `AGENTS.md` 若被別人更新，可把變更同步進本檔「規則快照」。  
-- **禁止**把「只給 Grok 的新規則」反寫進 `AGENTS.md`。
+- **禁止**把「只給 Codex 的新規則」反寫進 `AGENTS.md`。

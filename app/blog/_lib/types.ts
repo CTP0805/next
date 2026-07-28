@@ -61,6 +61,11 @@ export interface BlogPost {
   created_at: string;
   author_id: number;
   category_id: number | null;
+  category_name?: string | null;
+  order_item_id?: number | null;
+  experience_id?: number | null;
+  experience_title?: string | null;
+  city?: string | null;
   /** 綁定的訂單（當「分類」用，新增後通常不可改） */
   order_id?: string | null;
   order_title?: string | null;
@@ -68,6 +73,8 @@ export interface BlogPost {
   review_note?: string | null;
   /** JOIN member 時可能有 */
   author_name?: string | null;
+  /** 已送出的文章留言總數；公開列表用於熱門文章排序。 */
+  comment_count?: number;
 }
 
 /**
@@ -97,16 +104,40 @@ export interface BlogEligibleOrder {
   order_status?: string;
 }
 
+export interface BlogComment {
+  id: number;
+  post_id: number;
+  member_id: number;
+  author_name: string;
+  author_avatar: string | null;
+  content: string;
+  created_at: string;
+}
+
 /**
- * 顯示用「分類」標籤：優先訂單名稱，否則 category_id
+ * 顯示商品類型名稱；舊 API 尚未回傳名稱時保留編號作為退回顯示。
  */
 export function blogCategoryLabel(
-  post: Pick<BlogPost, "order_title" | "category_id" | "title">,
+  post: Pick<BlogPost, "category_name" | "category_id">,
 ): string {
-  const orderTitle = post.order_title?.trim();
-  if (orderTitle) return orderTitle;
+  const categoryName = post.category_name?.trim();
+  if (categoryName) return categoryName;
   if (post.category_id != null) return `分類 #${post.category_id}`;
   return "未分類";
+}
+
+/** 顯示商品城市；舊 API 沒有 city 時暫由文章文字判斷。 */
+export function blogCityLabel(
+  post: Pick<BlogPost, "city" | "title" | "excerpt" | "content">,
+): string {
+  const city = post.city?.trim();
+  if (city) return city === "巴賽隆納" ? "巴塞隆納" : city;
+
+  const text = `${post.title}\n${post.excerpt ?? ""}\n${post.content}`;
+  const matchedCity = BLOG_REGIONS.find((region) => text.includes(region));
+  if (matchedCity) return matchedCity;
+  if (text.includes("巴賽隆納")) return "巴塞隆納";
+  return "未指定城市";
 }
 
 /**

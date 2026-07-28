@@ -4,6 +4,7 @@ import type { BlogPost } from "../_lib/types";
 import {
   BLOG_STATUS_LABEL,
   blogCategoryLabel,
+  blogCityLabel,
 } from "../_lib/types";
 import BlogMediaImage from "./BlogMediaImage";
 
@@ -18,6 +19,7 @@ interface BlogPostCardProps {
  * 等高校牌：固定圖片比例 + 標題/摘要固定行數
  */
 export default function BlogPostCard({ post, footer }: BlogPostCardProps) {
+  const city = blogCityLabel(post);
   const category = blogCategoryLabel(post);
   const dateLabel = post.published_at
     ? new Date(post.published_at).toLocaleDateString("zh-TW")
@@ -37,10 +39,6 @@ export default function BlogPostCard({ post, footer }: BlogPostCardProps) {
             className="object-cover object-center transition duration-700 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-          <span className="absolute bottom-3 left-3 rounded-[12px] bg-white/95 px-3 py-1 text-xs font-semibold text-teal-700 shadow-sm backdrop-blur">
-            {category}
-          </span>
         </div>
 
         <div className="flex flex-1 flex-col p-5 sm:p-6">
@@ -54,6 +52,9 @@ export default function BlogPostCard({ post, footer }: BlogPostCardProps) {
 
           <div className="mt-auto">
             <div className="flex flex-wrap gap-2">
+              <span className="inline-flex items-center rounded-[12px] bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
+                {city}
+              </span>
               <span className="inline-flex items-center rounded-[12px] bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
                 {category}
               </span>
