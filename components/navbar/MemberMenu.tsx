@@ -8,7 +8,7 @@ import type { MemberList } from "@/types/navbar";
 type MemberMenuProps = {
   auth: {
     name?: string;
-    image_url?: string;
+    avatar_url?: string;
     member_level: string;
   };
   logout: () => void;
@@ -20,6 +20,7 @@ export default function MemberMenu({
   memberLists,
 }: MemberMenuProps) {
   const [open, setOpen] = useState(false);
+
   return (
     <li
       onMouseEnter={() => setOpen(true)}
@@ -33,7 +34,10 @@ export default function MemberMenu({
         <div className="absolute top-full right-0 h-4 w-full bg-transparent"></div>
 
         <Image
-          src={auth.image_url || "/images/member-avatar/angry-man.jpg"}
+          src={
+            `http://localhost:3001${auth.avatar_url}` ||
+            "/images/member-avatar/angry-man.jpg"
+          }
           alt={auth.name || "User Avatar"}
           className="h-8 w-8 rounded-full object-cover"
           width={32}
@@ -49,7 +53,10 @@ export default function MemberMenu({
         <li className="mb-2 border-b">
           <div className="flex items-center gap-3 px-4 py-3">
             <Image
-              src={auth.image_url || "/images/member-avatar/angry-man.jpg"}
+              src={
+                `http://localhost:3001${auth.avatar_url}` ||
+                "/images/member-avatar/angry-man.jpg"
+              }
               alt="用戶頭像"
               width={48}
               height={48}

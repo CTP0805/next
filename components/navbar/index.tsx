@@ -87,6 +87,7 @@ export default function Navbar() {
           } satisfies MemberList,
         ]),
   ];
+
   const isHomePage = pathname === "/";
   const [isScrolled, setIsScrolled] = useState(false);
   useEffect(() => {
