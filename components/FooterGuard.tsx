@@ -1,13 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Footer from "./Footer";
 
 export default function FooterGuard() {
-  // 取得目前網址路徑
   const pathname = usePathname();
+  const [isMobile, setIsMobile] = useState(false);
 
-  // 這裡放「不想顯示 footer 的路由」
   const hideFooterRoutes = [
     "/auth/login",
     "/auth/register",
@@ -16,12 +16,30 @@ export default function FooterGuard() {
     "/auth/verify-email",
   ];
 
-  // 判斷目前頁面是不是在不要顯示 footer 的清單裡
-  const shouldHideFooter = hideFooterRoutes.includes(pathname);
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
 
-  // 如果是，就直接不渲染任何東西
+    const updateIsMobile = () => {
+      setIsMobile(mediaQuery.matches);
+    };
+
+    updateIsMobile();
+    mediaQuery.addEventListener("change", updateIsMobile);
+
+    return () => {
+      mediaQuery.removeEventListener("change", updateIsMobile);
+    };
+  }, []);
+
+  const isHiddenRoute = hideFooterRoutes.includes(pathname);
+
+  // 符合 /experiences/123，但不會誤判 /experiences/search
+  const isExperienceDetailPage = /^\/experiences\/\d+\/?$/.test(pathname);
+
+  const shouldHideFooter =
+    isHiddenRoute || (isMobile && isExperienceDetailPage);
+
   if (shouldHideFooter) return null;
 
-  // 否則正常顯示 Footer
   return <Footer />;
 }

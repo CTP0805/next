@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, type PointerEvent } from "react";
-import { HiOutlineCalendar } from "react-icons/hi";
+import { HiChevronDown, HiOutlineCalendar } from "react-icons/hi";
 
 type Category = {
   id: number;
@@ -13,7 +13,8 @@ type FilterPanelProps = {
   categories: Category[];
   categoryIds: number[];
   onCategoryIdsChange: (categoryIds: number[]) => void;
-
+  city: string;
+  onCityChange: (city: string) => void;
   minPrice: number;
   maxPrice: number;
   onMinPriceChange: (price: number) => void;
@@ -27,6 +28,8 @@ export default function FilterPanel({
   categories,
   categoryIds,
   onCategoryIdsChange,
+  city,
+  onCityChange,
   minPrice,
   maxPrice,
   onMinPriceChange,
@@ -109,6 +112,32 @@ export default function FilterPanel({
         </div>
       </div>
       <div className="space-y-5 px-5 py-5">
+        <fieldset>
+          <legend className="mb-2.5 text-[16px] font-extrabold text-[#34393E]">
+            城市
+          </legend>
+
+          <div className="relative">
+            <select
+              value={city}
+              onChange={(event) => onCityChange(event.target.value)}
+              className="h-11 w-full cursor-pointer appearance-none rounded-md border border-[#E1E5E7] bg-white px-3 pr-11 text-sm font-medium text-[#565D63] transition-colors outline-none hover:border-[#68BBC3] focus:border-[#68BBC3] focus:ring-2 focus:ring-[#68BBC3]/15"
+            >
+              <option value="">全部城市</option>
+              <option value="倫敦">倫敦</option>
+              <option value="巴黎">巴黎</option>
+              <option value="慕尼黑">慕尼黑</option>
+              <option value="阿姆斯特丹">阿姆斯特丹</option>
+              <option value="威尼斯">威尼斯</option>
+              <option value="巴塞隆納">巴塞隆納</option>
+            </select>
+
+            <HiChevronDown
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 right-3 size-5 -translate-y-1/2 text-[#737B81]"
+            />
+          </div>
+        </fieldset>
         <fieldset>
           <legend className="mb-2.5 text-[16px] font-extrabold text-[#34393E]">
             體驗類型

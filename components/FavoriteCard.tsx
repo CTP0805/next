@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import { HiStar, HiHeart, HiOutlineHeart } from "react-icons/hi";
 import { useFavorites, type FavoriteItem } from "@/contexts/FavoriteContext";
 
@@ -12,11 +13,12 @@ export default function FavoriteCard({ item }: { item: FavoriteItem }) {
   const handleFavoriteClick = async () => {
     try {
       await toggleFavorite(item.id);
+      toast.success("已從「心願清單」移除");
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "心願清單操作失敗";
 
-      alert(message);
+      toast.error(message);
     }
   };
 
@@ -49,7 +51,7 @@ export default function FavoriteCard({ item }: { item: FavoriteItem }) {
           onClick={handleFavoriteClick}
         >
           {favorite ? (
-            <HiHeart className="size-6 scale-110 text-red-500 transition-transform duration-200" />
+            <HiHeart className="size-6 scale-110 [stroke:white] [stroke-width:1.5] text-red-500 drop-shadow-[0_1px_3px_rgba(0,0,0,0.3)] transition-transform duration-200" />
           ) : (
             <HiOutlineHeart className="size-6 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]" />
           )}
@@ -59,7 +61,16 @@ export default function FavoriteCard({ item }: { item: FavoriteItem }) {
         <p className="text-[17px] leading-7 font-bold text-[#2B2F33]">
           {item.title}
         </p>
-        <p className="p-text-14 mt-1 font-medium text-[#7A8187]">{item.city}</p>
+        <p className="p-text-14 mt-1 flex items-center gap-1 font-medium text-[#68BBC3]">
+          <span>{item.city}</span>
+
+          {item.category_name && (
+            <>
+              <span className="hidden max-sm:inline">·</span>
+              <span className="hidden max-sm:inline">{item.category_name}</span>
+            </>
+          )}
+        </p>
         <div className="mt-1 flex flex-wrap items-center gap-x-2 text-[14px]">
           {item.review_count > 0 ? (
             <>
@@ -91,7 +102,7 @@ export default function FavoriteCard({ item }: { item: FavoriteItem }) {
         type="button"
         aria-label={favorite ? "取消收藏" : "加入最愛"}
         aria-pressed={favorite}
-        className="absolute top-8 right-5 z-10 block cursor-pointer p-1 max-sm:hidden"
+        className="absolute top-3 right-3 z-10 block cursor-pointer p-1 max-sm:hidden"
         onClick={handleFavoriteClick}
       >
         {favorite ? (
