@@ -27,6 +27,15 @@ type MemberList = {
   href: string;
 };
 
+const CITY_OPTIONS = [
+  "倫敦",
+  "巴黎",
+  "慕尼黑",
+  "阿姆斯特丹",
+  "威尼斯",
+  "巴塞隆納",
+] as const;
+
 export default function Navbar() {
   const { auth, isAuthenticated, logout } = useAuth(); // 直接使用 Context 提供的狀態與方法
   //獲取全域的購物車資料
@@ -82,6 +91,8 @@ export default function Navbar() {
 
   const isHomePage = pathname === "/";
   const urlKeyword = searchParams.get("keyword") ?? "";
+  const urlCity = searchParams.get("city") ?? "";
+  const searchValue = urlKeyword || urlCity;
 
   const [isScrolled, setIsScrolled] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -105,9 +116,15 @@ export default function Navbar() {
 
     if (!trimmedKeyword) return;
 
-    const params = new URLSearchParams({
-      keyword: trimmedKeyword,
-    });
+    const params = new URLSearchParams();
+
+    if (
+      CITY_OPTIONS.includes(trimmedKeyword as (typeof CITY_OPTIONS)[number])
+    ) {
+      params.set("city", trimmedKeyword);
+    } else {
+      params.set("keyword", trimmedKeyword);
+    }
 
     router.push(`/experiences/search?${params.toString()}`);
   };
@@ -143,10 +160,10 @@ export default function Navbar() {
         </button>
 
         <input
-          key={urlKeyword}
+          key={searchValue}
           ref={searchInputRef}
           type="search"
-          defaultValue={urlKeyword}
+          defaultValue={searchValue}
           placeholder="搜尋城市、分類或體驗"
           className="h-[40px] w-full rounded-[25px] bg-gray-300/20 pr-4 pl-10 text-[16px] placeholder:text-white/70 focus:outline-none [&::-webkit-search-cancel-button]:cursor-pointer"
         />

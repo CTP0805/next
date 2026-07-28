@@ -58,7 +58,7 @@ export default function FavoritesPage() {
               - 加上 items-center，強迫「目前有12個體驗」跟「下拉選單」不論在哪種螢幕都垂直完美置中！
               - 攤平結構：把之前的 label 套娃改成乾淨的平級結構。
             */}
-          <div className="flex min-h-[92px] items-center justify-between gap-4 border-b border-[#ECEFF0] max-md:hidden max-sm:min-h-0 max-sm:py-4">
+          <div className="flex min-h-[92px] items-center justify-between gap-4 border-b border-[#ECEFF0] max-sm:min-h-0 max-sm:py-4">
             <p className="text-[17px] font-bold text-[#51585E] max-sm:text-[15px]">
               目前有{" "}
               <span className="text-[22px] font-extrabold text-[#68BBC3] max-sm:text-lg">
@@ -79,7 +79,7 @@ export default function FavoritesPage() {
                 }
                 className="select select-bordered h-10 min-h-10 rounded-md border border-[#E1E5E7] bg-white pr-10 pl-4 text-sm font-bold text-[#454B50] outline-none hover:border-[#68BBC3]"
               >
-                <option value="latest">最新</option>
+                <option value="latest">最新收藏</option>
                 <option value="rating">評價最高</option>
                 <option value="price-low">價格低到高</option>
               </select>

@@ -144,7 +144,7 @@ export default function ExperienceDetailPage() {
   const [experience, setExperience] = useState<Experience | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const [activeHash, setActiveHash] = useState("overview");
+  const [activeSection, setActiveSection] = useState("overview");
   // 1. 控制回到頂端按鈕的顯示狀態
   const [showScrollTop, setShowScrollTop] = useState(false);
   const isEditMode = searchParams.get("edit") === "true";
@@ -164,12 +164,19 @@ export default function ExperienceDetailPage() {
 
     try {
       await toggleFavorite(experience.id);
+
+      if (favorite) {
+        toast.success("已從「心願清單」移除");
+      } else {
+        toast.success("已收藏至「心願清單」");
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "收藏操作失敗";
 
-      alert(message);
+      toast.error(message);
     }
   };
+
   const [isLinkCopied, setIsLinkCopied] = useState(false);
 
   const handleShareClick = async () => {
@@ -187,7 +194,25 @@ export default function ExperienceDetailPage() {
       toast.error("複製網址失敗，請手動複製網址列");
     }
   };
+  // 💡 解決重新整理跑到底部的 key：強制將滾動恢復模式設為 'manual'
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      "scrollRestoration" in window.history
+    ) {
+      window.history.scrollRestoration = "manual";
+    }
 
+    // 元件卸載時恢復預設，避免影響其他頁面
+    return () => {
+      if (
+        typeof window !== "undefined" &&
+        "scrollRestoration" in window.history
+      ) {
+        window.history.scrollRestoration = "auto";
+      }
+    };
+  }, []);
   useEffect(() => {
     if (!id) return;
 
@@ -218,67 +243,106 @@ export default function ExperienceDetailPage() {
 
   // 最近瀏覽
   useEffect(() => {
-  // authInit：確認前端已完成向後端確認登入狀態
-  // isAuthenticated：確認目前確實是登入會員
-  // experience：確認體驗詳細資料成功載入
-  if (!authInit || !isAuthenticated || !experience) {
-    return;
-  }
-
-  const saveRecentlyViewed = async (): Promise<void> => {
-    try {
-      const response = await fetch(
-        `${API_SERVER}/api/member/recently-viewed`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-
-          // 前端只送體驗 ID，不送 memberId
-          body: JSON.stringify({
-            experienceId: experience.id,
-          }),
-        },
-      );
-
-      // 未登入或 Cookie 過期時，不記錄即可。
-      // 登入保護元件會負責處理會員頁面的權限。
-      if (response.status === 401) {
-        return;
-      }
-
-      if (!response.ok) {
-        console.error("記錄最近瀏覽失敗");
-      }
-    } catch (error) {
-      // 不讓紀錄失敗影響使用者正常看體驗內容
-      console.error("記錄最近瀏覽時發生網路錯誤", error);
+    // authInit：確認前端已完成向後端確認登入狀態
+    // isAuthenticated：確認目前確實是登入會員
+    // experience：確認體驗詳細資料成功載入
+    if (!authInit || !isAuthenticated || !experience) {
+      return;
     }
-  };
 
-  void saveRecentlyViewed();
+    const saveRecentlyViewed = async (): Promise<void> => {
+      try {
+        const response = await fetch(
+          `${API_SERVER}/api/member/recently-viewed`,
+          {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+
+            // 前端只送體驗 ID，不送 memberId
+            body: JSON.stringify({
+              experienceId: experience.id,
+            }),
+          },
+        );
+
+        // 未登入或 Cookie 過期時，不記錄即可。
+        // 登入保護元件會負責處理會員頁面的權限。
+        if (response.status === 401) {
+          return;
+        }
+
+        if (!response.ok) {
+          console.error("記錄最近瀏覽失敗");
+        }
+      } catch (error) {
+        // 不讓紀錄失敗影響使用者正常看體驗內容
+        console.error("記錄最近瀏覽時發生網路錯誤", error);
+      }
+    };
+
+    void saveRecentlyViewed();
   }, [authInit, isAuthenticated, experience]);
 
   // 2. 監聽滾動距離
   useEffect(() => {
+    const sectionIds = ["overview", "host", "location", "reviews", "notes"];
+    const stickyOffset = 130;
+
     const handleScroll = () => {
-      if (window.scrollY > 400) {
-        setShowScrollTop(true);
-      } else {
-        setShowScrollTop(false);
-      }
+      setShowScrollTop(window.scrollY > 400);
+
+      let currentSection = "overview";
+
+      sectionIds.forEach((sectionId) => {
+        const section = document.getElementById(sectionId);
+
+        if (!section) return;
+
+        if (section.getBoundingClientRect().top <= stickyOffset) {
+          currentSection = sectionId;
+        }
+      });
+
+      setActiveSection(currentSection);
     };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    handleScroll();
+
+    window.addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
+
+    window.addEventListener("resize", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
   }, []);
 
   // 3. 平滑回到頂端邏輯
   const scrollToTop = () => {
+    setActiveSection("overview");
+
     window.scrollTo({
       top: 0,
       behavior: "smooth",
+    });
+  };
+
+  const scrollToSection = (sectionId: string) => {
+    const targetElement = document.getElementById(sectionId);
+
+    if (!targetElement) return;
+
+    setActiveSection(sectionId);
+
+    targetElement.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
     });
   };
 
@@ -292,21 +356,26 @@ export default function ExperienceDetailPage() {
     if (!experience) return;
 
     // 找出使用者選中的 Session 以確保拿到正確金額
-  const targetSession = experience.sessions.find((s) => s.id === sessionId);
-  const maxLimit = targetSession?.max_participants ?? 8;
+    const targetSession = experience.sessions.find((s) => s.id === sessionId);
+    const maxLimit = targetSession?.max_participants ?? 8;
 
     // 🚀 核心防呆：檢查購物車裡面「原本是否已經有這一個場次」
     const existingCartItem = items.find(
-      (item) => item.experienceId === experience.id && item.sessionId === sessionId
+      (item) =>
+        item.experienceId === experience.id && item.sessionId === sessionId,
     );
 
     // 如果不是編輯模式，需要把購物車舊數量與這次選擇的新數量相加
     if (!isEditMode && existingCartItem) {
-      const existingTotal = Number(existingCartItem.adultQuantity || 0) + Number(existingCartItem.childQuantity || 0);
+      const existingTotal =
+        Number(existingCartItem.adultQuantity || 0) +
+        Number(existingCartItem.childQuantity || 0);
       const newTotal = existingTotal + adultQty + childQty;
 
       if (newTotal > maxLimit) {
-        toast.error(`購物車內已有 ${existingTotal} 位，此場次最多預訂 ${maxLimit} 位！`);
+        toast.error(
+          `購物車內已有 ${existingTotal} 位，此場次最多預訂 ${maxLimit} 位！`,
+        );
         return; // ⛔ 阻擋發送請求
       }
     } else if (adultQty + childQty > maxLimit) {
@@ -317,11 +386,19 @@ export default function ExperienceDetailPage() {
     const productInfo = {
       experienceId: experience.id,
       name: experience.title,
-      price: targetSession?.adult_price ?? experience.adult_price ?? experience.price ?? 0,
-      adultPrice: targetSession?.adult_price ?? experience.adult_price ?? experience.price ?? 0,
+      price:
+        targetSession?.adult_price ??
+        experience.adult_price ??
+        experience.price ??
+        0,
+      adultPrice:
+        targetSession?.adult_price ??
+        experience.adult_price ??
+        experience.price ??
+        0,
       childPrice: targetSession?.child_price ?? experience.child_price ?? 0,
       image_url: experience.image_url ?? "",
-      image: experience.image_url ?? "", 
+      image: experience.image_url ?? "",
     };
 
     try {
@@ -350,46 +427,54 @@ export default function ExperienceDetailPage() {
 
   //處理點擊立即預定按鈕到checkout介面
   const handleDirectBook = async (
-  sessionId: number,
-  adultQty: number,
-  childQty: number,
-  sessionName: string,
-) => {
-  if (!experience) return;
+    sessionId: number,
+    adultQty: number,
+    childQty: number,
+    sessionName: string,
+  ) => {
+    if (!experience) return;
 
-  const targetSession = experience.sessions.find((s) => s.id === sessionId);
-  const maxLimit = targetSession?.max_participants ?? 8;
+    const targetSession = experience.sessions.find((s) => s.id === sessionId);
+    const maxLimit = targetSession?.max_participants ?? 8;
 
-  // 🚀 核心防呆
+    // 🚀 核心防呆
     if (adultQty + childQty > maxLimit) {
       toast.error(`該場次最多只能預訂 ${maxLimit} 位！`);
       return;
     }
 
-  const productInfo = {
-    experienceId: experience.id,
-    name: experience.title,
-    price: targetSession?.adult_price ?? experience.adult_price ?? experience.price ?? 0,
-    adultPrice: targetSession?.adult_price ?? experience.adult_price ?? experience.price ?? 0,
-    childPrice: targetSession?.child_price ?? experience.child_price ?? 0,
-    image: experience.image_url ?? undefined,
+    const productInfo = {
+      experienceId: experience.id,
+      name: experience.title,
+      price:
+        targetSession?.adult_price ??
+        experience.adult_price ??
+        experience.price ??
+        0,
+      adultPrice:
+        targetSession?.adult_price ??
+        experience.adult_price ??
+        experience.price ??
+        0,
+      childPrice: targetSession?.child_price ?? experience.child_price ?? 0,
+      image: experience.image_url ?? undefined,
+    };
+
+    try {
+      // 1. 寫入購物車後跳轉
+      await onAdd(productInfo, sessionId, adultQty, childQty, sessionName);
+      // 2. 順暢跳轉至結帳頁面
+      toast.success("正在前往結帳頁面");
+      router.push("/checkout");
+    } catch (error) {
+      console.error("立即預訂失敗:", error);
+      toast.error("預訂失敗，請重試！");
+    }
   };
 
-  try {
-    // 1. 寫入購物車後跳轉
-    await onAdd(productInfo, sessionId, adultQty, childQty, sessionName);
-    // 2. 順暢跳轉至結帳頁面
-    toast.success("正在前往結帳頁面");
-    router.push("/checkout");
-  } catch (error) {
-    console.error("立即預訂失敗:", error);
-    toast.error("預訂失敗，請重試！");
-  }
-};
-
-// 【型別與載入保護】絕對不能刪！有這兩段 TypeScript 才知道底下的 experience 絕對不為 null
+  // 【型別與載入保護】絕對不能刪！有這兩段 TypeScript 才知道底下的 experience 絕對不為 null
   if (isLoading) {
-    return <Loading/>
+    return <Loading />;
     // return <div className="px-6 py-20 text-center">載入中...</div>;
   }
 
@@ -588,22 +673,19 @@ export default function ExperienceDetailPage() {
             <div className="w-full border-t border-[#DEE3E5]" />
             <nav className="sticky top-15 z-20 flex gap-8 border-b border-[#DEE3E5] bg-white/95 px-1 backdrop-blur max-sm:[scrollbar-width:none] max-sm:overflow-x-auto max-sm:[&::-webkit-scrollbar]:hidden">
               {[
-                ["#overview", "體驗介紹"],
-                ["#host", "在地嚮導"],
-                ["#location", "集合地點"],
-                ["#reviews", "旅人好評"],
-                ["#notes", "注意事項"],
-              ].map(([href, label]) => {
-                // 💡 步驟 2：檢查目前這個項目的 href 是不是就是被啟動的 activeHash
-                const isActive = activeHash === href;
+                ["overview", "體驗介紹"],
+                ["host", "在地嚮導"],
+                ["location", "集合地點"],
+                ["reviews", "旅人好評"],
+                ["notes", "注意事項"],
+              ].map(([sectionId, label]) => {
+                const isActive = activeSection === sectionId;
 
                 return (
-                  <a
-                    key={href}
-                    href={href}
-                    // 💡 步驟 3：點擊時，把目前的 href 存進 state 裡
-                    onClick={() => setActiveHash(href)}
-                    // 💡 步驟 4：動態判斷 class，是 active 就給水藍色，不是就給灰色
+                  <button
+                    key={sectionId}
+                    type="button"
+                    onClick={() => scrollToSection(sectionId)}
                     className={`shrink-0 border-b-2 py-4 text-sm font-extrabold transition-colors ${
                       isActive
                         ? "border-[#68BBC3] text-[#4CA3AB]"
@@ -611,7 +693,7 @@ export default function ExperienceDetailPage() {
                     }`}
                   >
                     {label}
-                  </a>
+                  </button>
                 );
               })}
             </nav>
@@ -653,7 +735,8 @@ export default function ExperienceDetailPage() {
             />
             <NotesSection notes={experience.notes} />
           </div>
-
+          {/* 讓最後一個區塊有足夠空間捲到導覽列下方 */}
+          <div aria-hidden="true" className="hidden h-[20vh] max-sm:block" />
           <div className="hidden lg:sticky lg:top-20 lg:block">
             <BookingCard
               sessions={experience.sessions}

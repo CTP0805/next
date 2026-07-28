@@ -39,7 +39,7 @@ export default function ExperienceListPage() {
   const router = useRouter();
   const pathname = usePathname();
   const MAX_PRICE_LIMIT = 9999;
-  const city = searchParams.get("city")?.trim() ?? "";
+  const urlCity = searchParams.get("city") ?? "";
   const keyword = searchParams.get("keyword") ?? "";
   const [selectedDate, setSelectedDate] = useState(() => {
     const date = searchParams.get("date") ?? "";
@@ -67,6 +67,8 @@ export default function ExperienceListPage() {
       ? urlSort
       : "popular";
   });
+  const [city, setCity] = useState(urlCity);
+
   const [minPrice, setMinPrice] = useState(() => {
     const value = Number(searchParams.get("min_price"));
 
@@ -88,6 +90,7 @@ export default function ExperienceListPage() {
 
     return Number.isInteger(value) && value > 0 ? value : 1;
   });
+
   const titleKeyword = keyword || city;
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -98,9 +101,12 @@ export default function ExperienceListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const isFirstLoad = useRef(true);
-  const previousSearchRef = useRef({ keyword, city });
+  const isSyncingCityFromUrlRef = useRef(false);
+  const previousUrlCityRef = useRef(urlCity);
+  const previousKeywordRef = useRef(keyword);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const clearFilters = () => {
+    setCity("");
     setCategoryIds([]);
     setMinPrice(0);
     setMaxPrice(MAX_PRICE_LIMIT);
@@ -108,22 +114,60 @@ export default function ExperienceListPage() {
     setPage(1);
   };
   const activeFilterCount =
+    (city ? 1 : 0) +
     categoryIds.length +
-    (selectedDate !== "" ? 1 : 0) +
-    (minPrice > 0 || maxPrice < MAX_PRICE_LIMIT ? 1 : 0);
+    (minPrice > 0 ? 1 : 0) +
+    (maxPrice < MAX_PRICE_LIMIT ? 1 : 0) +
+    (selectedDate ? 1 : 0);
   // 建立控制「回到頂端」按鈕是否顯示的狀態
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
-    const previousSearch = previousSearchRef.current;
+    if (previousUrlCityRef.current === urlCity) return;
 
-    const hasSearchContextChanged =
-      previousSearch.keyword !== keyword || previousSearch.city !== city;
+    previousUrlCityRef.current = urlCity;
 
-    previousSearchRef.current = { keyword, city };
+    // Navbar 搜尋或瀏覽器導航造成網址城市改變
+    if (city !== urlCity) {
+      isSyncingCityFromUrlRef.current = true;
 
-    // 第一次進頁面不重設，避免吃掉網址原本的 category_ids
-    if (!hasSearchContextChanged) return;
+      setCity(urlCity);
+      setCategoryIds([]);
+      setMinPrice(0);
+      setMaxPrice(MAX_PRICE_LIMIT);
+      setSelectedDate("");
+      setSort("popular");
+      setPage(1);
+    }
+  }, [urlCity, city]);
+
+  // 💡 在列表頁元件中放置這段程式碼
+  useEffect(() => {
+    // 1. 強制讓瀏覽器不要擅自恢復之前的滾動位置
+    if (
+      typeof window !== "undefined" &&
+      "scrollRestoration" in window.history
+    ) {
+      window.history.scrollRestoration = "manual";
+    }
+
+    // 2. 剛回到列表頁時，強制回到最頂端
+    window.scrollTo(0, 0);
+
+    return () => {
+      if (
+        typeof window !== "undefined" &&
+        "scrollRestoration" in window.history
+      ) {
+        window.history.scrollRestoration = "auto";
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (previousKeywordRef.current === keyword) return;
+
+    previousKeywordRef.current = keyword;
 
     setCategoryIds([]);
     setMinPrice(0);
@@ -131,13 +175,27 @@ export default function ExperienceListPage() {
     setSelectedDate("");
     setSort("popular");
     setPage(1);
-  }, [keyword, city]);
-  useEffect(() => {
-    const params = new URLSearchParams();
+  }, [keyword]);
 
+  useEffect(() => {
+    if (isSyncingCityFromUrlRef.current) {
+      if (city === urlCity) {
+        isSyncingCityFromUrlRef.current = false;
+      }
+
+      return;
+    }
+    const params = new URLSearchParams();
     // 保留搜尋本身帶來的條件
-    if (keyword) params.set("keyword", keyword);
-    if (city) params.set("city", city);
+    if (keyword) {
+      params.set("keyword", keyword);
+      // 只有當 city 真的跟 keyword 不一樣時（例如 keyword=旅拍 & city=倫敦）才同時帶 city
+      if (city && city !== keyword) {
+        params.set("city", city);
+      }
+    } else if (city) {
+      params.set("city", city);
+    }
 
     // 非預設值才寫進網址，網址會比較乾淨
     if (categoryIds.length > 0) {
@@ -175,6 +233,7 @@ export default function ExperienceListPage() {
   }, [
     keyword,
     city,
+    urlCity,
     categoryIds,
     minPrice,
     maxPrice,
@@ -195,9 +254,11 @@ export default function ExperienceListPage() {
 
         if (keyword) {
           params.set("keyword", keyword);
-        }
-
-        if (city) {
+          // 只有當使用者在左側選單『手動挑選了不同的城市』時，才同時帶 city
+          if (city && city !== keyword) {
+            params.set("city", city);
+          }
+        } else if (city) {
           params.set("city", city);
         }
         if (selectedDate) {
@@ -332,6 +393,11 @@ export default function ExperienceListPage() {
     setPage(1);
   };
 
+  const handleCityChange = (newCity: string) => {
+    setCity(newCity);
+    setPage(1);
+  };
+
   const handleMinPriceChange = (newMinPrice: number) => {
     setMinPrice(newMinPrice);
     setPage(1);
@@ -379,6 +445,8 @@ export default function ExperienceListPage() {
           <div className="sticky top-25 h-fit max-lg:hidden">
             <FilterPanel
               maxPriceLimit={MAX_PRICE_LIMIT}
+              city={city}
+              onCityChange={handleCityChange}
               categories={categories}
               categoryIds={categoryIds}
               minPrice={minPrice}
@@ -391,74 +459,63 @@ export default function ExperienceListPage() {
             />
           </div>
           <section aria-label="體驗列表" className="min-w-0">
-            <div className="mb-6 flex items-center justify-between gap-4">
-              <div>
-                <p className="text-[16px] font-bold whitespace-nowrap text-[#596066] sm:text-[14px]">
+            <div className="mb-6 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="shrink-0 text-[16px] font-bold whitespace-nowrap text-[#596066] sm:text-[14px]">
                   <span className="mr-1 text-[20px] font-extrabold text-[#68BBC3] sm:text-[18px]">
                     {pagination.total}
                   </span>
                   項體驗可預訂
                 </p>
 
-                {activeFilterCount > 0 && (
-                  <div className="mt-1 flex items-center gap-3">
-                    <p className="text-sm font-bold text-[#596066]">
-                      已選擇 {activeFilterCount} 個篩選條件
-                    </p>
+                <div className="flex min-w-0 items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsFilterOpen(true)}
+                    className="flex h-10 shrink-0 items-center gap-1.5 rounded-md border border-[#DDE2E4] px-3 text-sm font-bold text-[#4D545A] hover:border-[#68BBC3] lg:hidden"
+                  >
+                    <HiAdjustments className="size-4 text-[#68BBC3]" />
+                    <span>篩選</span>
+                  </button>
 
-                    <button
-                      type="button"
-                      onClick={clearFilters}
-                      className="text-sm font-medium text-[#489DA5] underline underline-offset-4 hover:text-[#287D85]"
-                    >
-                      清除
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2">
-                {/* 💡 修正 2：手機版專屬「篩選按鈕」。只在 lg 以下顯示，點擊開啟彈窗 */}
-                <button
-                  type="button"
-                  onClick={() => setIsFilterOpen(true)}
-                  className="flex h-10 shrink-0 items-center gap-1.5 rounded-md border border-[#DDE2E4] px-3 text-sm font-bold text-[#4D545A] hover:border-[#68BBC3] lg:hidden"
-                >
-                  <HiAdjustments className="size-4 text-[#68BBC3]" />
-                  <span>篩選</span>
-                </button>
-
-                <span className="text-sm font-medium text-[#777E84] max-sm:hidden">
-                  排序方式
-                </span>
-                <div className="relative">
                   <select
                     value={sort}
                     onChange={(event) =>
                       handleSortChange(event.target.value as SortOption)
                     }
                     aria-label="排序方式"
-                    className="h-10 appearance-none rounded-md border border-[#DDE2E4] bg-white py-0 pr-11 pl-4 text-sm font-bold text-[#4D545A] outline-none hover:border-[#68BBC3] hover:ring-2 hover:ring-[#68BBC3]/20"
+                    className="select h-10 min-h-10 w-[116px] rounded-md border border-[#DDE2E4] bg-white px-2 text-sm font-bold text-[#4D545A] shadow-none outline-none hover:border-[#68BBC3] focus:outline-none sm:w-[140px]"
                   >
                     <option value="popular">熱門推薦</option>
                     <option value="rating">評價最高</option>
                     <option value="price_asc">價格低到高</option>
                   </select>
-
-                  <HiChevronDown
-                    aria-hidden="true"
-                    className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-[#737B81]"
-                  />
                 </div>
               </div>
+
+              {activeFilterCount > 0 && (
+                <div className="flex items-center gap-3 rounded-md bg-[#F4FAFA] px-3 py-2 max-sm:justify-between">
+                  <p className="text-sm font-bold text-[#596066]">
+                    已套用 {activeFilterCount} 個篩選條件
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="shrink-0 text-sm font-medium whitespace-nowrap text-[#489DA5] underline underline-offset-4 hover:text-[#287D85]"
+                  >
+                    清除
+                  </button>
+                </div>
+              )}
             </div>
 
             {loading ? (
-              <Loading/>
-              // <div className="px-6 py-16 text-center">
-              //   <p className="font-bold text-[#596066]">載入中...</p>
-              // </div>
-            ) : experiences.length === 0 ? (
+              <Loading />
+            ) : // <div className="px-6 py-16 text-center">
+            //   <p className="font-bold text-[#596066]">載入中...</p>
+            // </div>
+            experiences.length === 0 ? (
               <div className="rounded-lg border border-[#E3E7E9] px-6 py-16 text-center">
                 <p className="font-bold text-[#596066]">找不到符合條件的體驗</p>
                 <p className="mt-2 text-sm text-[#969CA1]">
@@ -482,16 +539,41 @@ export default function ExperienceListPage() {
                 ))}
               </div>
             )}
+            {/* 手機／平板版簡化分頁 */}
+            <nav
+              aria-label="手機版商品列表分頁"
+              className="mt-12 flex items-center justify-center gap-3 md:hidden"
+            >
+              <button
+                type="button"
+                aria-label="上一頁"
+                disabled={page === 1}
+                onClick={() => setPage((currentPage) => currentPage - 1)}
+                className="grid size-10 place-items-center rounded-md border border-[#E0E4E6] bg-white text-lg font-bold text-[#6E757B] hover:border-[#68BBC3] hover:text-[#489DA5] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                ‹
+              </button>
+
+              <span className="min-w-[90px] text-center text-sm font-bold text-[#596066]">
+                第 {page} / {pagination.totalPages || 1} 頁
+              </span>
+
+              <button
+                type="button"
+                aria-label="下一頁"
+                disabled={
+                  page >= pagination.totalPages || pagination.totalPages === 0
+                }
+                onClick={() => setPage((currentPage) => currentPage + 1)}
+                className="grid size-10 place-items-center rounded-md border border-[#E0E4E6] bg-white text-lg font-bold text-[#6E757B] hover:border-[#68BBC3] hover:text-[#489DA5] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                ›
+              </button>
+            </nav>
             <nav
               aria-label="商品列表分頁"
-              className="mt-20 flex items-center justify-center gap-2"
+              className="mt-20 flex items-center justify-center gap-2 max-md:hidden"
             >
-              {/* 📱 手機版專屬（小於 768px）：溫馨的到底提示 */}
-              <div className="hidden flex-col items-center gap-2 py-4 max-md:flex">
-                <p className="text-sm font-medium tracking-wide text-[#8A9196]">
-                  到底了！暫時沒有其他體驗囉
-                </p>
-              </div>
               <button
                 type="button"
                 aria-label="上一頁"
@@ -571,6 +653,8 @@ export default function ExperienceListPage() {
           <div className="flex-1 overflow-y-auto p-6">
             <FilterPanel
               maxPriceLimit={MAX_PRICE_LIMIT}
+              city={city}
+              onCityChange={handleCityChange}
               categories={categories}
               categoryIds={categoryIds}
               minPrice={minPrice}
