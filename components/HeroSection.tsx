@@ -25,7 +25,7 @@ export default function HeroSwiper() {
     {
       id: 1,
       title: "Play Like a Local",
-      image: "/images/banner/carousel1.avif",
+      image: "/images/banner/carousel1.jpg",
     },
     {
       id: 2,
