@@ -33,7 +33,7 @@ export const emptyAuth: Auth = {
   name: "",
   email: "",
   phone: "",
-  member_level: "銅",
+  member_level: "啟程旅人",
   current_points: 0,
   role: "",
   avatar_url: null,
@@ -67,8 +67,9 @@ type AuthContextValue = {
   authInit: boolean;
   isAuthenticated: boolean;
   isLoggingOut: boolean;
+  showToast: boolean;
   login: (email: string, password: string) => Promise<boolean>; // 因為裡面有用到 async/await，所以要用 Promise
-  logout: () => Promise<void>;
+  logout: (showToast?: boolean) => Promise<void>;
   refreshAuth: () => Promise<void>;
   resendVerifyEmail: (email: string) => Promise<void>;
 };
@@ -94,6 +95,8 @@ export function AuthContextProvider({
   const [auth, setAuth] = useState(emptyAuth);
   const [authInit, setAuthInit] = useState(false); // true：後端已經回答，目前可安全判斷是否登入 false：還在問後端登入狀態
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showToast, setShowToast] = useState(true); // 修改密碼後的登出 顯示修改密碼的toast 不要顯示登出後的toast(配合AuthRouteGuard.tsx)
+  
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -244,9 +247,12 @@ export function AuthContextProvider({
     return false;
   };
 
-  const logout = async (): Promise<void> => {
+  const logout = async (toast = true): Promise<void> => {
     try {
+      // 使用者按下登出後 直接跳轉首頁(配合AuthRouteGuard.tsx)
       setIsLoggingOut(true);
+      // showToast 為 false 時，不讓路由守衛顯示「登出成功」
+      setShowToast(toast);
       await fetch(`${API_SERVER}/api/auth/logout`, {
         method: "POST",
         credentials: "include",
@@ -270,6 +276,7 @@ export function AuthContextProvider({
         authInit, // 是否已經問完後端登入狀態
         isAuthenticated: auth.id !== 0, // 是否已登入的簡單 true / false 判斷 (true-->已登入、false-->未登入)
         isLoggingOut, // 給 AuthRouteGuard 判斷是否為手動登出
+        showToast,
         login,
         logout,
         refreshAuth, // 呼叫 /api/auth/me 重新確認 Cookie 的函式
