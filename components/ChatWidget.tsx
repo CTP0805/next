@@ -88,7 +88,7 @@ export default function ChatWidget() {
 
     if (targetField === "客服") {
       // 判定等於客服時：不開啟彈跳視窗，改為給予連結或直接跳轉頁面
-      window.location.href = "http://localhost:3000/admin/chat"; 
+      window.location.href = "http://localhost:3000/admin/chat";
       return;
     }
 
@@ -152,6 +152,14 @@ export default function ChatWidget() {
               <button
                 onClick={sendMessage}
                 className="rounded-xl bg-[#45cad5] p-3 text-white transition-colors hover:bg-[#45cad5]"
+                onKeyDown={(e) => {
+                  if (e.nativeEvent.isComposing) return;
+
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
               >
                 <Send size={20} />
               </button>
