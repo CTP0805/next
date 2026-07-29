@@ -125,8 +125,11 @@ export default function BlogPostForm({
 
   useEffect(() => {
     if (mode !== "create" || !authInit || !isAuthenticated) {
-      setOrdersLoading(false);
-      return;
+      const timeoutId = window.setTimeout(
+        () => setOrdersLoading(false),
+        0,
+      );
+      return () => window.clearTimeout(timeoutId);
     }
     let cancelled = false;
     (async () => {
@@ -223,12 +226,16 @@ export default function BlogPostForm({
   /**
    * 解析最終寫入 DB 的圖片路徑
    * - pending_review + 本機檔 → 先 upload
-   * - draft + 本機檔 → 沿用舊圖（不上傳）
+   * - draft → 不保存封面，送審時需重新上傳
    * - 外連／已上傳路徑 → 直接使用
    */
   async function resolveImageForSubmit(
     status: BlogPostStatus,
   ): Promise<string | null> {
+    if (status === "draft") {
+      return null;
+    }
+
     if (status === "pending_review" && pendingFile) {
       setUploading(true);
       try {
@@ -240,16 +247,6 @@ export default function BlogPostForm({
       } finally {
         setUploading(false);
       }
-    }
-
-    if (pendingFile && status === "draft") {
-      const previous =
-        initial?.content_image ?? initial?.cover_image ?? null;
-      toast(
-        "草稿未上傳本機封面；送出審查時才會上傳。草稿沿用原圖（若有）。",
-        { icon: "ℹ️" },
-      );
-      return previous;
     }
 
     const ref = savedImageRef.trim();
@@ -329,7 +326,9 @@ export default function BlogPostForm({
           : await updateBlogPost(initial!.id, payload);
 
       toast.success(
-        status === "draft" ? "草稿已儲存至資料庫" : "已送出審查並寫入資料庫",
+        status === "draft"
+          ? "草稿已儲存；送出審查時請重新上傳圖片"
+          : "已送出審查並寫入資料庫",
       );
       onSuccess?.(post);
     } catch (e) {
@@ -400,7 +399,7 @@ export default function BlogPostForm({
           required
         />
         <p className="mt-1 text-xs text-gray-400">
-          最多 {BLOG_TITLE_MAX} 字 · 別名：{slugifyTitle(title) || "（自動）"}
+          最多 {BLOG_TITLE_MAX} 字
         </p>
       </div>
 
@@ -480,12 +479,7 @@ export default function BlogPostForm({
       </div>
 
       <div className="space-y-3 rounded-[12px] border border-gray-200 p-4">
-        <div>
-          <p className={labelClass}>內文頂圖／封面縮圖</p>
-          <p className="text-xs text-gray-400">
-            選圖後可裁切與縮放（21:9）；「送出審查」時上傳。也可貼 https 外連。
-          </p>
-        </div>
+        <p className={labelClass}>內文頂圖／封面縮圖</p>
 
         {previewSrc ? (
           <div className="relative aspect-[21/9] w-full overflow-hidden rounded-[12px] bg-gray-100">
@@ -516,19 +510,14 @@ export default function BlogPostForm({
         )}
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={ACCEPT_TYPES.join(",")}
-              onChange={handleImagePick}
-              disabled={busy}
-              className="block w-full text-sm text-gray-600 file:mr-4 file:rounded-[12px] file:border-0 file:bg-teal-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-teal-700 disabled:opacity-50"
-            />
-            <p className="mt-1 text-[11px] text-gray-400">
-              支援裁切／縮放（react-easy-crop）
-            </p>
-          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ACCEPT_TYPES.join(",")}
+            onChange={handleImagePick}
+            disabled={busy}
+            className="block h-12 w-full rounded-[12px] border border-gray-200 bg-white text-sm text-gray-600 file:mr-4 file:h-full file:rounded-l-[12px] file:border-0 file:bg-teal-50 file:px-4 file:text-sm file:font-medium file:text-teal-700 disabled:opacity-50"
+          />
           <input
             id="blog-content-image"
             type="text"
@@ -547,7 +536,7 @@ export default function BlogPostForm({
           <p className="text-xs text-teal-600">正在上傳封面…</p>
         ) : hasPendingLocal ? (
           <p className="text-xs text-amber-600">
-            本機預覽中；儲存草稿不會上傳封面，送出審查才會上傳。
+            本機預覽中；儲存草稿不會保留封面，送出審查時需重新上傳。
           </p>
         ) : savedImageRef.startsWith("/uploads/") ? (
           <p className="text-xs text-gray-400">已存伺服器：{savedImageRef}</p>

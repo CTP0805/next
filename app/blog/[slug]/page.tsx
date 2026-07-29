@@ -9,6 +9,7 @@
  */
 import React from "react";
 import Link from "next/link";
+import { BlogBackToTopButton } from "../_components/BlogBackToTopButton";
 import BlogCommentSection from "../_components/BlogCommentSection";
 import BlogMediaImage from "../_components/BlogMediaImage";
 import BlogOwnerEditLink from "../_components/BlogOwnerEditLink";
@@ -129,7 +130,7 @@ export default async function BlogDetail({
                   ) : null}
                   <BlogOwnerEditLink
                     authorId={post.author_id}
-                    href={`/blog/${post.slug}/edit`}
+                    href={`/member/edit-post?tab=create&draft=${post.id}`}
                     className="ml-auto text-sm font-medium text-teal-600 hover:underline"
                   >
                     編輯此文
@@ -141,6 +142,13 @@ export default async function BlogDetail({
                 </h1>
 
                 <div className="mb-8 flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-gray-100 pb-6 text-sm text-gray-500">
+                  <span className="font-medium text-gray-700">
+                    作者：{post.author_name?.trim() || `會員 #${post.author_id}`}
+                  </span>
+                  <span
+                    className="hidden h-1 w-1 rounded-[12px] bg-gray-300 sm:inline-block"
+                    aria-hidden
+                  />
                   {publishedLabel ? (
                     <time dateTime={post.published_at ?? undefined}>
                       {publishedLabel}
@@ -247,6 +255,7 @@ export default async function BlogDetail({
           </aside>
         </div>
       </div>
+      <BlogBackToTopButton />
     </div>
   );
 }
