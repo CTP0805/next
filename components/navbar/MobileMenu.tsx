@@ -101,16 +101,26 @@ export default function MobileMenu({
             {!isAuthenticated && (
               <>
                 <li>
-                  <Link href="/auth/login" onClick={closeMenu}>
+                  <Link
+                    href="/auth/login"
+                    onClick={closeMenu}
+                    className="text-[#ACACAC]hover:bg-zinc-50 item-center flex w-full items-center border-gray-100 pt-3 pb-1"
+                  >
                     登入
                   </Link>
                 </li>
+                <div className=" border-t border-gray-100" />
+
                 <li>
-                  <Link href="/auth/register" onClick={closeMenu}>
+                  <Link
+                    href="/auth/register"
+                    onClick={closeMenu}
+                    className="flex w-full items-center py-1.5 text-[#ACACAC]"
+                  >
                     註冊
                   </Link>
                 </li>
-                <div className="my-2 border-t border-gray-100" />
+                <div className="mb-2 border-t border-gray-100" />
               </>
             )}
 
