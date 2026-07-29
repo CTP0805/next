@@ -19,8 +19,18 @@ type BookingCardProps = {
   isEditMode?: boolean;
   oldSessionId?: number | null;
   oldQty?: number | null;
-  onSubmit: (sessionId: number, adultQty: number, childQty: number, sessionName: string) => void;
-  onDirectBook: (sessionId: number, adultQty: number,childQty: number, sessionName: string) => void;
+  onSubmit: (
+    sessionId: number,
+    adultQty: number,
+    childQty: number,
+    sessionName: string,
+  ) => void;
+  onDirectBook: (
+    sessionId: number,
+    adultQty: number,
+    childQty: number,
+    sessionName: string,
+  ) => void;
 };
 const formatDateValue = (dateString: string) => {
   return new Date(dateString).toISOString().slice(0, 10);
@@ -70,8 +80,9 @@ export default function BookingCard({
   // 只有在當前日期有場次時才去匹配 selectedSession，否則為 null
   const selectedSession =
     sessionsByDate.length > 0
-    ? (sessionsByDate.find((session) => session.id === selectedSessionId) ?? sessionsByDate[0])
-    : null;
+      ? (sessionsByDate.find((session) => session.id === selectedSessionId) ??
+        sessionsByDate[0])
+      : null;
 
   const adultPrice = selectedSession?.adult_price ?? 0;
   const childPrice = selectedSession?.child_price ?? 0;
@@ -84,7 +95,7 @@ export default function BookingCard({
         selectedSession.end_time,
       )}`
     : "";
-  
+
   // 🚀 取得當前選中場次的人數上限 (若資料庫沒給預設 8 人)
   const maxLimit = selectedSession?.max_participants ?? 8;
 
@@ -106,7 +117,7 @@ export default function BookingCard({
   // 🚀 處理兒童數量變更防呆
   const handleChildChange = (nextChildren: number) => {
     const validChildren = Math.max(0, nextChildren);
-    
+
     // 增加兒童且目前大人是 0 時，會自動補 1 大人的情況檢查
     let neededAdults = adults;
     if (validChildren > 0 && adults === 0) {
@@ -124,7 +135,6 @@ export default function BookingCard({
     setChildren(validChildren);
   };
 
-
   return (
     <aside className="sticky top-28 rounded-lg border border-[#DDE3E5] bg-white p-6 shadow-[0_8px_24px_rgba(34,57,61,0.10)]">
       <p className="text-[15px] font-bold text-[#858D92]">
@@ -133,7 +143,6 @@ export default function BookingCard({
         </span>{" "}
         起
       </p>
-
       <label className="mt-6 block">
         <span className="mb-2 block text-xs font-bold text-[#656D72]">
           選擇日期
@@ -170,7 +179,6 @@ export default function BookingCard({
           </button>
         </div>
       </label>
-
       <label className="mt-4 block">
         <span className="mb-2 block text-xs font-bold text-[#656D72]">
           場次
@@ -203,7 +211,6 @@ export default function BookingCard({
           </p>
         )}
       </label>
-
       <div className="mt-4">
         <p className="text-[14px] font-bold text-[#656D72]">參加人數</p>
         <Stepper
@@ -222,21 +229,22 @@ export default function BookingCard({
           min={0}
         />
       </div>
-
       <div className="my-5 flex items-center justify-between border-t border-[#E8ECEE] pt-5">
         <span className="font-bold text-[#545C61]">合計</span>
         <strong className="text-[20px] text-[#30363A]">
           NT$ {total.toLocaleString("zh-TW")}
         </strong>
       </div>
-
+      ·
       <div className="grid grid-cols-2 gap-3">
-        
         {/* 加入購物車 / 確認修改按鈕 */}
         <button
           type="button"
           disabled={!selectedSession || sessionsByDate.length === 0}
-          onClick={() => selectedSession && onSubmit(selectedSession.id, adults, children, sessionName)}
+          onClick={() =>
+            selectedSession &&
+            onSubmit(selectedSession.id, adults, children, sessionName)
+          }
           className="h-12 rounded-xl bg-[#FF9224] text-[16px] font-extrabold text-white transition-colors hover:bg-[#F48312] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF9224]"
         >
           {isEditMode ? "確認修改" : "加入購物車"}
@@ -246,17 +254,18 @@ export default function BookingCard({
         <button
           type="button"
           disabled={!selectedSession || sessionsByDate.length === 0}
-          onClick={() => selectedSession && onDirectBook(selectedSession.id, adults, children, sessionName)}
+          onClick={() =>
+            selectedSession &&
+            onDirectBook(selectedSession.id, adults, children, sessionName)
+          }
           className="h-12 rounded-xl bg-[#68BBC3] text-[16px] font-extrabold text-white transition-colors hover:bg-[#55AAB2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#68BBC3]"
         >
           立即預訂
         </button>
       </div>
-
       <p className="mt-4 text-center text-[12px] text-[#8B9297]">
         預訂前不會向您收費
       </p>
-
       <ul className="mt-5 space-y-2 border-t border-[#E8ECEE] pt-5 text-[12px] font-medium text-[#6F777C]">
         <li>◉ 24 小時前免費取消</li>
         <li>◉ 小團體驗，最多 8 人成行</li>

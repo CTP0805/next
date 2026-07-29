@@ -10,6 +10,7 @@ type ExperienceReview = {
   image_url: string | null;
   member_name: string | null;
   member_avatar: string | null;
+  member_city: string | null;
   departure_date: string | null;
 };
 
@@ -72,7 +73,7 @@ export default function ReviewsSection({
                   </strong>
                   {/* 手機版模擬截圖中的標籤，電腦版可隱藏或留著 */}
                   <span className="mt-0.5 text-[12px] text-[#8A9196] max-sm:inline-block">
-                    同行旅人
+                    {review.member_city ?? "台灣"}
                   </span>
                 </div>
               </div>
@@ -106,29 +107,12 @@ export default function ReviewsSection({
               ))}
             </div>
 
-            {/* 詳細評論正文 (保留你原本的 index > 4 邏輯) */}
-            <p
-              className={`mt-2 text-[14px] leading-6 text-[#5F676C] ${
-                index > 4 ? "font-medium" : ""
-              }`}
-            >
+            <p className="mt-2 text-[14px] leading-6 font-normal text-[#5F676C]">
               {review.comment}
             </p>
           </article>
         ))}
       </div>
-
-      <nav
-        aria-label="評價分頁"
-        className="mt-10 flex justify-center gap-2 pb-4 max-sm:hidden"
-      >
-        <button className="grid size-9 place-items-center rounded-md border border-[#DDE3E5]">
-          ‹
-        </button>
-        <button className="grid size-9 place-items-center rounded-md border border-[#DDE3E5]">
-          ›
-        </button>
-      </nav>
     </section>
   );
 }
