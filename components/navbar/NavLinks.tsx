@@ -99,14 +99,14 @@ export default function NavLinks({ links }: NavLinksProps) {
         <div
           tabIndex={0}
           role="button"
-          className={`cursor-pointer border-r px-5 select-none ${isOpen && "text-gray-300"}`}
+          className={`cursor-pointer border-r border-amber-50 px-5 select-none ${isOpen && "text-gray-300"}`}
         >
           所有體驗
         </div>
 
         {/* 下拉內容：用 isOpen 控制顯示 */}
         {isOpen && (
-          <div className="rounded-box bg-base-100 absolute top-full -left-26 z-50 flex w-96 p-2 shadow-sm">
+          <div className="rounded-box bg-base-100 absolute top-full -left-26 z-100 mt-2 flex w-96 p-2 shadow-sm">
             {/* 透明橋接區，避免滑鼠移到中間空隙時關閉 */}
             <div className="absolute -top-2 left-0 h-2 w-full bg-transparent" />
 
@@ -117,7 +117,7 @@ export default function NavLinks({ links }: NavLinksProps) {
                   <Link
                     href={v.href}
                     onClick={handleLinkClick}
-                    className="flex items-center gap-3 rounded-lg px-4 py-2 text-[#ACACAC]  hover:bg-zinc-50"
+                    className="flex items-center gap-3 rounded-lg px-4 py-2 text-[#ACACAC] hover:bg-zinc-50"
                   >
                     {v.name}
                   </Link>

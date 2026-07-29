@@ -53,7 +53,7 @@ export default function MemberMenu({
         tabIndex={0}
         className={`dropdown-content menu rounded-box z-[60] mt-2 w-56 bg-white p-2 text-black shadow-xl ${open ? "block" : "hidden"} `}
       >
-        <li className="mb-2 border-b">
+        <li className="pointer-events-none mb-2 border-b border-gray-200">
           <div className="flex items-center gap-3 px-4 py-3">
             <Image
               src={
