@@ -3,12 +3,14 @@ import { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import { MessageCircle, X, Send } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
+
 type ChatMessage = {
   roomId: string;
   text: string;
   sender: "user" | "admin";
   created_at?: string;
 };
+
 const socket = io("http://localhost:3001");
 
 export default function ChatWidget() {
@@ -16,9 +18,19 @@ export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
+  const [member, setMember] = useState<any>(null); // 會員資料
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // 1. 抓取會員資料（修正相依陣列避免無限迴圈）
+  useEffect(() => {
+    fetch(`http://localhost:3001/api/member/profile`, {
+      method: "GET",
+      credentials: "include", // 帶上 cookie 驗證身份
+    })
+      .then((res) => res.json())
+      .then((data) => setMember(data.data))
+      .catch((error) => console.error(error));
+  }, []);
 
   // 2. 歷史訊息
   useEffect(() => {
@@ -27,6 +39,7 @@ export default function ChatWidget() {
       .then((res) => res.json())
       .then((data) => setMessages(data));
   }, [auth.id]);
+
   // 自動滾動到底部
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -59,6 +72,7 @@ export default function ChatWidget() {
       });
     }
   };
+
   useEffect(() => {
     if (isOpen) {
       requestAnimationFrame(() => {
@@ -85,7 +99,7 @@ export default function ChatWidget() {
   return (
     <div className="fixed right-6 bottom-6 z-50">
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggleChat}
         className="rounded-full bg-[#45cad5] p-4 text-white shadow-lg transition-colors hover:bg-[#45cad5]"
       >
         {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
@@ -138,6 +152,14 @@ export default function ChatWidget() {
               <button
                 onClick={sendMessage}
                 className="rounded-xl bg-[#45cad5] p-3 text-white transition-colors hover:bg-[#45cad5]"
+                onKeyDown={(e) => {
+                  if (e.nativeEvent.isComposing) return;
+
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
               >
                 <Send size={20} />
               </button>

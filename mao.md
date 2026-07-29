@@ -168,6 +168,7 @@ next/app/blog/
 │   └── page.tsx                      # 審核佇列（管理者）
 ├── _components/
 │   ├── BlogCommentSection.tsx
+│   ├── BlogBackToTopButton.tsx
 │   ├── BlogMediaImage.tsx
 │   ├── BlogOwnerEditLink.tsx
 │   ├── BlogPostCard.tsx
@@ -226,6 +227,9 @@ next/app/member/level/
 ```text
 express/routes/
 └── api-member-level.ts               # /api/member/level（或專案實際 mount 路徑）
+
+express/databases/
+└── member-101-level-orders.sql        # 測試會員 101：2 筆訂單／累積 NT$2,800
 ```
 
 #### 2.3 會員殼層（level 掛在 member 下；非本人負責功能本體，改動需克制）

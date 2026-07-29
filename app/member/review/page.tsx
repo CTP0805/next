@@ -490,7 +490,37 @@ export default function ReviewPage() {
                 key={`${order.id}-${item.id}`}
                 className={index > 0 ? "border-t border-gray-200" : ""}
               >
-                <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5">
+                <div
+                  role={activeTab === "completed" ? "button" : undefined}
+                  tabIndex={activeTab === "completed" ? 0 : undefined}
+                  aria-expanded={
+                    activeTab === "completed" ? isExpanded : undefined
+                  }
+                  aria-controls={
+                    activeTab === "completed"
+                      ? `completed-review-${item.id}`
+                      : undefined
+                  }
+                  onClick={
+                    activeTab === "completed"
+                      ? () => toggleReview(item.id)
+                      : undefined
+                  }
+                  onKeyDown={(event) => {
+                    if (
+                      activeTab === "completed" &&
+                      (event.key === "Enter" || event.key === " ")
+                    ) {
+                      event.preventDefault();
+                      toggleReview(item.id);
+                    }
+                  }}
+                  className={`flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5 ${
+                    activeTab === "completed"
+                      ? "cursor-pointer transition hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#45cad5]"
+                      : ""
+                  }`}
+                >
                   <div
                     role="img"
                     aria-label={item.title}
@@ -533,9 +563,16 @@ export default function ReviewPage() {
                       )}
                     </button>
                   ) : (
-                    <div className="flex shrink-0 items-center gap-1 text-sm font-bold text-[#FFA938]">
-                      <HiStar className="size-5" />
-                      {item.review?.rating ?? 0}
+                    <div className="flex shrink-0 items-center gap-3">
+                      <div className="flex items-center gap-1 text-sm font-bold text-[#FFA938]">
+                        <HiStar className="size-5" />
+                        {item.review?.rating ?? 0}
+                      </div>
+                      {isExpanded ? (
+                        <HiOutlineChevronUp className="size-4 text-gray-400" />
+                      ) : (
+                        <HiOutlineChevronDown className="size-4 text-gray-400" />
+                      )}
                     </div>
                   )}
                 </div>
@@ -682,8 +719,21 @@ export default function ReviewPage() {
                   </div>
                 ) : null}
 
-                {activeTab === "completed" && item.review ? (
-                  <div className="border-t border-gray-100 bg-gray-50/80 px-4 py-4 sm:px-6">
+                {activeTab === "completed" && item.review && isExpanded ? (
+                  <div
+                    id={`completed-review-${item.id}`}
+                    className="border-t border-gray-100 bg-gray-50/80 px-4 py-4 sm:px-6"
+                  >
+                    {item.review.image_url ? (
+                      <div
+                        role="img"
+                        aria-label={`${item.title}的評論圖片`}
+                        className="mb-3 aspect-[4/3] w-full max-w-md rounded-xl bg-gray-100 bg-cover bg-center"
+                        style={{
+                          backgroundImage: `url("${resolveImageUrl(item.review.image_url)}")`,
+                        }}
+                      />
+                    ) : null}
                     <p className="text-sm leading-6 text-gray-700">
                       {item.review.comment}
                     </p>

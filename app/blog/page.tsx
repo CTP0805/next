@@ -12,6 +12,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { BlogBackToTopButton } from "./_components/BlogBackToTopButton";
 import BlogMediaImage from "./_components/BlogMediaImage";
 import BlogOwnerEditLink from "./_components/BlogOwnerEditLink";
 import BlogPostCard from "./_components/BlogPostCard";
@@ -57,6 +58,7 @@ function CardSkeleton() {
 export default function BlogListPage() {
   // ---------- 畫面狀態 ----------
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [showAllLatestPosts, setShowAllLatestPosts] = useState(false);
   const [allPosts, setAllPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const { auth } = useAuth();
@@ -118,10 +120,11 @@ export default function BlogListPage() {
 
   const latestPosts = useMemo(() => {
     if (selectedCountry) return [];
-    return [...publishedPosts]
-      .sort((a, b) => postTimestamp(b) - postTimestamp(a))
-      .slice(0, 8);
-  }, [publishedPosts, selectedCountry]);
+    const sorted = [...publishedPosts].sort(
+      (a, b) => postTimestamp(b) - postTimestamp(a),
+    );
+    return showAllLatestPosts ? sorted : sorted.slice(0, 8);
+  }, [publishedPosts, selectedCountry, showAllLatestPosts]);
 
   /** 經典推薦：留言數由多至少；同票時較新的文章優先。 */
   const popularPosts = useMemo(() => {
@@ -256,7 +259,7 @@ export default function BlogListPage() {
                     footer={
                       <BlogOwnerEditLink
                         authorId={post.author_id}
-                        href={`/blog/${post.slug}/edit`}
+                        href={`/member/edit-post?tab=create&draft=${post.id}`}
                         className="text-xs font-medium text-teal-600 hover:underline"
                       >
                         編輯文章
@@ -338,6 +341,17 @@ export default function BlogListPage() {
                   </Link>
                 ))}
               </div>
+              {!showAllLatestPosts && publishedPosts.length > 8 ? (
+                <div className="mt-8 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowAllLatestPosts(true)}
+                    className="rounded-[12px] border border-[#45cad5] bg-white px-6 py-2.5 text-sm font-semibold text-[#259aa5] transition hover:bg-[#effcfd]"
+                  >
+                    瀏覽全部文章
+                  </button>
+                </div>
+              ) : null}
             </section>
 
             <aside>
@@ -388,6 +402,7 @@ export default function BlogListPage() {
           </div>
         ) : null}
       </div>
+      <BlogBackToTopButton />
     </div>
   );
 }

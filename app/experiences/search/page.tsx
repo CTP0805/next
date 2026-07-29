@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import FilterPanel from "@/app/experiences/_components/FilterPanel";
 import ExperienceCard from "@/app/experiences/_components/ExperienceCard";
 import Link from "next/link";
-import { HiAdjustments, HiChevronUp, HiChevronDown } from "react-icons/hi";
+import { HiAdjustments, HiChevronUp } from "react-icons/hi";
 import Loading from "@/components/Loading";
 
 type Experience = {
@@ -68,6 +68,7 @@ export default function ExperienceListPage() {
       : "popular";
   });
   const [city, setCity] = useState(urlCity);
+  const CITY_NAMES = ["倫敦", "巴黎", "阿姆斯特丹", "東京", "首爾", "台北"];
 
   const [minPrice, setMinPrice] = useState(() => {
     const value = Number(searchParams.get("min_price"));
@@ -127,16 +128,18 @@ export default function ExperienceListPage() {
 
     previousUrlCityRef.current = urlCity;
 
-    // Navbar 搜尋或瀏覽器導航造成網址城市改變
     if (city !== urlCity) {
       isSyncingCityFromUrlRef.current = true;
 
       setCity(urlCity);
-      setCategoryIds([]);
-      setMinPrice(0);
-      setMaxPrice(MAX_PRICE_LIMIT);
-      setSelectedDate("");
-      setSort("popular");
+
+      // 保留原本的類別與其他篩選條件
+      // setCategoryIds([]);
+      // setMinPrice(0);
+      // setMaxPrice(MAX_PRICE_LIMIT);
+      // setSelectedDate("");
+      // setSort("popular");
+
       setPage(1);
     }
   }, [urlCity, city]);
@@ -169,6 +172,14 @@ export default function ExperienceListPage() {
 
     previousKeywordRef.current = keyword;
 
+    // 因為改選城市而移除 keyword 時，
+    // 保留目前已套用的其他篩選條件
+    if (!keyword) {
+      setPage(1);
+      return;
+    }
+
+    // 使用搜尋列輸入新的關鍵字時，才重設其他篩選條件
     setCategoryIds([]);
     setMinPrice(0);
     setMaxPrice(MAX_PRICE_LIMIT);
@@ -394,8 +405,31 @@ export default function ExperienceListPage() {
   };
 
   const handleCityChange = (newCity: string) => {
-    setCity(newCity);
-    setPage(1);
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (newCity) {
+      params.set("city", newCity);
+    } else {
+      params.delete("city");
+    }
+
+    const currentKeyword = params.get("keyword")?.trim() ?? "";
+
+    // 搜尋列原本搜尋的是城市，改選其他城市後移除舊城市 keyword
+    if (CITY_NAMES.includes(currentKeyword)) {
+      params.delete("keyword");
+    }
+
+    params.delete("page");
+
+    const nextQuery = params.toString();
+
+    router.replace(
+      nextQuery ? `/experiences/search?${nextQuery}` : "/experiences/search",
+      {
+        scroll: false,
+      },
+    );
   };
 
   const handleMinPriceChange = (newMinPrice: number) => {

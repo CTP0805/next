@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
+import toast from "react-hot-toast";
 import { HiOutlineChatAlt2 } from "react-icons/hi";
 
 type HostSectionProps = {
@@ -18,6 +20,8 @@ export default function HostSection({
   hostAvatar,
   city,
 }: HostSectionProps) {
+  const [isContactOpen, setIsContactOpen] = useState(false);
+  const [contactMessage, setContactMessage] = useState("");
   return (
     <section
       id="host"
@@ -63,12 +67,72 @@ export default function HostSection({
       <div className="mt-10 mb-5 w-full">
         <button
           type="button"
+          onClick={() => setIsContactOpen(true)}
           className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#F0F2F3] py-3 text-[12px] font-bold text-[#454B50] transition-colors md:hover:bg-[#E4E7E9]"
         >
           <HiOutlineChatAlt2 className="size-4 text-[#5B6267]" />
           傳訊息給 {hostName}
         </button>
       </div>
+      {isContactOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setIsContactOpen(false);
+            }
+          }}
+        >
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-extrabold">傳訊息給 {hostName}</h3>
+
+              <button
+                type="button"
+                onClick={() => setIsContactOpen(false)}
+                className="text-2xl text-[#7B8388]"
+                aria-label="關閉"
+              >
+                ×
+              </button>
+            </div>
+
+            <p className="mt-2 text-sm text-[#7B8388]">
+              可詢問體驗內容、集合地點或其他預訂問題。
+            </p>
+
+            <textarea
+              value={contactMessage}
+              onChange={(event) => setContactMessage(event.target.value)}
+              placeholder="請輸入想詢問主辦人的內容"
+              className="mt-5 min-h-36 w-full resize-none rounded-xl border border-[#DDE3E5] p-4 outline-none focus:border-[#68BBC3]"
+            />
+
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsContactOpen(false)}
+                className="rounded-lg border border-[#DDE3E5] px-5 py-3 font-bold"
+              >
+                取消
+              </button>
+
+              <button
+                type="button"
+                disabled={!contactMessage.trim()}
+                onClick={() => {
+                  toast.success("訊息已送出");
+                  setContactMessage("");
+                  setIsContactOpen(false);
+                }}
+                className="rounded-lg bg-[#68BBC3] px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                送出訊息
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

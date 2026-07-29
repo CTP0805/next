@@ -91,37 +91,61 @@
     @apply mb-4 block text-[16px] text-black;
   }
 
-  
+  .button-main {
+    @apply rounded-md bg-[#45cad5] px-5 py-3 text-white transition hover:bg-[#36b3be] disabled:cursor-not-allowed disabled:opacity-70;
+  }
 
   .button-green {
-    @apply inline-block rounded-md bg-green-600 px-5 py-3 text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70;
+    @apply rounded-md bg-green-600 px-5 py-3 text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70;
   }
 
   .button-red {
-    @apply inline-block rounded-md bg-red-600 px-5 py-3 text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70;
-  }
-
-  .button-main-1 {
-    @apply rounded-md bg-[#76bdc8] px-5 py-3 text-white transition hover:bg-[#66adba];
-  }
-
-  .button-main-2 {
-    @apply rounded-md bg-[#45cad5] px-8 py-3 text-white transition hover:bg-[#36b3be];
+    @apply rounded-md bg-red-600 px-5 py-3 text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70;
   }
 
   .button-white {
-    @apply rounded-md border-[1.5px] border-zinc-800 bg-white px-8 py-3 text-zinc-800 transition hover:bg-zinc-100;
+    @apply rounded-md border border-zinc-300 px-5 py-3 text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-70;
   }
 
-  .button-pagination {
-    @apply grid size-10 place-items-center rounded-md border border-[#E0E4E6] bg-white text-sm font-bold text-[#6E757B] hover:border-[#68BBC3] hover:text-[#489DA5] disabled:cursor-not-allowed disabled:opacity-40;
+  .button-orange {
+    @apply rounded-md bg-[#FF9224] px-5 py-3 text-center text-white transition hover:bg-[#d78532] disabled:cursor-not-allowed disabled:opacity-50;
   }
 
-  .button-people {
-    @apply grid size-7 place-items-center rounded-full border border-[#D9DFE1] text-[#697178] hover:border-[#68BBC3];
+  .button-circle {
+    @apply rounded-full bg-[#45cad5]  px-7 py-2 font-bold text-white shadow-sm transition hover:bg-[#53AAB2] disabled:cursor-not-allowed disabled:opacity-50;
   }
 
-  
+  .button-status-focus {
+    @apply rounded-full bg-gray-900 px-4 py-1.5 text-xs font-medium text-white transition;
+  }
+
+  .button-status {
+    @apply rounded-full bg-gray-100 px-4 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-200;
+  }
+
+  .button-s-green {
+    @apply rounded-full border border-green-700 bg-white px-4 py-1.5 text-xs font-semibold text-green-800 transition hover:bg-green-50;
+  }
+
+  .button-s-red {
+    @apply rounded-full border border-red-500 bg-white px-4 py-1.5 text-xs font-semibold text-red-500 transition hover:border-red-300 hover:bg-red-50;
+  }
+
+  .button-s-yellow {
+    @apply rounded-full border border-yellow-400 bg-white px-4 py-1.5 text-xs font-semibold text-yellow-600 transition hover:bg-amber-50;
+  }
+
+  .button-s-white {
+    @apply rounded-full border border-gray-300 px-4 py-1.5 text-xs font-semibold text-gray-600 transition hover:bg-gray-100;
+  }
+
+  .button-status-blog-focus {
+    @apply rounded-md border border-white/80 bg-white px-4 py-2 font-semibold text-gray-500 transition;
+  }
+
+  .button-status-blog {
+    @apply rounded-md border border-white/80 bg-white/5 px-4 py-2 text-white transition hover:bg-white/15;
+  }
 }
 
 /* @media (prefers-color-scheme: dark) {

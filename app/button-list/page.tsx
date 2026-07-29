@@ -6,7 +6,6 @@ import Loading from "@/components/Loading";
 import Link from "next/link";
 import Image from "next/image";
 
-
 export default function TestPage() {
   // const { isAuthenticated, authInit } = useAuth();
   // if (!authInit) {
@@ -15,19 +14,18 @@ export default function TestPage() {
   const { auth } = useAuth();
   return (
     <>
-      
+      <main >
       {/* <div className="mx-auto text-2xl">
         {isAuthenticated ? "已登入" : "未登入"}
       </div> */}
       {/* <h1>目前身分{auth.role}</h1> */}
-      <h1>按鈕樣式(原本、hover、disable)</h1>
+      {/* <h1>按鈕樣式(原本、hover、disable)</h1>
       <h1>主色、橘色、白色</h1>
       
       <div className="flex flex-wrap items-center ml-5 my-5 gap-3">
         <h2>大按鈕</h2>
         
-        <Link className="button-main-1 inline-flex gap-1.5" href="#">立即訂購</Link>
-        <Link className="button-main-2 inline-flex gap-1.5" href="#">立即訂購</Link>
+        <Link className="button-main inline-flex gap-1.5" href="#">立即訂購</Link>
         <Link className="button-white inline-flex gap-1.5" href="#">立即訂購</Link>
         
         <Link className="rounded-lg border border-zinc-300 px-5 py-2 text-zinc-700 transition hover:bg-zinc-100" href="#">取消</Link>
@@ -50,8 +48,48 @@ export default function TestPage() {
         <h2>分頁、加減按鈕</h2>
         <Link className="button-pagination inline-flex gap-1.5" href="#">›</Link>
         <Link className="button-people inline-flex gap-1.5" href="#">+</Link>
-      </div>
+      </div> */}
 
+      <div className=" items-center ml-5 my-5 gap-3">
+        <h2>按鈕樣式一覽表</h2>
+        <p className="pt-4">button-orange</p>
+        <Link className="button-orange inline-flex gap-1.5" href="#">加入購物車</Link>
+        
+        <p className="pt-4">button-main</p>
+        <Link className="button-main inline-flex gap-1.5" href="#">立即預定</Link>
+        <p className="pt-4">button-main 客製化範例 px-9</p>
+        <Link className="button-main inline-flex gap-1.5 px-9" href="#">立即預定</Link>
+        <p className="pt-4">button-white</p>
+        <Link className="button-white inline-flex gap-1.5" href="#">儲存草稿</Link>
+        <p className="pt-4">button-green</p>
+        <Link className="button-green inline-flex gap-1.5" href="#">回到登入</Link>
+        <p className="pt-4">button-red</p>
+        <Link className="button-red inline-flex gap-1.5" href="#">回到註冊</Link>
+        <p className="pt-4">button-circle</p>
+        <Link className="button-circle inline-flex gap-1.5" href="#">選擇圖片</Link>
+        <p className="pt-4">button-status-focus</p>
+        <Link className="button-status-focus inline-flex gap-1.5" href="#">全部(0)</Link>
+        <p className="pt-4">button-status</p>
+        <Link className="button-status inline-flex gap-1.5" href="#">已付款(1)</Link>
+        <p className="pt-4">button-s-red</p>
+        <Link className="button-s-red inline-flex gap-1.5" href="#">刪除</Link>
+        <p className="pt-4">button-s-green</p>
+        <Link className="button-s-green inline-flex gap-1.5" href="#">通過</Link>
+        <p className="pt-4">button-s-yellow</p>
+        <Link className="button-s-yellow inline-flex gap-1.5" href="#">退回原因</Link>
+        <p className="pt-4">button-s-white</p>
+        <Link className="button-s-white inline-flex gap-1.5" href="#">查看</Link>
+        <div className="bg-[url('/images/banner/carousel5.jpeg')] bg-center h-100 mt-5">
+        <p className="pt-4 pl-2 text-white">button-status-blog-focus</p>
+        <Link className="button-status-blog-focus inline-flex gap-1.5" href="#">全部</Link>
+        <p className="pt-4 pl-2 text-white">button-status-blog</p>
+        <Link className="button-status-blog inline-flex gap-1.5" href="#">慕尼黑</Link>
+        </div>
+
+      </div>
+        </main>
     </>
   );
 }
+
+

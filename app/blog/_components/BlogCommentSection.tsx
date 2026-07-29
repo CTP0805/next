@@ -4,10 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { getApiServer } from "@/config/api-path";
 import { useAuth } from "@/contexts/auth-context";
-import {
-  createBlogComment,
-  fetchBlogComments,
-} from "../_lib/api";
+import { createBlogComment, fetchBlogComments } from "../_lib/api";
 import type { BlogComment } from "../_lib/types";
 
 interface BlogCommentSectionProps {
@@ -45,7 +42,7 @@ function MemberAvatar({
 }) {
   const [imageFailed, setImageFailed] = useState(false);
   const resolvedAvatar =
-    resolveAvatarUrl(avatarUrl) ?? "/images/avatar-test.png";
+    resolveAvatarUrl(avatarUrl) ?? "/images/member-avatar/angry-man.jpg";
 
   return (
     <div
@@ -92,9 +89,7 @@ export default function BlogCommentSection({
       .catch((error: unknown) => {
         if (!cancelled) {
           setComments([]);
-          setLoadError(
-            error instanceof Error ? error.message : "讀取留言失敗",
-          );
+          setLoadError(error instanceof Error ? error.message : "讀取留言失敗");
         }
       })
       .finally(() => {
@@ -134,9 +129,7 @@ export default function BlogCommentSection({
       setContent("");
       setSubmitted(true);
     } catch (error) {
-      setSubmitError(
-        error instanceof Error ? error.message : "送出留言失敗",
-      );
+      setSubmitError(error instanceof Error ? error.message : "送出留言失敗");
     } finally {
       setSubmitting(false);
     }
@@ -225,9 +218,7 @@ export default function BlogCommentSection({
             <p className="mb-3 text-sm text-red-500">{submitError}</p>
           ) : null}
           {submitted ? (
-            <p className="mb-3 text-sm text-teal-600">
-              留言已送出，感謝分享！
-            </p>
+            <p className="mb-3 text-sm text-teal-600">留言已送出，感謝分享！</p>
           ) : null}
 
           <div className="flex justify-end">
