@@ -67,6 +67,11 @@ export default function Navbar() {
       icon: <FaClockRotateLeft />,
       href: "/member/recently-viewed",
     },
+    {
+      label: "管理文章",
+      icon: <FaEdit />,
+      href: "/member/edit-post",
+    } satisfies MemberList,
   ];
   const memberLists: MemberList[] = [
     ...memberListsBase,
