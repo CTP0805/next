@@ -120,8 +120,8 @@ export default function FilterPanel({
           <div className="relative">
             <select
               value={city}
-              onChange={(event) => onCityChange(event.target.value)}
-              className="h-11 w-full cursor-pointer appearance-none rounded-md border border-[#E1E5E7] bg-white px-3 pr-11 text-sm font-medium text-[#565D63] transition-colors outline-none hover:border-[#68BBC3] focus:border-[#68BBC3] focus:ring-2 focus:ring-[#68BBC3]/15"
+              onChange={(e) => onCityChange(e.target.value)}
+              className="h-11 w-full cursor-pointer appearance-none rounded-md border border-[#E1E5E7] bg-white px-3 pr-11 text-sm font-medium text-[#565D63] transition-colors outline-none hover:border-[#68BBC3]"
             >
               <option value="">全部城市</option>
               <option value="倫敦">倫敦</option>

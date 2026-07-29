@@ -74,9 +74,9 @@ const destinations = [
     href: "/experiences/search?city=威尼斯",
   },
   {
-    name: "巴賽隆納",
+    name: "巴塞隆納",
     image: "/images/carousel1.jpeg",
-    href: "/experiences/search?city=巴賽隆納",
+    href: "/experiences/search?city=巴塞隆納",
   },
 ];
 
@@ -91,7 +91,7 @@ export default function NavLinks({ links }: NavLinksProps) {
   return (
     <div className="hidden items-center md:flex">
       <div
-        className="relative px-3 py-4"
+        className="relative py-4"
         onMouseEnter={() => setIsOpen(true)}
         onMouseLeave={() => setIsOpen(false)}
       >
@@ -99,19 +99,19 @@ export default function NavLinks({ links }: NavLinksProps) {
         <div
           tabIndex={0}
           role="button"
-          className="m-1 cursor-pointer select-none"
+          className={`cursor-pointer border-r border-amber-50 px-5 select-none ${isOpen && "text-gray-300"}`}
         >
           所有體驗
         </div>
 
         {/* 下拉內容：用 isOpen 控制顯示 */}
         {isOpen && (
-          <div className="rounded-box bg-base-100 absolute top-full right-0 z-50 flex w-96 p-2 shadow-sm">
+          <div className="rounded-box bg-base-100 absolute top-full -left-26 z-100 mt-2 flex w-96 p-2 shadow-sm">
             {/* 透明橋接區，避免滑鼠移到中間空隙時關閉 */}
             <div className="absolute -top-2 left-0 h-2 w-full bg-transparent" />
 
             <ul className="menu w-1/2 p-0">
-              <li className="menu-title">體驗分類</li>
+              <li className="menu-title text-black">體驗分類</li>
               {features.map((v) => (
                 <li key={v.name}>
                   <Link
@@ -126,7 +126,7 @@ export default function NavLinks({ links }: NavLinksProps) {
             </ul>
 
             <ul className="menu w-1/2 p-0">
-              <li className="menu-title">熱門地區</li>
+              <li className="menu-title text-black">熱門地區</li>
               {destinations.map((v) => (
                 <li key={v.name}>
                   <Link

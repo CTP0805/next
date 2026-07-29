@@ -81,7 +81,7 @@ export default function HeroSwiper() {
 
               <div className="relative z-10 flex h-full items-center justify-center px-6 text-center">
                 <span
-                  className={`${cormorant.className} bg-[linear-gradient(to_top,rgba(255,255,255,0.15)_0%,rgba(255,255,255,0.65)_25%,rgba(255,255,255,1)_100%)] bg-clip-text text-6xl leading-[0.9] font-[300] tracking-[-0.03em] text-transparent italic md:text-[100px]`}
+                  className={`${cormorant.className} bg-black/30 bg-[linear-gradient(to_top,rgba(255,255,255,0.15)_0%,rgba(255,255,255,0.65)_25%,rgba(255,255,255,1)_100%)] bg-clip-text px-2 pb-3 text-6xl leading-[1.05] font-[300] tracking-[-0.03em] text-transparent italic md:text-[100px]`}
                 >
                   {slide.title}
                 </span>

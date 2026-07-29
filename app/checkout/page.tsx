@@ -62,7 +62,7 @@ export default function CheckPage() {
     current_points: number;
     phone: string;
   }>({
-    member_level: auth.member_level || "銅",
+    member_level: auth.member_level || "啟程旅人",
     current_points: auth.current_points || 0,
     phone: "",
   });
@@ -88,7 +88,7 @@ export default function CheckPage() {
           if (result.success || result.data) {
             const data = result.data || result;
             setUserProfile({
-              member_level: data.member_level || "銅",
+              member_level: data.member_level || "啟程旅人",
               current_points: Number(data.current_points) || 0,
               phone: data.phone || "",
             });
@@ -138,8 +138,8 @@ export default function CheckPage() {
 
   // 對齊「金 9折 (回饋5%)」、「銀 95折 (回饋3%)」、「銅 原價 (回饋1%)」
   const getLevelConfig = (level: string | undefined) => {
-    if (level === "金") return { discountRate: 0.9, rewardRate: 0.05 };
-    if (level === "銀") return { discountRate: 0.95, rewardRate: 0.03 };
+    if (level === "環遊旅人") return { discountRate: 0.9, rewardRate: 0.05 };
+    if (level === "探索旅人") return { discountRate: 0.95, rewardRate: 0.03 };
     return { discountRate: 1.0, rewardRate: 0.01 };
   };
 

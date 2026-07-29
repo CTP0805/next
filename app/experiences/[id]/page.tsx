@@ -6,7 +6,6 @@ import toast from "react-hot-toast";
 import { useFavorites } from "@/contexts/FavoriteContext";
 import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { FaImages } from "react-icons/fa";
 import { FaLink } from "react-icons/fa6";
 import { useCart } from "@/contexts/cart";
 import {
@@ -578,18 +577,6 @@ export default function ExperienceDetailPage() {
                 <HiOutlineShoppingCart className="size-5" />
               </button>
             </div>
-
-            {/* 📱 手機版專屬：1. 右下角黑底「查看照片」按鈕 */}
-            <button
-              type="button"
-              className="absolute right-4 bottom-4 z-10 hidden items-center gap-1.5 rounded-md bg-black/65 px-3 py-1.5 text-[12px] font-bold text-white backdrop-blur-sm max-sm:flex"
-            >
-              {/* 這裡模擬一個圖片小圖標，也可以換成你的 icon */}
-              <span className="text-sm">
-                <FaImages />
-              </span>{" "}
-              查看照片
-            </button>
           </div>
 
           {/* 右側四張圖拼圖區：加上 max-sm:hidden，手機版直接隱藏不顯示 */}
@@ -603,15 +590,6 @@ export default function ExperienceDetailPage() {
                   sizes="(max-width: 768px) 50vw, 20vw"
                   className="object-cover"
                 />
-
-                {index === 3 && (
-                  <button
-                    type="button"
-                    className="absolute right-4 bottom-4 rounded-md bg-black/65 px-4 py-2 text-[14px] font-bold text-white backdrop-blur-sm"
-                  >
-                    查看照片
-                  </button>
-                )}
               </div>
             ))}
           </div>

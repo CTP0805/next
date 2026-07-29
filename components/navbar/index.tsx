@@ -25,10 +25,9 @@ export default function Navbar() {
   const { auth, isAuthenticated, logout } = useAuth();
   const { totalQty } = useCart();
   const pathname = usePathname();
-  const [member, setMember] = useState([]);
+  const [member, setMember] = useState(null);
   const navLinks: NavLink[] = [
-    { name: "品牌介紹", href: "/about" },
-    { name: "聯絡我們", href: "/contact" },
+    { name: "關於我們", href: "/about" },
     { name: "部落格", href: "/blog" },
   ];
 
@@ -68,6 +67,11 @@ export default function Navbar() {
       icon: <FaClockRotateLeft />,
       href: "/member/recently-viewed",
     },
+    {
+      label: "管理文章",
+      icon: <FaEdit />,
+      href: "/member/edit-post",
+    } satisfies MemberList,
   ];
   const memberLists: MemberList[] = [
     ...memberListsBase,
@@ -98,7 +102,7 @@ export default function Navbar() {
       .then((data) => data.json())
       .then((data) => setMember(data.data))
       .catch((error) => console.error(error));
-  }, []);
+  }, [member, isAuthenticated]);
   useEffect(() => {
     if (!isHomePage) return;
     const handleScroll = () => {

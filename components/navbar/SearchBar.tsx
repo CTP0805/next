@@ -28,7 +28,7 @@ export default function SearchBar() {
       <button
         type="submit"
         aria-label="搜尋"
-        className="absolute top-1/2 left-3 z-10 -translate-y-1/2 text-gray-400"
+        className="absolute top-1/2 left-4 z-10 -translate-y-1/2 text-white"
       >
         <FaSearch />
       </button>
