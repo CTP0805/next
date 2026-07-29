@@ -10,6 +10,7 @@
  *   對應後端 mapPost()：express/routes/api-blog.ts
  * =============================================================================
  */
+import { pinyin } from "pinyin-pro";
 
 /** 文章狀態（和後端 ALLOWED_STATUS 對齊） */
 export type BlogPostStatus =
@@ -145,16 +146,20 @@ export function blogCityLabel(
  * 邏輯與後端 slugify 相近；真正唯一性由後端 ensureUniqueSlug 保證
  */
 export function slugifyTitle(input: string): string {
-  const base = input
+  const romanized = pinyin(input, {
+    toneType: "none", // 不顯示聲調
+    type: "array",
+  }).join("-");
+
+  const slug = romanized
     .trim()
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^\w\s\u4e00-\u9fff-]/g, "")
-    .replace(/[\s_]+/g, "-")
+    .replace(/[^a-z0-9-]+/g, "-")
     .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+    .replace(/^-|-$/g, "")
+    .slice(0, 200);
 
-  if (base) return base.slice(0, 200);
-  return `post-${Date.now()}`;
+  return slug || `post-${Date.now()}`;
 }
