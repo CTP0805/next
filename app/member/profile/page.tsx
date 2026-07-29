@@ -435,7 +435,7 @@ export default function ProfileFormTabs() {
             <div className="mt-11 flex justify-end">
               <button
                 type="button"
-                className="button-main-2"
+                className="button-main px-7"
                 disabled={!isProfileChanged}
                 onClick={handleProfile}
               >
@@ -449,7 +449,7 @@ export default function ProfileFormTabs() {
               <button
                 type="button"
                 onClick={handlePassword}
-                className="button-main-2"
+                className="button-main px-7"
               >
                 儲存
               </button>
