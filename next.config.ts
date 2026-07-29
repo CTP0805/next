@@ -50,6 +50,10 @@ const nextConfig: NextConfig = {
       // 5. 外部圖片來源
       {
         protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+      {
+        protocol: "https",
         hostname: "placehold.co",
         pathname: "/**",
       },

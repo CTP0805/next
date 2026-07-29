@@ -17,6 +17,10 @@ export default function ChatWidget() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 1. 抓取會員資料（修正相依陣列避免無限迴圈）
+
+  // 2. 歷史訊息
   useEffect(() => {
     if (!auth.id) return;
     fetch(`http://localhost:3001/api/chat/${auth.id}/messages`)
@@ -62,6 +66,22 @@ export default function ChatWidget() {
       });
     }
   }, [messages, isOpen]);
+
+  // 3. 點擊按鈕時的判定邏輯
+  const handleToggleChat = () => {
+    // 假設你的欄位名稱叫 fieldName (請依你的 member 屬性自行修改，例如 member.role 或 member.status)
+    const targetField = auth?.role; // 或者是 member?.role 等等
+
+    if (targetField === "客服") {
+      // 判定等於客服時：不開啟彈跳視窗，改為給予連結或直接跳轉頁面
+      window.location.href = "http://localhost:3000/admin/chat";
+      return;
+    }
+
+    // 若不是客服，維持原本正常開啟/關閉彈跳視窗的行為
+    setIsOpen(!isOpen);
+  };
+
   return (
     <div className="fixed right-6 bottom-6 z-50">
       <button

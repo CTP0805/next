@@ -23,6 +23,19 @@ export default function MemberMenu({
   if (!auth) {
     return null;
   }
+
+  // 處理頭像網址的函式
+  const getAvatarUrl = (avatarUrl?: string | null) => {
+    if (!avatarUrl) return "/images/member-avatar/angry-man.jpg";
+
+    // 如果已經是完整網址 (http:// 或 https://)，直接回傳
+    if (avatarUrl.startsWith("http://") || avatarUrl.startsWith("https://")) {
+      return avatarUrl;
+    }
+
+    // 否則視為相對路徑，補上 API 主機位置
+    return `http://localhost:3001${avatarUrl}`;
+  };
   return (
     <li
       onMouseEnter={() => setOpen(true)}
@@ -36,11 +49,7 @@ export default function MemberMenu({
         <div className="absolute top-full right-0 h-4 w-full bg-transparent"></div>
 
         <Image
-          src={
-            auth.avatar_url
-              ? `http://localhost:3001${auth.avatar_url}`
-              : "/images/member-avatar/angry-man.jpg"
-          }
+          src={getAvatarUrl(auth.avatar_url)}
           alt={auth.name || "User Avatar"}
           className="h-8 w-8 rounded-full object-cover"
           width={32}
@@ -56,11 +65,7 @@ export default function MemberMenu({
         <li className="pointer-events-none mb-2 border-b border-gray-200">
           <div className="flex items-center gap-3 px-4 py-3">
             <Image
-              src={
-                auth.avatar_url
-                  ? `http://localhost:3001${auth.avatar_url}`
-                  : "/images/member-avatar/angry-man.jpg"
-              }
+              src={getAvatarUrl(auth.avatar_url)}
               alt="用戶頭像"
               width={48}
               height={48}
