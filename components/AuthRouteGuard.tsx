@@ -37,7 +37,7 @@ export function AuthRouteGuard({ children }: AuthRouteGuardProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { authInit, isAuthenticated, isLoggingOut } = useAuth();
+  const { authInit, isAuthenticated, isLoggingOut, showToast } = useAuth();
 
   // 記住這次已經提示過的受保護路徑，避免 Toast 重複跳出
   const redirectedPathRef = useRef<string | null>(null);
@@ -75,9 +75,13 @@ export function AuthRouteGuard({ children }: AuthRouteGuardProps) {
     if (!isAuthenticated && isLoginRequiredPage) {
       // 使用者剛按登出，首頁正在跳轉中，不提示也不搶著導去登入頁
       if (isLoggingOut) {
-        toast.success("登出成功");
+        if(!showToast){
+          return;
+        } 
+        toast.success("登出成功(前端)");
         return;
       }
+      
       // 同一個路徑只顯示一次提示
       if (redirectedPathRef.current !== currentPath) {
         toast.error("尚未登入 已重新為您導向");

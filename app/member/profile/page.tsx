@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
 import { HiChevronDown } from "react-icons/hi";
+import { useAuth } from "@/contexts/auth-context";
 
 type ProfileData = {
   name: string;
@@ -64,6 +65,8 @@ export default function ProfileFormTabs() {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const { logout } = useAuth();
 
   const router = useRouter();
 
@@ -204,9 +207,11 @@ export default function ProfileFormTabs() {
       }
 
       toast.success(result.message);
+
+      await logout(false);
       //window.location.reload();
 
-      router.push("/auth/login");
+      router.replace("/auth/login");
     } catch (error) {
       console.warn(error);
       toast.error("系統發生錯誤，請稍後再試(後端有問題)");
@@ -430,7 +435,7 @@ export default function ProfileFormTabs() {
             <div className="mt-11 flex justify-end">
               <button
                 type="button"
-                className="button-main-2"
+                className="button-main px-7"
                 disabled={!isProfileChanged}
                 onClick={handleProfile}
               >
@@ -444,7 +449,7 @@ export default function ProfileFormTabs() {
               <button
                 type="button"
                 onClick={handlePassword}
-                className="button-main-2"
+                className="button-main px-7"
               >
                 儲存
               </button>

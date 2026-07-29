@@ -312,7 +312,7 @@ export default function AboutPage() {
         </div>
       </section>
       {/* 頁尾 CTA */}
-      <section className="bg-[#c6d7d2] px-6 py-20 text-center sm:px-10 lg:py-28">
+      <section className=" px-6 py-20 text-center sm:px-10 lg:py-28">
         <p className="mb-4 text-sm font-bold tracking-[0.22em] text-[#557473]">
           MEET LOCALS
         </p>
