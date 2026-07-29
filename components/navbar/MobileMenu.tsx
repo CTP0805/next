@@ -27,7 +27,7 @@ const destinations = [
   { name: "慕尼黑", href: "/experiences/search?city=慕尼黑" },
   { name: "阿姆斯特丹", href: "/experiences/search?city=阿姆斯特丹" },
   { name: "威尼斯", href: "/experiences/search?city=威尼斯" },
-  { name: "巴賽隆納", href: "/experiences/search?city=巴賽隆納" },
+  { name: "巴塞隆納", href: "/experiences/search?city=巴塞隆納" },
 ];
 
 export default function MobileMenu({

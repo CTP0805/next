@@ -74,9 +74,9 @@ const destinations = [
     href: "/experiences/search?city=威尼斯",
   },
   {
-    name: "巴賽隆納",
+    name: "巴塞隆納",
     image: "/images/carousel1.jpeg",
-    href: "/experiences/search?city=巴賽隆納",
+    href: "/experiences/search?city=巴塞隆納",
   },
 ];
 

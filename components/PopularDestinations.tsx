@@ -30,9 +30,9 @@ const destinations = [
     href: "/experiences/search?city=巴黎",
   },
   {
-    name: "巴賽隆納",
+    name: "巴塞隆納",
     image: "/images/city/barcelona.jpg",
-    href: "/experiences/search?city=巴賽隆納",
+    href: "/experiences/search?city=巴塞隆納",
   },
 ];
 export default function PopularDestinations() {
