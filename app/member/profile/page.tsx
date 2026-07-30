@@ -57,6 +57,8 @@ export default function ProfileFormTabs() {
     null,
   );
 
+  const { auth, setAuth } = useAuth();
+
   // Part2. 修改密碼
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -99,6 +101,7 @@ export default function ProfileFormTabs() {
 
       // 存到 state 裡，作為「尚未修改」的基準
       setOriginalProfile(profileData);
+      
     };
     getUserProfile();
   }, []);
@@ -162,7 +165,9 @@ export default function ProfileFormTabs() {
       setOriginalProfile(profileData);
 
       toast.success(result.message);
-      window.location.reload();
+      // window.location.reload();
+      setAuth({...auth,...profileData,});
+      
     } catch (error) {
       console.warn(error);
       toast.error("系統發生錯誤，請稍後再試(後端有問題)");

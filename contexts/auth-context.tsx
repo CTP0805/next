@@ -25,6 +25,8 @@ export type Auth = {
   current_points?: number;
   role?: string;
   avatar_url?: string | null;
+  gender?: string;
+  birthday?: string;
 };
 
 // 初始值
@@ -37,10 +39,11 @@ export const emptyAuth: Auth = {
   current_points: 0,
   role: "",
   avatar_url: null,
+  gender: "",
+  birthday: "",
 };
 
-
-// 成功時 
+// 成功時
 type AuthSuccessResponse = {
   success: true;
   message: string;
@@ -64,6 +67,7 @@ type MessageResponse = {
 // 要廣播的資料
 type AuthContextValue = {
   auth: Auth;
+  setAuth: React.Dispatch<React.SetStateAction<Auth>>;
   authInit: boolean;
   isAuthenticated: boolean;
   isLoggingOut: boolean;
@@ -96,14 +100,14 @@ export function AuthContextProvider({
   const [authInit, setAuthInit] = useState(false); // true：後端已經回答，目前可安全判斷是否登入 false：還在問後端登入狀態
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showToast, setShowToast] = useState(true); // 修改密碼後的登出 顯示修改密碼的toast 不要顯示登出後的toast(配合AuthRouteGuard.tsx)
-  
+
   const router = useRouter();
   const searchParams = useSearchParams();
 
   // 這個函式負責向後端確認目前 Cookie 對應哪位使用者。
   const refreshAuth = useCallback(async (): Promise<void> => {
     try {
-      const response = await fetch(`${API_SERVER}/api/auth/me`, {
+      const response = await fetch(`${API_SERVER}/api/member/profile`, {
         method: "GET",
         credentials: "include",
       });
@@ -209,7 +213,7 @@ export function AuthContextProvider({
                 {result.message}
               </p>
               <button
-                className="rounded-md bg-red-400 px-4 py-1 my-2 text-center text-white"
+                className="my-2 rounded-md bg-red-400 px-4 py-1 text-center text-white"
                 onClick={() => void resendVerifyEmail(trimmedEmail)}
               >
                 重新發送驗證信
@@ -219,7 +223,6 @@ export function AuthContextProvider({
           {
             style: {
               minWidth: "420px",
-              
             },
           },
         );
@@ -232,13 +235,11 @@ export function AuthContextProvider({
         return false;
       }
 
-      
       setAuth(result.data); // 刷新狀態
       setAuthInit(true); // 刷新狀態
       toast.success(result.message || "登入成功(前端)");
       router.replace(next ?? "/"); // 登入成功後跳轉到首頁(💡看有沒有要換成其他的)
       return true; // ❓❓❓為什麼要回傳 true 目的是甚麼?
-      
     } catch (error) {
       // 如果網路壞掉、後端沒開，會進到這裡
       console.warn(error);
@@ -273,6 +274,7 @@ export function AuthContextProvider({
     <AuthContext.Provider
       value={{
         auth, // 目前登入的使用者的資料
+        setAuth, // 讓其他人可以更新 auth 的資料
         authInit, // 是否已經問完後端登入狀態
         isAuthenticated: auth.id !== 0, // 是否已登入的簡單 true / false 判斷 (true-->已登入、false-->未登入)
         isLoggingOut, // 給 AuthRouteGuard 判斷是否為手動登出
