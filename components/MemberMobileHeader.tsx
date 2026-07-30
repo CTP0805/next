@@ -14,6 +14,7 @@ const memberPageTitles: Record<string, string> = {
   "/member/review": "我的評論",
   "/member/favorites": "心願清單",
   "/member/recently-viewed": "最近瀏覽",
+  "/member/edit-post": "管理文章",
 };
 
 export default function MemberMobileHeader() {
