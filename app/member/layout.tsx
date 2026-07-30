@@ -57,7 +57,7 @@ export default function MemberLayout({
   const isMemberHome = pathname === "/member";
 
   return (
-    <div className="min-h-screen  bg-zinc-100 md:px-6 md:py-6">
+    <div className="min-h-screen   md:px-6 md:py-6">
       <div className="mx-auto flex w-full max-w-[1280px]  justify-center gap-6 md:items-start md:w-[80%]">
         {/* 
           手機版：
