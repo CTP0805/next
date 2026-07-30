@@ -7,6 +7,12 @@ import toast from "react-hot-toast";
 import { API_SERVER } from "@/config/api-path";
 import { IoIosWarning } from "react-icons/io";
 
+// TS 型別專區
+type ForgotPasswordResponse = {
+  success: boolean;
+  message: string;
+};
+
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
 
@@ -38,7 +44,7 @@ export default function ForgotPasswordPage() {
         }),
       });
 
-      const result = await response.json();
+      const result = (await response.json()) as ForgotPasswordResponse;
 
       if (!response.ok) {
         // toast.error(result.message || "此帳號尚未完成信箱驗證(前端)");
