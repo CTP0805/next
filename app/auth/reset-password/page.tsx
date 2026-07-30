@@ -10,17 +10,10 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { API_SERVER } from "@/config/api-path";
 
-// 還不確定用不用的到
-type LoginRequest = {
-  email: string;
-  password: string;
-};
-
-type LoginResponse = {
+// TS 型別專區
+type ResetPasswordResponse = {
   success: boolean;
   message: string;
-  token?: string;
-  user?: User;
 };
 
 const resetpasswordSchema = z
@@ -132,7 +125,7 @@ export default function ResetPasswordPage() {
         }),
       });
 
-      const result = await response.json();
+      const result = (await response.json()) as ResetPasswordResponse;
 
       if (!response.ok) {
         toast.error(result.message || "重設密碼失敗(前端)");
