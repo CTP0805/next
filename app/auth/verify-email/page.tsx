@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { useAuth } from "@/contexts/auth-context";
 import { useSearchParams } from "next/navigation";
@@ -92,8 +92,7 @@ function getPageContent(params: {
 */
 
 export default function EmailVerifiedPage() {
-  
-  const searchParams  = useSearchParams()
+  const searchParams = useSearchParams();
   const { resendVerifyEmail } = useAuth();
 
   // 只在這裡判斷一次成功或失敗
@@ -125,9 +124,7 @@ export default function EmailVerifiedPage() {
             ✔
           </div>
 
-          <h3>
-            {isAlreadyVerified ? "此信箱已驗證過" : "信箱驗證成功"}
-          </h3>
+          <h3>{isAlreadyVerified ? "此信箱已驗證過" : "信箱驗證成功"}</h3>
 
           <p className="mt-3 text-gray-600">
             {isAlreadyVerified
@@ -165,7 +162,11 @@ export default function EmailVerifiedPage() {
 
             <button
               type="button"
-              onClick={()=>resendVerifyEmail(email)}
+              onClick={() => { // 確保 querystring 有 email
+                if (email) {
+                  void resendVerifyEmail(email);
+                }
+              }}
               className="rounded-md bg-red-600 px-5 py-3 text-white hover:bg-red-700"
             >
               重新發送驗證信
