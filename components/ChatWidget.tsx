@@ -18,19 +18,7 @@ export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
-  const [member, setMember] = useState<any>(null); // 會員資料
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // 1. 抓取會員資料（修正相依陣列避免無限迴圈）
-  useEffect(() => {
-    fetch(`http://localhost:3001/api/member/profile`, {
-      method: "GET",
-      credentials: "include", // 帶上 cookie 驗證身份
-    })
-      .then((res) => res.json())
-      .then((data) => setMember(data.data))
-      .catch((error) => console.error(error));
-  }, []);
 
   // 2. 歷史訊息
   useEffect(() => {
@@ -71,6 +59,15 @@ export default function ChatWidget() {
         sender: "user",
       });
     }
+  };
+
+  const formatTime = (time?: string) => {
+    if (!time) return;
+
+    return new Date(time).toLocaleTimeString("zh-TW", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   useEffect(() => {
@@ -133,6 +130,13 @@ export default function ChatWidget() {
                   }`}
                 >
                   {m.text}
+                </div>
+                <div
+                  className={`mt-1 text-[11px] ${
+                    m.sender === "user" ? "text-cyan-100" : "text-gray-400"
+                  }`}
+                >
+                  {formatTime(m.created_at)}
                 </div>
               </div>
             ))}
