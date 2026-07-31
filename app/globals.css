@@ -164,3 +164,18 @@ body {
 @theme {
   --font-besley: var(--font-besley);
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  .about-page :is(h1, h2, h3, p, a) {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+      opacity 700ms ease-out,
+      transform 700ms ease-out;
+  }
+
+  .about-page :is(h1, h2, h3, p, a).about-text-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
