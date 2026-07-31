@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+
 const features = [
   {
     number: "01",
@@ -56,8 +60,52 @@ const functions = [
 const members = ["王廷安", "楊博惟", "陳彥程", "王冠勛", "王冠煒"];
 
 export default function AboutPage() {
+  const pageRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const page = pageRef.current;
+    const textElements =
+      page?.querySelectorAll<HTMLElement>("h1, h2, h3, p, a");
+
+    if (!textElements) {
+      return;
+    }
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    if (reducedMotion.matches) {
+      textElements.forEach((element) => {
+        element.classList.add("about-text-visible");
+      });
+
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("about-text-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15 },
+    );
+
+    textElements.forEach((element, index) => {
+      element.style.transitionDelay = `${(index % 4) * 80}ms`;
+      observer.observe(element);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <main className="overflow-hidden bg-[linear-gradient(to_bottom,#FEFDFC_0%,#FAF8F4_20%,#F2EBE0_50%,#FAF8F4_75%,#FFFFFF_100%)] text-[#1e3435]">
+    <main
+      ref={pageRef}
+      className="about-page overflow-hidden bg-[linear-gradient(to_bottom,#FEFDFC_0%,#FAF8F4_20%,#F2EBE0_50%,#FAF8F4_75%,#FFFFFF_100%)] text-[#1e3435]"
+    >
       {/* 首屏：滿版封面 */}
       <section className="relative flex min-h-[calc(100svh-60px)] items-center justify-center overflow-hidden px-6 py-24 text-white">
         {/* 背景圖片 */}
@@ -93,7 +141,7 @@ export default function AboutPage() {
 
           <a
             href="#purpose"
-            className="mt-12 inline-flex items-center gap-3 text-sm font-medium tracking-[0.2em] text-white transition hover:text-[#e7c98f]"
+            className="mt-12 inline-flex items-center gap-3 text-sm font-medium tracking-[0.2em] text-white hover:text-[#e7c98f]"
           >
             探索我們的故事
             <span aria-hidden="true" className="text-xl">
@@ -224,7 +272,7 @@ export default function AboutPage() {
         </div>
       </section>
       {/* 聯絡我們 */}
-      <section className=" text-[#1e3435]">
+      <section className="text-[#1e3435]">
         <div className="mx-auto grid max-w-7xl gap-10 px-6 py-20 sm:px-10 lg:grid-cols-[0.75fr_1.25fr] lg:px-12 lg:py-32">
           {/* 左側標題 */}
           <div className="border-b border-[#d9d2c6] pb-8 lg:border-r lg:border-b-0 lg:pr-16 lg:pb-0">
@@ -318,10 +366,10 @@ export default function AboutPage() {
         {/* <p className="mb-4 text-center text-sm font-bold tracking-[0.22em] text-[#557473]">
           MEET LOCALS
         </p> */}
-        <h2 className="mx-auto max-w-lg text-center text-4xl! leading-tight! font-normal! text-[#1e3435] sm:text-6xl!">
-          下一次旅行，
+        <h2 className="mx-auto max-w-xl text-center text-4xl! leading-tight! font-normal! text-[#1e3435] sm:text-6xl!">
+          “ 下一次旅行，
           <br />
-          玩得像個當地人。
+          玩得像個當地人 ”
         </h2>
       </section>
     </main>
