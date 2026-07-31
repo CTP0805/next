@@ -9,6 +9,7 @@ type ChatMessage = {
   text: string;
   sender: "user" | "admin";
   created_at?: string;
+  is_read: number;
 };
 
 const socket = io("http://localhost:3001");
@@ -51,14 +52,14 @@ export default function ChatWidget() {
   }, [auth.id]);
 
   const sendMessage = () => {
-    if (input.trim()) {
-      setInput("");
-      socket.emit("send-message", {
-        roomId: `user-${auth.id}`,
-        text: input,
-        sender: "user",
-      });
-    }
+    const message = input.trim();
+    if (!message) return;
+    setInput("");
+    socket.emit("send-message", {
+      roomId: `user-${auth.id}`,
+      text: message,
+      sender: "user",
+    });
   };
 
   const formatTime = (time?: string) => {
@@ -130,7 +131,7 @@ export default function ChatWidget() {
                   }`}
                 >
                   {m.text}
-                </div>
+                </div>{" "}
                 <div
                   className={`mt-1 text-[11px] ${
                     m.sender === "user" ? "text-cyan-100" : "text-gray-400"
@@ -156,14 +157,6 @@ export default function ChatWidget() {
               <button
                 onClick={sendMessage}
                 className="rounded-xl bg-[#45cad5] p-3 text-white transition-colors hover:bg-[#45cad5]"
-                onKeyDown={(e) => {
-                  if (e.nativeEvent.isComposing) return;
-
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    sendMessage();
-                  }
-                }}
               >
                 <Send size={20} />
               </button>
