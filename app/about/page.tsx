@@ -57,10 +57,10 @@ const members = ["王廷安", "楊博惟", "陳彥程", "王冠勛", "王冠煒"
 
 export default function AboutPage() {
   return (
-    <main className="overflow-hidden bg-[#f6f3ed] text-[#1e3435]">
+    <main className="overflow-hidden bg-[linear-gradient(to_bottom,#FEFDFC_0%,#FAF8F4_20%,#F2EBE0_50%,#FAF8F4_75%,#FFFFFF_100%)] text-[#1e3435]">
       {/* 首屏：滿版封面 */}
-      <section className="relative flex min-h-[calc(100svh-80px)] items-center justify-center overflow-hidden px-6 py-24 text-white">
-        {/* 背景圖片：可替換成你們自己的旅遊照片 */}
+      <section className="relative flex min-h-[calc(100svh-60px)] items-center justify-center overflow-hidden px-6 py-24 text-white">
+        {/* 背景圖片 */}
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
@@ -69,7 +69,7 @@ export default function AboutPage() {
           }}
         />
 
-        {/* 深藍綠色濾鏡，做出參考圖片的沉穩質感 */}
+        {/* 黑色濾鏡 */}
         <div className="absolute inset-0 bg-black/30" />
         <div className="absolute inset-0 bg-gradient-to-b from-[#102f3b]/30 via-transparent to-[#102b32]/75" />
 
@@ -134,7 +134,7 @@ export default function AboutPage() {
           </p>
 
           <p className="border-l-2 border-[#b48a4c] py-1 pl-5 font-semibold text-[#1e3435]">
-            「這一次，讓我們玩得像個當地人——你會發現，這比跟團好玩太多了！」
+            「 這一次，讓我們玩得像個當地人——你會發現，這比跟團好玩太多了！」
           </p>
         </div>
       </section>
@@ -145,10 +145,10 @@ export default function AboutPage() {
           <div
             className="min-h-screen bg-cover bg-center sm:h-[480px]"
             style={{
-              backgroundImage:
-                "url('https://images.unsplash.com/photo-1498654896293-37aacf113fd9?auto=format&fit=crop&w=1800&q=85')",
+              backgroundImage: "url('/images/about.jpg')",
             }}
           />
+          {/* url('https://images.unsplash.com/photo-1498654896293-37aacf113fd9?auto=format&fit=crop&w=1800&q=85') */}
           <div className="absolute inset-0 bg-[#173b3d]/25" />
 
           <p className="absolute bottom-7 left-7 max-w-xs border-l-2 border-[#e4c78d] pl-4 text-sm leading-6 text-white sm:bottom-10 sm:left-10">
@@ -224,58 +224,60 @@ export default function AboutPage() {
         </div>
       </section>
       {/* 聯絡我們 */}
-      <section className="bg-[#76bdc8] px-6 py-14 text-white sm:px-10 lg:px-16 lg:py-20">
-        <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+      <section className=" text-[#1e3435]">
+        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-20 sm:px-10 lg:grid-cols-[0.75fr_1.25fr] lg:px-12 lg:py-32">
           {/* 左側標題 */}
-          <div className="flex flex-col justify-center border-b border-white/40 pb-8 lg:border-r lg:border-b-0 lg:pr-16 lg:pb-0">
-            <p className="mb-4 text-sm font-semibold tracking-[0.25em] text-white/80">
+          <div className="border-b border-[#d9d2c6] pb-8 lg:border-r lg:border-b-0 lg:pr-16 lg:pb-0">
+            <p className="mb-4 text-sm font-bold tracking-[0.22em] text-[#a17435]">
               MEET LOCALS
             </p>
 
-            <h2 className="font-besley text-5xl! leading-tight! font-normal! sm:text-6xl!">
+            <h2 className="font-besley text-4xl! font-normal! text-[#1e3435] sm:text-5xl!">
               聯絡我們
             </h2>
 
-            <p className="mt-6 max-w-xs text-white/90">
+            <p className="mt-5 max-w-sm text-[#667577]">
               有任何旅程上的問題，歡迎隨時與我們聯絡。
             </p>
           </div>
 
           {/* 右側聯絡資訊 */}
-          <div className="grid gap-8 sm:grid-cols-2 sm:gap-x-12 sm:gap-y-10">
+          <div className="grid gap-10 sm:grid-cols-2 sm:gap-x-12 sm:gap-y-10">
             <div>
-              <p className="mb-2 text-xs font-semibold tracking-[0.2em] text-white/70">
+              <p className="mb-2 text-xs font-semibold tracking-[0.2em] text-[#a17435]">
                 PHONE
               </p>
               <a
                 href="tel:0912345678"
-                className="text-lg text-white transition hover:text-[#1e5c65]"
+                className="text-lg text-[#1e3435] transition hover:text-[#b48a4c]"
               >
                 0912-345-678
               </a>
             </div>
 
             <div>
-              <p className="mb-2 text-xs font-semibold tracking-[0.2em] text-white/70">
+              <p className="mb-2 text-xs font-semibold tracking-[0.2em] text-[#a17435]">
                 EMAIL
               </p>
               <a
                 href="mailto:meetlocals@example.com"
-                className="text-lg text-white transition hover:text-[#1e5c65]"
+                className="text-lg text-[#1e3435] transition hover:text-[#b48a4c]"
               >
                 meetlocals@example.com
               </a>
             </div>
 
             <div>
-              <p className="mb-2 text-xs font-semibold tracking-[0.2em] text-white/70">
+              <p className="mb-2 text-xs font-semibold tracking-[0.2em] text-[#a17435]">
                 ADDRESS
               </p>
-              <p className="text-lg text-white">台中市西屯區逢甲路 100 號</p>
+              <p className="text-lg text-[#1e3435]">
+                台中市西屯區逢甲路 100 號
+              </p>
             </div>
 
             <div>
-              <p className="mb-3 text-xs font-semibold tracking-[0.2em] text-white/70">
+              <p className="mb-3 text-xs font-semibold tracking-[0.2em] text-[#a17435]">
                 SOCIAL MEDIA
               </p>
 
@@ -284,7 +286,7 @@ export default function AboutPage() {
                   href="https://www.facebook.com/"
                   target="_blank"
                   rel="noreferrer"
-                  className="grid size-10 place-items-center rounded-full border border-white/70 text-sm font-semibold text-white transition hover:bg-white hover:text-[#3e98a5]"
+                  className="grid size-10 place-items-center rounded-full border border-[#b48a4c] text-sm font-semibold text-[#1e3435] transition hover:bg-[#1e3435] hover:text-white"
                 >
                   FB
                 </a>
@@ -293,7 +295,7 @@ export default function AboutPage() {
                   href="https://www.instagram.com/"
                   target="_blank"
                   rel="noreferrer"
-                  className="grid size-10 place-items-center rounded-full border border-white/70 text-sm font-semibold text-white transition hover:bg-white hover:text-[#3e98a5]"
+                  className="grid size-10 place-items-center rounded-full border border-[#b48a4c] text-sm font-semibold text-[#1e3435] transition hover:bg-[#1e3435] hover:text-white"
                 >
                   IG
                 </a>
@@ -302,7 +304,7 @@ export default function AboutPage() {
                   href="https://www.youtube.com/"
                   target="_blank"
                   rel="noreferrer"
-                  className="grid size-10 place-items-center rounded-full border border-white/70 text-sm font-semibold text-white transition hover:bg-white hover:text-[#3e98a5]"
+                  className="grid size-10 place-items-center rounded-full border border-[#b48a4c] text-sm font-semibold text-[#1e3435] transition hover:bg-[#1e3435] hover:text-white"
                 >
                   YT
                 </a>
@@ -312,11 +314,11 @@ export default function AboutPage() {
         </div>
       </section>
       {/* 頁尾 CTA */}
-      <section className=" px-6 py-20 text-center sm:px-10 lg:py-28">
-        <p className="mb-4 text-sm font-bold tracking-[0.22em] text-[#557473]">
+      <section className="flex flex-col items-center px-6 py-20 text-center sm:px-10 lg:py-30 lg:pb-60">
+        {/* <p className="mb-4 text-center text-sm font-bold tracking-[0.22em] text-[#557473]">
           MEET LOCALS
-        </p>
-        <h2 className="font-besley mx-auto max-w-3xl text-4xl! leading-tight! font-normal! text-[#1e3435] sm:text-6xl!">
+        </p> */}
+        <h2 className="mx-auto max-w-lg text-center text-4xl! leading-tight! font-normal! text-[#1e3435] sm:text-6xl!">
           下一次旅行，
           <br />
           玩得像個當地人。
