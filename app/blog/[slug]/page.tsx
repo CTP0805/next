@@ -21,6 +21,31 @@ import {
   blogCityLabel,
 } from "../_lib/types";
 import type { BlogPost } from "../_lib/types";
+import type { Metadata } from "next";
+
+// 使用網址中的 slug 找文章，並設定這篇文章專屬的分頁標題
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+
+  try {
+    // 用 slug 向既有 API 取得文章資料
+    const post = await fetchBlogPostBySlug(slug);
+
+    return {
+      title: `${post.title}｜Meet Locals`,
+      description: post.excerpt ?? post.title,
+    };
+  } catch {
+    // 找不到文章時的備用標題
+    return {
+      title: "找不到文章｜Meet Locals",
+    };
+  }
+}
 
 export default async function BlogDetail({
   params,

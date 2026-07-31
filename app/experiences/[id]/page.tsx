@@ -240,6 +240,14 @@ export default function ExperienceDetailPage() {
     getExperience();
   }, [id]);
 
+  // API 成功取得體驗資料後，將體驗名稱設定到瀏覽器分頁
+  useEffect(() => {
+    // 還在載入中、或 API 尚未回傳資料時，先不修改標題
+    if (!experience) return;
+
+    document.title = `${experience.title}｜Meet Locals`;
+  }, [experience]);
+
   // 最近瀏覽
   useEffect(() => {
     // authInit：確認前端已完成向後端確認登入狀態
