@@ -156,7 +156,7 @@ export default function ChatWidget() {
                   >
                     {/* 訊息氣泡 */}
                     <div
-                      className={`max-w-[75%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed break-words whitespace-pre-wrap ${
+                      className={`max-w-[75%] rounded-2xl px-4 py-1 text-[13px] leading-5 wrap-break-word whitespace-pre-wrap ${
                         isUser
                           ? "rounded-br-none bg-[#45cad5] text-white"
                           : "rounded-bl-none border border-gray-200 bg-white text-gray-800"
@@ -166,7 +166,7 @@ export default function ChatWidget() {
                     </div>
 
                     {/* 時間與已讀狀態（會因為 flex-row-reverse 而自動排在使用者氣泡的左側） */}
-                    <div className="mb-1 flex items-center gap-1 text-[11px] whitespace-nowrap text-gray-400">
+                    <div className="mb-1 flex items-center gap-1 text-[10px] whitespace-nowrap text-gray-400">
                       <div className="flex flex-col">
                         {isUser && (
                           <div className="text-end">
