@@ -18,7 +18,40 @@ export default function AdminChatPage() {
   const params = useParams<{
     userId: string;
   }>();
+  useEffect(() => {
+    const read = async () =>
+      await fetch(`http://localhost:3001/api/chat/${params.userId}/read`, {
+        method: "PATCH",
+      });
+    read();
+  }, [params.userId]);
+  useEffect(() => {
+    if (!params.userId) return;
 
+    const roomId = `user-${params.userId}`;
+
+    // 1. 加入房間
+    socket.emit("join-room", roomId);
+
+    // 2. 進入時先把舊訊息標成已讀
+    socket.emit("mark-as-read", { userId: Number(params.userId) });
+
+    // 3. 監聽新訊息
+    const handleMessage = (data: ChatMessage) => {
+      setMessages((prev) => [...prev, data]);
+
+      // 如果是使用者傳來的，立刻標已讀
+      if (data.sender === "user") {
+        socket.emit("mark-as-read", { userId: Number(params.userId) });
+      }
+    };
+
+    socket.on("receive-message", handleMessage);
+
+    return () => {
+      socket.off("receive-message", handleMessage);
+    };
+  }, [params.userId]);
   useEffect(() => {
     fetch(`http://localhost:3001/api/chat/${params.userId}/messages`)
       .then((res) => res.json())
