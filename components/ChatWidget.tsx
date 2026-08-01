@@ -156,7 +156,7 @@ export default function ChatWidget() {
                   >
                     {/* 訊息氣泡 */}
                     <div
-                      className={`max-w-[75%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed ${
+                      className={`max-w-[75%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed break-words whitespace-pre-wrap ${
                         isUser
                           ? "rounded-br-none bg-[#45cad5] text-white"
                           : "rounded-bl-none border border-gray-200 bg-white text-gray-800"
@@ -184,19 +184,26 @@ export default function ChatWidget() {
           </div>
 
           {/* 輸入區 */}
+          {/* 輸入區 */}
           <div className="border-t bg-white p-4">
-            <div className="flex gap-2">
-              <input
+            <div className="flex items-end gap-2">
+              <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                  // Enter 送出，Shift + Enter 換行
+                  if (
+                    e.key === "Enter" &&
+                    !e.shiftKey &&
+                    !e.nativeEvent.isComposing
+                  ) {
                     e.preventDefault();
                     sendMessage();
                   }
                 }}
-                placeholder="輸入訊息..."
-                className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm text-black focus:border-[#45cad5] focus:outline-none"
+                placeholder="輸入訊息...（Shift + Enter 換行）"
+                rows={1}
+                className="max-h-32 min-h-[44px] flex-1 resize-none overflow-y-auto rounded-xl border border-gray-300 px-4 py-3 text-sm text-black focus:border-[#45cad5] focus:outline-none"
               />
               <button
                 onClick={sendMessage}
