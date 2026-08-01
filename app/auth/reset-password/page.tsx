@@ -5,7 +5,6 @@ import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { z } from "zod";
 import { useSearchParams } from "next/navigation";
-import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { API_SERVER } from "@/config/api-path";
@@ -54,13 +53,14 @@ function ResetPasswordError() {
         <p className="mb-6 text-gray-600">
           此連結可能已經過期、已經使用過，或網址中的驗證資訊不正確。
         </p>
-
+        <div className="mt-6 flex justify-center gap-3">
         <Link
           href="/auth/forgot-password"
           className="button-red"
         >
           重新申請重設密碼
         </Link>
+        </div>
       </section>
     </main>
   );
@@ -139,7 +139,7 @@ export default function ResetPasswordPage() {
       }
     } catch (error) {
       // 如果網路壞掉、後端沒開，會進到這裡
-      toast.error("系統發生錯誤，請稍後再試(後端壞掉)");
+      toast.error("系統發生錯誤，請稍後再試");
     } finally {
       // 不管成功或失敗，都把 loading 關掉
       setIsLoading(false);

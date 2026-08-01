@@ -32,7 +32,6 @@ export default function ForgotPasswordPage() {
       // 開始送資料時，讓按鈕變成 loading 狀態
       setIsLoading(true);
 
-      // 前端送資料給後端
       // API_SERVER 要確認 port 號
       const response = await fetch(`${API_SERVER}/api/auth/forgot-password`, {
         method: "POST",
@@ -74,7 +73,6 @@ export default function ForgotPasswordPage() {
 
       if (response.ok) {
         toast.success(result.message || "若此 Email 存在，我們已寄送重設密碼信(前端)");
-
         return;
       }
 
@@ -82,7 +80,7 @@ export default function ForgotPasswordPage() {
       // 例如：登入成功後導到首頁
     } catch (error) {
       // 如果網路壞掉、後端沒開，會進到這裡
-      toast.error("系統發生錯誤，請稍後再試(後端沒開)");
+      toast.error("系統發生錯誤，請稍後再試");
     } finally {
       // 不管成功或失敗，都把 loading 關掉
       setIsLoading(false);

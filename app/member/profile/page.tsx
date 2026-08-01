@@ -6,7 +6,6 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
-import { HiChevronDown } from "react-icons/hi";
 import { useAuth } from "@/contexts/auth-context";
 
 // TS 型別專區
@@ -44,12 +43,13 @@ type ProfileFailureResponse = {
 // GET 與 PUT profile 都使用這個型別。
 type ProfileResponse = ProfileSuccessResponse | ProfileFailureResponse;
 
-// 修改密碼不會回傳會員資料。
+// 修改密碼不會回傳會員資料
 type ChangePasswordResponse = {
   success: boolean;
   message: string;
 };
 
+// 格式驗證專區
 const changePasswordSchema = z
   .object({
     newPassword: z
@@ -73,6 +73,7 @@ const changePasswordSchema = z
   });
 
 export default function ProfileFormTabs() {
+  // 切換 "基本資料"、"修改密碼"
   const [activeTab, setActiveTab] = useState<"profile" | "password">("profile");
 
   // Part1. 基本資料
@@ -84,7 +85,7 @@ export default function ProfileFormTabs() {
 
   const today = new Date().toISOString().split("T")[0]; // 取得今天日期 生日不能是未來日期
 
-  // 保存「剛從後端取得時」的原始資料，用來判斷使用者有沒有修改
+  // 保存「剛從後端取得時」的原始資料，用來判斷使用者有沒有修改，有修改才能按下"儲存"按鈕
   const [originalProfile, setOriginalProfile] = useState<ProfileData | null>(
     null,
   );
@@ -104,7 +105,8 @@ export default function ProfileFormTabs() {
 
   const router = useRouter();
 
-  // step1-1. 先取得使用者資料
+  // step1-1. 先取得使用者資料(也可從auth-context裡面拿)
+  /*
   useEffect(() => {
     const getUserProfile = async () => {
       const response = await fetch(`${API_SERVER}/api/member/profile`, {
@@ -112,7 +114,6 @@ export default function ProfileFormTabs() {
         credentials: "include",
       });
 
-      // step3. 解析回應
       const result = (await response.json()) as ProfileResponse;
 
       if (!response.ok || !result.success) {
@@ -140,6 +141,26 @@ export default function ProfileFormTabs() {
     };
     getUserProfile();
   }, []);
+  */
+  useEffect(()=>{
+    const profileData: ProfileData = {
+        name: auth.name ?? "",
+        email: auth.email ?? "",
+        phone: auth.phone ?? "",
+        gender: auth.gender ?? "",
+        birthday: auth.birthday ?? "",
+      };
+
+    // 填入畫面上的 input
+    setName(profileData.name);
+    setEmail(profileData.email);
+    setPhone(profileData.phone);
+    setGender(profileData.gender);
+    setBirthday(profileData.birthday);
+
+    // 存到 state 裡，作為「尚未修改」的基準
+    setOriginalProfile(profileData);
+  },[])
 
   // step1-2. 按鈕開關
   // originalProfile 還沒拿到時，先不能儲存。
@@ -203,7 +224,8 @@ export default function ProfileFormTabs() {
 
       toast.success(result.message);
       // window.location.reload();
-      setAuth({ ...auth, ...profileData });
+    
+      setAuth({ ...auth, ...profileData }); // 更新 auth-context
     } catch (error) {
       console.warn(error);
       toast.error("系統發生錯誤，請稍後再試(後端有問題)");
@@ -266,6 +288,7 @@ export default function ProfileFormTabs() {
       <div className="min-h-[740px] w-full">
         <div className="border-b border-[#d9d9d9]">
           <div className="flex gap-8">
+            {/* 基本資料分頁切換按鈕 */}
             <button
               type="button"
               onClick={() => setActiveTab("profile")}
@@ -278,6 +301,7 @@ export default function ProfileFormTabs() {
               基本資料
             </button>
 
+            {/* 修改密碼分頁切換按鈕 */}
             <button
               type="button"
               onClick={() => setActiveTab("password")}
@@ -293,6 +317,7 @@ export default function ProfileFormTabs() {
         </div>
 
         <form className="mt-9">
+          {/* 基本資料表單 */}
           {activeTab === "profile" && (
             <div className="grid grid-cols-1 gap-x-12 gap-y-9 md:grid-cols-2">
               <div>
@@ -394,6 +419,7 @@ export default function ProfileFormTabs() {
             </div>
           )}
 
+          {/* 修改密碼表單 */}
           {activeTab === "password" && (
             <div className="w-full max-w-[352px] space-y-9">
               <div className="relative">
@@ -469,7 +495,8 @@ export default function ProfileFormTabs() {
           )}
 
           <div className="mt-16 border-t border-[#d9d9d9]" />
-
+          
+          {/* 基本資料儲存按鈕 */}
           {activeTab === "profile" && (
             <div className="mt-11 flex justify-end">
               <button
@@ -483,6 +510,7 @@ export default function ProfileFormTabs() {
             </div>
           )}
 
+          {/* 修改密碼儲存按鈕 */}
           {activeTab === "password" && (
             <div className="mt-11 flex justify-end">
               <button

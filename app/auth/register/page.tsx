@@ -128,20 +128,14 @@ export default function RegisterPage() {
       }
 
       if (response.ok) {
-        
         toast.success(result.message || "註冊成功(前端)");
-        /* 註冊成功後要進行信箱驗證
-        const r = await fetch(`${API_SERVER}/api/auth/verify-email`)
-        */
-
-        // 之後你可以改成 router.push("/")
         router.push("/auth/login");
         return;
       }
 
     } catch (error) {
       console.warn(error);
-      toast.error("系統發生錯誤，請稍後再試(後端有問題)");
+      toast.error("系統發生錯誤，請稍後再試");
     } finally {
       setIsLoading(false);
     }

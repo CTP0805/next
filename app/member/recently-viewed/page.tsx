@@ -5,6 +5,7 @@ import FavoriteCard from "@/components/FavoriteCard";
 import type { FavoriteItem } from "@/contexts/FavoriteContext";
 import { API_SERVER } from "@/config/api-path";
 
+// TS 型別專區
 // 最近瀏覽比 FavoriteItem 多了 viewed_at。
 // FavoriteCard 不會用到 viewed_at，但保留它方便未來顯示瀏覽時間。
 interface RecentlyViewedItem extends FavoriteItem {
@@ -24,14 +25,15 @@ export default function RecentlyViewedPage() {
     RecentlyViewedItem[]
   >([]);
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+  // const [isLoading, setIsLoading] = useState(true);
+  // const [errorMessage, setErrorMessage] = useState("");
 
   // 預設由新到舊顯示
   const [sort, setSort] = useState<RecentlyViewedSort>("newest");
 
-  // useMemo 會在資料或排序選項改變時，才重新排序。
+  // useMemo 用來快取，只有在資料或排序選項(依賴)改變時，才重新排序
   const sortedRecentlyViewedItems = useMemo(() => {
+    // 先複製一份陣列，因為 sort 會直接更動原本的陣列
     const items = [...recentlyViewedItems];
 
     return items.sort((a, b) => {
@@ -40,10 +42,10 @@ export default function RecentlyViewedPage() {
 
       // 新資料排前面
       if (sort === "newest") {
-        return timeB - timeA;
+        return timeB - timeA; 
       }
 
-      // 舊資料排前面
+      // 舊資料排前面( JS 規定:相減為負數時，前項擺前面，即:小-->大、相減為正數時，後項擺前面，即:大-->小)
       return timeA - timeB;
     });
   }, [recentlyViewedItems, sort]);
@@ -58,14 +60,14 @@ export default function RecentlyViewedPage() {
           },
         );
 
-        if (response.status === 401) {
-          setErrorMessage("請先登入會員");
-          return;
-        }
+        // if (response.status === 401) {
+        //   setErrorMessage("請先登入會員");
+        //   return;
+        // }
 
         const result = (await response.json()) as RecentlyViewedApiResponse;
 
-        if (!response.ok || result.success !== true || !result.data) {
+        if (!response.ok || !result.success  || !result.data) {
           throw new Error(result.message ?? "取得最近瀏覽資料失敗");
         }
 
@@ -83,31 +85,32 @@ export default function RecentlyViewedPage() {
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "取得最近瀏覽資料失敗";
-
-        setErrorMessage(message);
+        
+        
+        // setErrorMessage(message);
       } finally {
-        setIsLoading(false);
+        //setIsLoading(false);
       }
     };
 
     void getRecentlyViewed();
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="px-8 py-16 text-center text-[#687076]">
-        正在載入最近瀏覽資料…
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="px-8 py-16 text-center text-[#687076]">
+  //       正在載入最近瀏覽資料…
+  //     </div>
+  //   );
+  // }
 
-  if (errorMessage) {
-    return (
-      <div className="px-8 py-16 text-center text-[#687076]">
-        {errorMessage}
-      </div>
-    );
-  }
+  // if (errorMessage) {
+  //   return (
+  //     <div className="px-8 py-16 text-center text-[#687076]">
+  //       {errorMessage}
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="text-[#292D32]">

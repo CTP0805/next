@@ -134,7 +134,7 @@ export default function EmailVerifiedPage() {
 
           <Link
             href="/auth/login"
-            className="mt-6 inline-block rounded-md bg-green-600 px-5 py-3 text-white hover:bg-green-700"
+            className="button-green inline-block mt-6"
           >
             前往登入
           </Link>
@@ -155,7 +155,7 @@ export default function EmailVerifiedPage() {
           <div className="mt-6 flex justify-center gap-3">
             <Link
               href="/auth/register"
-              className="rounded-md bg-zinc-200 px-5 py-3 text-zinc-800 hover:bg-zinc-300"
+              className="button-white"
             >
               回到註冊
             </Link>
@@ -167,7 +167,7 @@ export default function EmailVerifiedPage() {
                   void resendVerifyEmail(email);
                 }
               }}
-              className="rounded-md bg-red-600 px-5 py-3 text-white hover:bg-red-700"
+              className="button-red"
             >
               重新發送驗證信
             </button>

@@ -165,6 +165,7 @@ body {
   --font-besley: var(--font-besley);
 }
 
+/* 關於我們 */
 @media (prefers-reduced-motion: no-preference) {
   .about-page :is(h1, h2, h3, p, a) {
     opacity: 0;
