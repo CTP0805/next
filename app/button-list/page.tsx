@@ -14,7 +14,7 @@ export default function TestPage() {
   const { auth } = useAuth();
   return (
     <>
-      <main >
+      
       {/* <div className="mx-auto text-2xl">
         {isAuthenticated ? "已登入" : "未登入"}
       </div> */}
@@ -87,7 +87,107 @@ export default function TestPage() {
         </div>
 
       </div>
-        </main>
+      <h1>首頁分類標題</h1>
+      <h2>第一種</h2>
+      {/* 深色標題 + 副標 + 小短線：最乾淨、最不容易像按鈕 */}
+      <div className="mb-10 text-center">
+        <h2 className="text-3xl font-extrabold tracking-tight text-[#2E3338]">
+          熱門地區
+        </h2>
+
+        <p className="mt-3 text-sm text-gray-500">
+          探索下一趟旅程的靈感
+        </p>
+
+        {/* mx-auto 讓短線保持置中 */}
+        <div className="mx-auto mt-4 h-1 w-12 rounded-full bg-[#45cad5]" />
+      </div>
+      <h2>第二種</h2>
+      {/* 上方的小英文是區塊分類，不是按鈕 */}
+      <div className="mb-10 text-center">
+        <p className="text-xs font-bold tracking-[0.28em] text-[#45cad5]">
+          EXPLORE
+        </p>
+
+        <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-[#2E3338]">
+          熱門地區
+        </h2>
+
+        <p className="mt-3 text-sm text-gray-500">
+          從城市風景開始規劃下一趟旅程
+        </p>
+      </div>
+      <h2>第三種</h2>
+      {/* 線條只是裝飾，標題本身沒有背景色 */}
+      <div className="mb-10 text-center">
+        <div className="flex items-center justify-center gap-4">
+          <div className="h-px w-12 bg-gray-200 sm:w-20" />
+
+          <h2 className="text-3xl font-extrabold tracking-tight text-[#2E3338]">
+            熱門地區
+          </h2>
+
+          <div className="h-px w-12 bg-gray-200 sm:w-20" />
+        </div>
+
+        <p className="mt-3 text-sm text-gray-500">
+          尋找下一個想去的地方
+        </p>
+      </div>
+      <h2>第四種</h2>
+      {/* 01 像旅遊雜誌的章節編號；標題仍然是純文字 */}
+      <div className="mb-10 text-center">
+        <p className="mx-auto flex size-8 items-center justify-center rounded-full bg-[#E5FAFB] text-xs font-extrabold text-[#249EAA]">
+          01
+        </p>
+
+        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-[#2E3338]">
+          熱門地區
+        </h2>
+
+        <p className="mt-3 text-sm text-gray-500">
+          從城市風景開始出發
+        </p>
+      </div>
+      <h2>第五種</h2>
+      {/* 青綠色只在文字底部露出，不會變成一整顆按鈕 */}
+      <div className="mb-10 text-center">
+        <h2 className="relative inline-block text-3xl font-extrabold tracking-tight text-[#2E3338]">
+          {/* absolute 的色塊在文字後面，z-10 讓文字顯示在最上層 */}
+          <span className="relative z-10">熱門地區</span>
+
+          {/* -bottom-1 讓色塊貼在文字底部；w-3/4 表示只有文字寬度的 75% */}
+          <span className="absolute right-0 -bottom-1 z-0 h-3 w-full bg-[#BCEFF2]" />
+        </h2>
+
+        <p className="mt-4 text-sm text-gray-500">
+          探索下一趟旅程的靈感
+        </p>
+      </div>      
+      <h2>第六種</h2>
+      {/* 小圖案作為視覺焦點，品牌色只用在裝飾上 */}
+      <div className="mb-10 text-center">
+        <p
+          className="text-xl leading-none text-[#45cad5]"
+          aria-hidden="true"
+        >
+          ✦
+        </p>
+
+        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-[#2E3338]">
+          熱門地區
+        </h2>
+
+        <p className="mt-3 text-sm text-gray-500">
+          探索下一趟旅程的靈感
+        </p>
+
+        <div className="mx-auto mt-4 flex w-12 items-center justify-center gap-1">
+          <span className="size-1 rounded-full bg-[#45cad5]" />
+          <span className="h-px flex-1 bg-[#45cad5]" />
+          <span className="size-1 rounded-full bg-[#45cad5]" />
+        </div>
+      </div>
     </>
   );
 }
