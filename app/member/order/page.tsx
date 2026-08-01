@@ -3,6 +3,8 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { TicketsPlane } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 interface OrderItem {
   item_id: number;
@@ -19,7 +21,28 @@ interface OrderItem {
   booking_date: string;
   quantity: number;
   item_price: number;
+  final_amount?: number;
+  contact_name?: string;
 }
+
+// 🚀 時間格式化小工具：把 "2026-07-31T20:23:21.000Z" 格式化成 "2026/08/01 10:00"
+const formatDate = (dateStr: string | undefined) => {
+  if (!dateStr) return "詳見產品頁說明";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr; // 如果不是正規 Date 字串，直接原字串傳回
+
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+
+    return `${year}/${month}/${day} ${hours}:${minutes}`;
+  } catch {
+    return dateStr;
+  }
+};
 
 export default function OrderPage() {
   const router = useRouter();
@@ -178,60 +201,16 @@ export default function OrderPage() {
           {filteredOrders.map((order) => (
             <div
               key={`${order.order_id}-${order.item_id}`}
-              className="flex w-full flex-col justify-between gap-6 rounded-xl border border-dashed border-gray-300 bg-white p-5 shadow-sm transition hover:shadow-md md:flex-row md:items-center"
+              className="flex w-full flex-col justify-between gap-6 rounded-xl border border-dashed border-gray-300 bg-white p-5 pl-7 shadow-sm transition hover:shadow-md md:flex-row md:items-center"
             >
               {/* 【左側資訊區】：完全響應式 RWD 適應 */}
               <div className="flex flex-1 flex-col gap-2">
                 {/* 標題與類型 */}
                 <div className="flex items-center gap-2">
-                  <span className="rounded bg-orange-100 px-2 py-0.5 text-[11px] font-bold text-orange-600">
-                    體驗
-                  </span>
+                  <TicketsPlane className="h-5 w-5 shrink-0 text-[#FF9224]" />
                   <h4 className="text-base leading-snug font-bold text-gray-900">
                     {order.title}
                   </h4>
-                </div>
-
-                {/* 詳細資訊條目 */}
-                <div className="mt-1 flex flex-col gap-1 border-l-2 border-gray-100 pl-3 text-xs text-gray-500">
-                  <p>地點：{order.location || "精選景點"}</p>
-                  <p>
-                    體驗日期：
-                    {order.booking_date
-                      ? new Date(order.booking_date).toLocaleDateString()
-                      : "未指定"}
-                  </p>
-                  <p>參加人數：共 {order.quantity} 人</p>
-                  <p>
-                    付款方式：
-                    {order.payment_method?.toLowerCase().includes("line")
-                      ? "LINE Pay"
-                      : "信用卡"}
-                  </p>
-
-                  {/*  M 幣折抵 (點數 > 0 才顯示) */}
-                  {Number(order.points_redeemed) > 0 && (
-                    <p className="font-mediu">
-                      M幣折抵：{order.points_redeemed} 點
-                    </p>
-                  )}
-
-                  {/* 優惠券折抵 (金額 > 0 才顯示) */}
-                  {Number(order.coupon_discount) > 0 && (
-                    <p className="font-medium">
-                      優惠券：NT${" "}
-                      {Number(order.coupon_discount).toLocaleString()}
-                    </p>
-                  )}
-                  <p>下單時間：{new Date(order.order_date).toLocaleString()}</p>
-                </div>
-
-                {/* 金額顯示 */}
-                <div className="mt-2 text-sm font-bold text-gray-800">
-                  <span>實付金額：</span>
-                  <span className="text-base text-cyan-600">
-                    NT$ {Number(order.item_price).toLocaleString()}
-                  </span>
                 </div>
 
                 {/* 訂單編號與狀態標籤 */}
@@ -258,6 +237,48 @@ export default function OrderPage() {
                   )}
                 </div>
 
+                {/* 詳細資訊條目 */}
+                <div className="flex flex-col gap-1 text-xs text-gray-500">
+                  <p>地點：{order.location || "精選景點"}</p>
+                  <p>
+                    體驗日期：
+                    {order.booking_date
+                      ? new Date(order.booking_date).toLocaleDateString()
+                      : "未指定"}
+                  </p>
+                  <p>參加人數：共 {order.quantity} 人</p>
+                  <p>
+                    付款方式：
+                    {order.payment_method?.toLowerCase().includes("line")
+                      ? "LINE Pay"
+                      : "信用卡"}
+                  </p>
+
+                  {/*  M 幣折抵 (點數 > 0 才顯示) */}
+                  {Number(order.points_redeemed) > 0 && (
+                    <p className="font-medium">
+                      M幣折抵：{order.points_redeemed} 點
+                    </p>
+                  )}
+
+                  {/* 優惠券折抵 (金額 > 0 才顯示) */}
+                  {Number(order.coupon_discount) > 0 && (
+                    <p className="font-medium">
+                      優惠券：NT${" "}
+                      {Number(order.coupon_discount).toLocaleString()}
+                    </p>
+                  )}
+                  <p>下單時間：{new Date(order.order_date).toLocaleString()}</p>
+                </div>
+
+                {/* 金額顯示 */}
+                <div className="mt-2 text-sm font-bold text-gray-800">
+                  <span>實付金額：</span>
+                  <span className="text-base text-cyan-600">
+                    NT$ {Number(order.item_price).toLocaleString()}
+                  </span>
+                </div>
+
                 {/* 操作按鈕群（憑證 / 取消） */}
                 <div className="mt-3 flex items-center gap-2">
                   {/* 情況 A：待付款狀態 (pending) -> 顯示【前往付款】 */}
@@ -267,7 +288,7 @@ export default function OrderPage() {
                       onClick={() =>
                         router.push(`/payment?order_id=${order.order_id}`)
                       }
-                      className="btn btn-sm rounded-lg bg-[#45cad5] px-4 text-xs font-medium text-white hover:bg-teal-600"
+                      className="button-main !h-auto min-h-0 !px-4 !py-2 !text-xs"
                     >
                       前往付款
                     </button>
@@ -280,7 +301,7 @@ export default function OrderPage() {
                       <button
                         type="button"
                         onClick={() => setSelectedVoucher(order)}
-                        className="btn btn-sm btn-outline rounded-lg border-gray-300 px-4 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                        className="button-s-white"
                       >
                         訂單憑證
                       </button>
@@ -288,7 +309,7 @@ export default function OrderPage() {
                       <button
                         type="button"
                         onClick={() => handleCancelClick(order.item_id)}
-                        className="btn btn-sm rounded-lg border-red-200 bg-white px-3 text-xs text-red-500 hover:border-red-300 hover:bg-red-50"
+                        className="button-s-red"
                       >
                         取消
                       </button>
@@ -326,47 +347,88 @@ export default function OrderPage() {
 
       {/* 3. 🌟 訂單憑證彈窗 (Modal) */}
       {selectedVoucher && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="animate-in fade-in zoom-in-95 w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-            <h3 className="text-base font-bold text-gray-800">訂單憑證</h3>
-            <p className="mt-1 text-xs text-gray-500">
-              {selectedVoucher.title}
-            </p>
-
-            <div className="my-4 space-y-2 rounded-lg border bg-gray-50 p-4 text-xs text-gray-600">
-              <p>
-                <span className="font-bold">訂單編號：</span>
-                {selectedVoucher.order_id}
-              </p>
-              <p>
-                <span className="font-bold">實付金額：</span>NT${" "}
-                {Number(selectedVoucher.item_price).toLocaleString()}
-              </p>
-              <p>
-                <span className="font-bold">狀態：</span>
-                <span
-                  className={
-                    selectedVoucher.order_status === "paid"
-                      ? "font-bold text-emerald-600"
-                      : "text-gray-500"
-                  }
-                >
-                  {selectedVoucher.order_status === "paid"
-                    ? "已確認"
-                    : "已取消"}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div
+            id="printable-voucher"
+            className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl transition-all"
+          >
+            {/* 1. 票券頂部 Banner */}
+            <div className="bg-[#45cad5] p-5 text-white">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold tracking-widest uppercase opacity-90">
+                  MeetLocal Voucher
                 </span>
+                <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-semibold">
+                  已確認入場
+                </span>
+              </div>
+              <h3 className="mt-2 line-clamp-1 text-lg font-extrabold">
+                {selectedVoucher.title}
+              </h3>
+            </div>
+
+            {/* 2. QR Code 核銷區 */}
+            <div className="flex flex-col items-center border-b border-dashed border-gray-200 bg-gray-50/50 p-6 text-center">
+              <div className="rounded-xl border border-gray-100 bg-white p-3 shadow-md">
+                <QRCodeSVG value={selectedVoucher.order_id} size={140} />
+              </div>
+              <p className="mt-3 font-mono text-xs font-bold text-gray-500">
+                憑證序號：{selectedVoucher.order_id}
+              </p>
+              <p className="mt-1 text-[11px] text-gray-400">
+                現場請出示此 QR Code 供工作人員掃描核銷
               </p>
             </div>
 
-            <button
-              onClick={() => setSelectedVoucher(null)}
-              className="btn btn-sm w-full rounded-xl bg-cyan-500 text-white hover:bg-cyan-600"
-            >
-              關閉
-            </button>
+            {/* 3. 行程詳細資料 */}
+            <div className="space-y-3 p-6 text-xs text-gray-600">
+              <div className="flex justify-between">
+                <span className="text-gray-400">體驗日期/場次</span>
+                <span className="font-bold text-gray-800">
+                  {formatDate(
+                    selectedVoucher.booking_date || selectedVoucher.order_date,
+                  )}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">參加人數</span>
+                <span className="font-bold text-gray-800">
+                  共 {selectedVoucher.quantity} 人
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">集合地點</span>
+                <span className="font-bold text-gray-800">
+                  {selectedVoucher.location || "詳見產品頁說明"}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">訂購人姓名</span>
+                <span className="font-bold text-gray-800">
+                  {selectedVoucher.contact_name || "YANG POWEI"}
+                </span>
+              </div>
+            </div>
+
+            {/* 4. 底部控制按鈕 */}
+            <div className="print-btn-group flex gap-3 bg-gray-50 p-4 pt-0">
+              <button
+                onClick={() => window.print()}
+                className="btn btn-outline btn-sm flex-1 border-gray-300 text-xs text-gray-600 hover:bg-gray-100"
+              >
+                🖨️ 列印憑證
+              </button>
+              <button
+                onClick={() => setSelectedVoucher(null)}
+                className="btn btn-sm flex-1 bg-[#45cad5] text-xs text-white hover:bg-[#3bb1bb]"
+              >
+                關閉
+              </button>
+            </div>
           </div>
         </div>
       )}
+
       {/* 🌟 專屬取消行程的 DaisyUI Modal */}
       <dialog ref={cancelModalRef} className="modal">
         <div className="modal-box">

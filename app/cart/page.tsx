@@ -5,6 +5,7 @@ import { useCart } from "@/contexts/cart";
 import { useEffect, useState, useRef } from "react";
 import toast from "react-hot-toast";
 import { HiStar } from "react-icons/hi";
+import { useRouter } from "next/navigation";
 
 //定義從後端拿到的推薦商品型別
 interface RecommendProduct {
@@ -32,12 +33,26 @@ interface CartItem {
 }
 
 export default function CartPage() {
+  const router = useRouter();
   // 從自訂的 useCart 鉤子中解構出狀態與方法
   const { items, setItems, totalQty, totalAmount, onUpdateQuantity, onRemove } =
     useCart();
 
   // 記錄全選勾選
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+
+  // 🚀 新增這段 useEffect：當購物車資料 (items) 載入完成時，預設自動全選！
+useEffect(() => {
+  if (items.length > 0) {
+    // 找出所有未過期的可勾選商品 key
+    const allKeys = items
+      .filter((item) => !item.isSoldOut)
+      .map((item) => `${item.experienceId}-${item.sessionId}`);
+
+    setSelectedKeys(allKeys);
+  }
+}, []); // 當 items 載入或更新時觸發
+
   // 存推薦商品的state
   const [recommendProducts, setRecommendProducts] = useState<
     RecommendProduct[]
@@ -153,6 +168,36 @@ export default function CartPage() {
       // 原本沒勾選 -> 加上勾選
       setSelectedKeys([...selectedKeys, itemKey]);
     }
+  };
+
+  // 🚀 計算勾選商品的件數與金額 + 處理點擊前往結帳
+  const selectedItems = items.filter((item) =>
+    selectedKeys.includes(`${item.experienceId}-${item.sessionId}`),
+  );
+
+  const selectedTotalQty = selectedItems.reduce((acc, item) => {
+    const adult = Number(item.adultQuantity) || 0;
+    const child = Number(item.childQuantity) || 0;
+    return acc + (adult + child || Number(item.quantity) || 0);
+  }, 0);
+
+  const selectedTotalAmount = selectedItems.reduce((acc, item) => {
+    const adult = Number(item.adultQuantity) || 0;
+    const child = Number(item.childQuantity) || 0;
+    const adultP = Number(item.adultPrice) || Number(item.price) || 0;
+    const childP = Number(item.childPrice) || 0;
+    return acc + (adult * adultP + child * childP);
+  }, 0);
+
+  const handleGoToCheckout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (selectedKeys.length === 0) {
+      toast.error("請至少勾選一項活動進行結帳！");
+      return;
+    }
+
+    sessionStorage.setItem("checkoutItems", JSON.stringify(selectedItems));
+    router.push("/checkout");
   };
 
   // ==========================================
@@ -401,24 +446,27 @@ export default function CartPage() {
               {/* 右側結帳卡片 */}
               <div className="w-full rounded-lg bg-white p-6 shadow-sm lg:flex-[1]">
                 <p className="mb-1 text-sm font-medium text-gray-500">
-                  {selectedKeys.length > 0 ? selectedKeys.length : items.length}{" "}
-                  件總計
+                  已選擇 {selectedKeys.length} 項活動
                 </p>
                 <div className="mb-4 text-2xl font-bold text-gray-900">
-                  NT$ {totalAmount.toLocaleString()}
+                  NT$ {selectedTotalAmount.toLocaleString()}
                 </div>
 
-                <Link href="/checkout/">
-                  <button
-                    disabled={totalQty === 0}
-                    className="btn w-full border-none bg-[#45cad5] text-white hover:bg-[#36b3be] disabled:bg-gray-300"
-                  >
-                    前往結帳
-                  </button>
-                </Link>
+                <button
+                  type="button"
+                  onClick={handleGoToCheckout}
+                  disabled={selectedKeys.length === 0}
+                  className={`button-main block w-full py-2.5 text-center ${
+                    selectedKeys.length === 0
+                      ? "pointer-events-none bg-gray-300 opacity-60"
+                      : ""
+                  }`}
+                >
+                  前往結帳
+                </button>
 
                 <p className="mt-2 text-center text-xs text-cyan-600">
-                  預估可獲得約 {Math.round(totalAmount * 0.01).toLocaleString()}{" "}
+                  預估可獲得約 {Math.round(totalAmount * 0.01).toLocaleString()}
                   M幣
                 </p>
               </div>
@@ -433,16 +481,17 @@ export default function CartPage() {
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {recommendProducts.map((product) => (
-                <div
+                <Link
                   key={product.id}
-                  className="overflow-hidden rounded-lg border border-gray-100 bg-white p-4 shadow-sm"
+                  href={`/experiences/${product.id}`}
+                  className="group block overflow-hidden rounded-lg border border-gray-100 bg-white p-4 shadow-sm transition hover:shadow-md"
                 >
                   <div className="mb-2 flex h-40 items-center justify-center overflow-hidden rounded-md bg-gray-200">
                     {product.primaryImage ? (
                       <img
                         src={product.primaryImage}
                         alt={product.title}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (
                       <span className="text-xs text-gray-400">暫無圖片</span>
@@ -471,7 +520,7 @@ export default function CartPage() {
                       </span>
                     )}
                   </p>
-                  
+
                   <p className="mt-3 text-sm font-bold text-gray-800">
                     NT${" "}
                     {product.minPrice
@@ -479,7 +528,7 @@ export default function CartPage() {
                       : "---"}{" "}
                     起
                   </p>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

@@ -44,7 +44,7 @@ export default function Footer() {
             Meet部落格
           </Link>
           <Link href="/rewards" className="link link-hover">
-            酷幣兌換
+            M幣兌換
           </Link>
         </nav>
 

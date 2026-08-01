@@ -149,7 +149,7 @@ export default function SuccessPage() {
             {/* 查看訂單按鈕 */}
             <div className="mt-4">
             <Link href="/member/order">
-              <button className="btn btn-outline rounded-xl border-gray-400 px-8 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-800">
+              <button className="button-white text-sm px-6 py-2">
                 查看訂單
               </button>
               </Link>

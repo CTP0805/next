@@ -43,7 +43,7 @@ export default function CartDropdown() {
             </Link>
             <Link
               href="/cart"
-              className="block w-full rounded-lg bg-[#45cad5] py-2 text-center text-xs font-bold text-white transition-colors hover:bg-[#39b4bf]"
+              className="block w-full text-center button-main"
             >
               前往購物車
             </Link>
@@ -130,7 +130,7 @@ export default function CartDropdown() {
               </div>
               <Link
                 href="/cart"
-                className="block w-full rounded-lg bg-[#45cad5] py-2 text-center text-xs font-black text-white shadow-md shadow-[#45cad5]/10 transition-transform hover:bg-[#36b3bc] active:scale-[0.99]"
+                className="button-main block w-full py-2.5 text-center text-xs font-bold"
               >
                 進入購物車頁面
               </Link>
