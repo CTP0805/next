@@ -4,7 +4,12 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { getApiServer } from "@/config/api-path";
 import { useAuth } from "@/contexts/auth-context";
-import { createBlogComment, fetchBlogComments } from "../_lib/api";
+import {
+  createBlogComment,
+  deleteBlogComment,
+  fetchBlogComments,
+  updateBlogComment,
+} from "../_lib/api";
 import type { BlogComment } from "../_lib/types";
 
 interface BlogCommentSectionProps {
@@ -75,6 +80,10 @@ export default function BlogCommentSection({
   const [loadError, setLoadError] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [actionId, setActionId] = useState<number | null>(null);
+  const [actionError, setActionError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -132,6 +141,67 @@ export default function BlogCommentSection({
       setSubmitError(error instanceof Error ? error.message : "送出留言失敗");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  function startEditing(comment: BlogComment) {
+    setEditingId(comment.id);
+    setEditContent(comment.content);
+    setActionError("");
+  }
+
+  function cancelEditing() {
+    setEditingId(null);
+    setEditContent("");
+    setActionError("");
+  }
+
+  async function handleUpdate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (editingId == null) return;
+
+    const body = editContent.trim();
+    if (body.length < 2 || body.length > 500) {
+      setActionError("留言內容需為 2 至 500 個字");
+      return;
+    }
+
+    setActionId(editingId);
+    setActionError("");
+    try {
+      const updated = await updateBlogComment(editingId, body);
+      setComments((previous) =>
+        previous.map((comment) =>
+          comment.id === updated.id ? updated : comment,
+        ),
+      );
+      setEditingId(null);
+      setEditContent("");
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "更新留言失敗");
+    } finally {
+      setActionId(null);
+    }
+  }
+
+  async function handleDelete(commentId: number) {
+    if (!window.confirm("確定要刪除這則留言嗎？")) return;
+
+    setActionId(commentId);
+    setActionError("");
+    try {
+      await deleteBlogComment(commentId);
+      setComments((previous) =>
+        previous.filter((comment) => comment.id !== commentId),
+      );
+      if (editingId === commentId) {
+        setEditingId(null);
+        setEditContent("");
+      }
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "刪除留言失敗");
+    } finally {
+      setActionId(null);
     }
   }
 
@@ -239,6 +309,12 @@ export default function BlogCommentSection({
         </p>
       ) : null}
 
+      {actionError ? (
+        <p className="mb-3 rounded-[12px] border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {actionError}
+        </p>
+      ) : null}
+
       <div className="space-y-3">
         {loading ? (
           <div className="space-y-3">
@@ -270,10 +346,63 @@ export default function BlogCommentSection({
                 <span className="text-xs text-gray-400">
                   {formatDate(comment.created_at)}
                 </span>
+                {auth.id === comment.member_id ? (
+                  <div className="ml-auto flex items-center gap-2 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => startEditing(comment)}
+                      disabled={actionId === comment.id}
+                      className="font-medium text-[#36b3be] transition hover:text-[#258d95] disabled:opacity-50"
+                    >
+                      編輯
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleDelete(comment.id)}
+                      disabled={actionId === comment.id}
+                      className="font-medium text-red-500 transition hover:text-red-600 disabled:opacity-50"
+                    >
+                      刪除
+                    </button>
+                  </div>
+                ) : null}
               </div>
-              <p className="pl-12 text-[15px] leading-relaxed whitespace-pre-wrap text-gray-700">
-                {comment.content}
-              </p>
+              {editingId === comment.id ? (
+                <form onSubmit={handleUpdate} className="pl-12">
+                  <textarea
+                    value={editContent}
+                    onChange={(event) => setEditContent(event.target.value)}
+                    rows={3}
+                    maxLength={500}
+                    className={`resize-y py-3 ${fieldClass}`}
+                    aria-label="編輯留言內容"
+                  />
+                  <div className="mt-1 text-right text-xs text-gray-400">
+                    {editContent.length}/500
+                  </div>
+                  <div className="mt-2 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={cancelEditing}
+                      disabled={actionId === comment.id}
+                      className="rounded-[10px] border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      取消
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={actionId === comment.id}
+                      className="rounded-[10px] bg-[#45cad5] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#36b3be] disabled:opacity-50"
+                    >
+                      {actionId === comment.id ? "儲存中…" : "儲存"}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <p className="pl-12 text-[15px] leading-relaxed whitespace-pre-wrap text-gray-700">
+                  {comment.content}
+                </p>
+              )}
             </article>
           ))
         )}

@@ -184,6 +184,38 @@ export async function createBlogComment(
   return data.comment;
 }
 
+/** 編輯自己的留言；後端會再次檢查留言擁有者與 2–500 字限制。 */
+export async function updateBlogComment(
+  commentId: number,
+  content: string,
+): Promise<BlogComment> {
+  const response = await fetch(`${apiBase()}/api/blog/comments/${commentId}`, {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+  });
+  const data = await readJson<CommentResponse>(response);
+  if (!response.ok || !data.comment) {
+    throw new Error(data.message || "更新留言失敗");
+  }
+  return data.comment;
+}
+
+/** 軟刪除自己的留言；後端只會把 status 改為 deleted。 */
+export async function deleteBlogComment(commentId: number): Promise<void> {
+  const response = await fetch(`${apiBase()}/api/blog/comments/${commentId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  const data = await readJson<{ success?: boolean; message?: string }>(
+    response,
+  );
+  if (!response.ok) {
+    throw new Error(data.message || "刪除留言失敗");
+  }
+}
+
 /**
  * 【函式】fetchMyBlogPosts
  * 對應：GET /api/blog/mine（需登入）
