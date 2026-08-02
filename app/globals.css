@@ -217,6 +217,24 @@ body {
 .rdp-root .rdp-day_button {
   font-size: 16px;
 }
+
+/* 關於我們 */
+@media (prefers-reduced-motion: no-preference) {
+  .about-page :is(h1, h2, h3, p, a) {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+      opacity 700ms ease-out,
+      transform 700ms ease-out;
+  }
+
+  .about-page :is(h1, h2, h3, p, a).about-text-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
 /* 🖨️ 列印專用 CSS 樣式修正 (精準單頁憑證) */
 @media print {
   /* 1. 設定頁面預設為直向，並把 Margins 歸零防止多頁 */
@@ -256,10 +274,10 @@ body {
   #printable-voucher * {
     visibility: visible !important;
   }
+}
 
   /* 5. 隱藏憑證底部的按鈕群 (同時兼顧兩種 class 拼寫) */
   #printable-voucher .print-btn-group,
   #printable-voucher [class*="print-btn"] {
     display: none !important;
   }
-}

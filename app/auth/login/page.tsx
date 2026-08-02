@@ -34,7 +34,7 @@ export default function LoginPage() {
   // isLoading 用來控制按下登入後，按鈕顯示「登入中」
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-
+  
 
   const router = useRouter();
   const { login, refreshAuth } = useAuth();
@@ -45,10 +45,8 @@ export default function LoginPage() {
   async function handleLogin(
     e: SyntheticEvent<HTMLFormElement>,
   ): Promise<void> {
-    // 阻止表單預設刷新頁面的行為
     e.preventDefault();
 
-    // 等等就會替換成這段
     try {
       setIsLoading(true);
       await login(email, password);
@@ -58,51 +56,6 @@ export default function LoginPage() {
       setIsLoading(false);
     }
 
-    /*
-    try {
-      // 開始送資料時，讓按鈕變成 loading 狀態
-      setIsLoading(true);
-
-      // 前端送資料給後端
-      // API_SERVER 要確認 port 號
-      const response = await fetch(`${API_SERVER}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: trimmedEmail,
-          password,
-        }),
-      });
-
-      const result = await response.json();
-
-      // 如果後端說登入失敗
-      if (!response.ok) {
-        toast.error(result.message || "登入失敗(前端)");
-        return;
-      }
-
-      // 如果登入成功，通常會把 token 存起來
-      // 注意：正式專案更建議用 HttpOnly Cookie，這裡先用最容易懂的版本
-      if (response.ok) {
-        localStorage.setItem("kenny-auth", JSON.stringify(result.data));
-        toast.success(result.message || "登入成功(前端)");
-        router.push("/");
-        return;
-      }
-
-      // 之後你可以改成 router.push("/")
-      // 例如：登入成功後導到首頁
-    } catch (error) {
-      // 如果網路壞掉、後端沒開，會進到這裡
-      toast.error("系統發生錯誤，請稍後再試(後端沒開)");
-    } finally {
-      // 不管成功或失敗，都把 loading 關掉
-      setIsLoading(false);
-    }
-    */
   }
 
   // google 第三方登入
@@ -126,7 +79,7 @@ export default function LoginPage() {
       // 後端回什麼？
       // success、message、data，並且後端會順便把 JWT 寫進 HttpOnly Cookie
       const result = (await response.json()) as GoogleLoginResponse;
-      
+
       if (!response.ok) {
         toast.error(result.message || "Google 登入失敗");
         return;
@@ -146,7 +99,6 @@ export default function LoginPage() {
   return (
     <>
       <main className="min-h-screen bg-[url('/images/login-bg.jpg')] bg-cover bg-[position:48%_center] text-white xl:bg-left">
-        
         {/* 背景遮罩 */}
         <div className="min-h-screen bg-black/10 backdrop-brightness-75">
           {/* 外層 container：負責控制整體寬度與 RWD 留白 */}
@@ -158,7 +110,32 @@ export default function LoginPage() {
             */}
             <div className="flex w-full max-w-md flex-col overflow-hidden rounded-[12px] border border-white/80 bg-black/35 shadow-2xl backdrop-blur-[2px] xl:max-w-[1280px] xl:flex-row">
               {/* 左側：登入表單 */}
-              <div className="flex w-full items-center justify-center px-5 py-10 sm:px-8 sm:py-12 xl:w-1/2 xl:px-16 xl:px-20">
+              <div className="relative flex w-full items-center justify-center px-5 py-10 sm:px-8 sm:py-12 xl:w-1/2 xl:px-16 xl:px-20">
+                {/* 一鍵輸入的隱藏按鈕 */}
+                {/* 一般會員測試帳號 */}
+                <button
+                  type="button"
+                  onClick={() => {setEmail("member@example.com"); setPassword("a123456789")}}
+                  aria-label="顯示或隱藏密碼"
+                  className="absolute top-1 left-1  w-10 h-10 hover:cursor-pointer"
+                ></button>
+
+                {/* 管理員測試帳號 */}
+                <button
+                  type="button"
+                  onClick={() => {setEmail("admin@example.com"); setPassword("a123456789")}}
+                  aria-label="顯示或隱藏密碼"
+                  className="absolute top-1 center  w-10 h-10 hover:cursor-pointer"
+                ></button>
+
+                {/* 客服測試帳號 */}
+                <button
+                  type="button"
+                  onClick={() => {setEmail("support@example.com"); setPassword("a123456789")}}
+                  aria-label="顯示或隱藏密碼"
+                  className="absolute top-1 right-1  w-10 h-10 hover:cursor-pointer"
+                ></button>
+
                 <form onSubmit={handleLogin} className="w-full max-w-[470px]">
                   <h2 className="mb-10 text-center xl:mb-14">立即登入</h2>
 
@@ -238,7 +215,9 @@ export default function LoginPage() {
                       <FcGoogle />
                     </span>
                     <span>
-                      {isGoogleLoading ? "Google 登入中..." : "使用 Google 登入"}
+                      {isGoogleLoading
+                        ? "Google 登入中..."
+                        : "使用 Google 登入"}
                     </span>
                   </button>
 

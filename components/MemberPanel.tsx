@@ -186,7 +186,6 @@ export default function MemberPanel() {
   // 目前顯示在會員面板上的頭像
   const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR_URL);
 
-  const [name, setName] = useState("");
 
   // 頁面剛開啟時，向後端拿資料庫已儲存的大頭貼
   useEffect(() => {
@@ -201,7 +200,7 @@ export default function MemberPanel() {
 
         // 先確認 API 成功，而且真的有會員資料
         if (response.ok && result.success && result.data) {
-          setName(result.data.name);
+          // setName(result.data.name);
 
           // avatar_url 可能是 null；有值才需要 trim 與組合後端網址
           const savedAvatarUrl = result.data.avatar_url?.trim();
@@ -518,7 +517,7 @@ export default function MemberPanel() {
             />
           </div>
 
-          <h4>{name}</h4>
+          <h4>{auth.name}</h4>
           {/*  
           {errorMessage && !isUploadDialogOpen && !selectedImage && (
             <p className="mt-3 text-sm text-red-500">{errorMessage}</p>
@@ -567,7 +566,7 @@ export default function MemberPanel() {
               {/* 取消：只關閉 Modal，不呼叫後端 */}
               <button
                 type="button"
-                className="btn"
+                className="button-white"
                 disabled={isSaving}
                 onClick={() => setIsRemoveAvatarModalOpen(false)}
               >
@@ -755,7 +754,7 @@ export default function MemberPanel() {
               <button
                 type="button"
                 onClick={handleCancelCrop}
-                className="rounded-lg border border-zinc-300 px-5 py-2 text-zinc-700 transition hover:bg-zinc-100"
+                className="button-white"
               >
                 取消
               </button>
@@ -764,7 +763,7 @@ export default function MemberPanel() {
                 type="button"
                 disabled={isSaving}
                 onClick={handleSave}
-                className="rounded-lg bg-[#68BBC3] px-5 py-2 text-white transition hover:bg-[#53AAB2] disabled:cursor-not-allowed disabled:opacity-60"
+                className="button-main"
               >
                 {isSaving ? "處理中..." : "使用這張圖片"}
               </button>

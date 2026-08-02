@@ -1,3 +1,15 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { Cormorant_Garamond } from "next/font/google";
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
 const features = [
   {
     number: "01",
@@ -56,11 +68,55 @@ const functions = [
 const members = ["王廷安", "楊博惟", "陳彥程", "王冠勛", "王冠煒"];
 
 export default function AboutPage() {
+  const pageRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const page = pageRef.current;
+    const textElements =
+      page?.querySelectorAll<HTMLElement>("h1, h2, h3, p, a");
+
+    if (!textElements) {
+      return;
+    }
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    if (reducedMotion.matches) {
+      textElements.forEach((element) => {
+        element.classList.add("about-text-visible");
+      });
+
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("about-text-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15 },
+    );
+
+    textElements.forEach((element, index) => {
+      element.style.transitionDelay = `${(index % 4) * 80}ms`;
+      observer.observe(element);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <main className="overflow-hidden bg-[#f6f3ed] text-[#1e3435]">
+    <main
+      ref={pageRef}
+      className="about-page overflow-hidden bg-[linear-gradient(to_bottom,#FEFDFC_0%,#FAF8F4_20%,#F2EBE0_50%,#FAF8F4_75%,#FFFFFF_100%)] text-[#1e3435]"
+    >
       {/* 首屏：滿版封面 */}
-      <section className="relative flex min-h-[calc(100svh-80px)] items-center justify-center overflow-hidden px-6 py-24 text-white">
-        {/* 背景圖片：可替換成你們自己的旅遊照片 */}
+      <section className="relative flex min-h-[calc(100svh-60px)] items-center justify-center overflow-hidden px-6 py-24 text-white">
+        {/* 背景圖片 */}
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
@@ -69,19 +125,18 @@ export default function AboutPage() {
           }}
         />
 
-        {/* 深藍綠色濾鏡，做出參考圖片的沉穩質感 */}
+        {/* 黑色濾鏡 */}
         <div className="absolute inset-0 bg-black/30" />
         <div className="absolute inset-0 bg-gradient-to-b from-[#102f3b]/30 via-transparent to-[#102b32]/75" />
 
-        {/* 裝飾線條 */}
-        <div className="absolute inset-5 border border-white/35 sm:inset-8 lg:inset-12" />
-
         <div className="relative z-10 mx-auto max-w-4xl text-center">
-          <p className="mb-5 text-xs font-semibold tracking-[0.38em] text-[#d9b77b] sm:text-sm">
+          {/* <p className="mb-5 text-xs font-semibold tracking-[0.38em] text-[#d9b77b] sm:text-sm">
             DISCOVER THE WORLD DIFFERENTLY
-          </p>
+          </p> */}
 
-          <h1 className="text-6xl! font-normal! tracking-tight! sm:text-7xl! lg:text-9xl!">
+          <h1
+            className={`${cormorant.className} text-6xl! font-[300]! tracking-[-0.03em]! italic sm:text-7xl! lg:text-9xl!`}
+          >
             About Us
           </h1>
 
@@ -91,15 +146,15 @@ export default function AboutPage() {
             人生，就是一場由無數體驗編織而成的旅程。
           </p>
 
-          <a
+          {/* <a
             href="#purpose"
-            className="mt-12 inline-flex items-center gap-3 text-sm font-medium tracking-[0.2em] text-white transition hover:text-[#e7c98f]"
+            className="mt-12 inline-flex items-center gap-3 text-sm font-medium tracking-[0.2em] text-white hover:text-[#e7c98f]"
           >
             探索我們的故事
             <span aria-hidden="true" className="text-xl">
               ↓
             </span>
-          </a>
+          </a> */}
         </div>
       </section>
 
@@ -134,7 +189,7 @@ export default function AboutPage() {
           </p>
 
           <p className="border-l-2 border-[#b48a4c] py-1 pl-5 font-semibold text-[#1e3435]">
-            「這一次，讓我們玩得像個當地人——你會發現，這比跟團好玩太多了！」
+            「 這一次，讓我們玩得像個當地人——你會發現，這比跟團好玩太多了！」
           </p>
         </div>
       </section>
@@ -145,10 +200,10 @@ export default function AboutPage() {
           <div
             className="min-h-screen bg-cover bg-center sm:h-[480px]"
             style={{
-              backgroundImage:
-                "url('https://images.unsplash.com/photo-1498654896293-37aacf113fd9?auto=format&fit=crop&w=1800&q=85')",
+              backgroundImage: "url('/images/about.jpg')",
             }}
           />
+          {/* url('https://images.unsplash.com/photo-1498654896293-37aacf113fd9?auto=format&fit=crop&w=1800&q=85') */}
           <div className="absolute inset-0 bg-[#173b3d]/25" />
 
           <p className="absolute bottom-7 left-7 max-w-xs border-l-2 border-[#e4c78d] pl-4 text-sm leading-6 text-white sm:bottom-10 sm:left-10">
@@ -224,87 +279,92 @@ export default function AboutPage() {
         </div>
       </section>
       {/* 聯絡我們 */}
-      <section className="bg-[#76bdc8] px-6 py-14 text-white sm:px-10 lg:px-16 lg:py-20">
-        <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+      <section className="text-[#1e3435]">
+        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-20 sm:px-10 lg:grid-cols-[0.75fr_1.25fr] lg:px-12 lg:py-32">
           {/* 左側標題 */}
-          <div className="flex flex-col justify-center border-b border-white/40 pb-8 lg:border-r lg:border-b-0 lg:pr-16 lg:pb-0">
-            <p className="mb-4 text-sm font-semibold tracking-[0.25em] text-white/80">
+          <div className="border-b border-[#d9d2c6] pb-8 lg:border-r lg:border-b-0 lg:pr-16 lg:pb-0">
+            <p className="mb-4 text-sm font-bold tracking-[0.22em] text-[#a17435]">
               MEET LOCALS
             </p>
 
-            <h2 className="font-besley text-5xl! leading-tight! font-normal! sm:text-6xl!">
+            <h2 className="font-besley text-4xl! font-normal! text-[#1e3435] sm:text-5xl!">
               聯絡我們
             </h2>
 
-            <p className="mt-6 max-w-xs text-white/90">
+            <p className="mt-5 max-w-sm text-[#667577]">
               有任何旅程上的問題，歡迎隨時與我們聯絡。
             </p>
           </div>
 
           {/* 右側聯絡資訊 */}
-          <div className="grid gap-8 sm:grid-cols-2 sm:gap-x-12 sm:gap-y-10">
+          <div className="grid gap-10 sm:grid-cols-2 sm:gap-x-12 sm:gap-y-10">
             <div>
-              <p className="mb-2 text-xs font-semibold tracking-[0.2em] text-white/70">
+              <p className="mb-2 text-xs font-semibold tracking-[0.2em] text-[#a17435]">
                 PHONE
               </p>
               <a
                 href="tel:0912345678"
-                className="text-lg text-white transition hover:text-[#1e5c65]"
+                className="text-lg text-[#1e3435] transition hover:text-[#b48a4c]"
               >
                 0912-345-678
               </a>
             </div>
 
             <div>
-              <p className="mb-2 text-xs font-semibold tracking-[0.2em] text-white/70">
+              <p className="mb-2 text-xs font-semibold tracking-[0.2em] text-[#a17435]">
                 EMAIL
               </p>
               <a
                 href="mailto:meetlocals@example.com"
-                className="text-lg text-white transition hover:text-[#1e5c65]"
+                className="text-lg text-[#1e3435] transition hover:text-[#b48a4c]"
               >
                 meetlocals@example.com
               </a>
             </div>
 
             <div>
-              <p className="mb-2 text-xs font-semibold tracking-[0.2em] text-white/70">
+              <p className="mb-2 text-xs font-semibold tracking-[0.2em] text-[#a17435]">
                 ADDRESS
               </p>
-              <p className="text-lg text-white">台中市西屯區逢甲路 100 號</p>
+              <p className="text-lg text-[#1e3435]">
+                台中市西屯區逢甲路 100 號
+              </p>
             </div>
 
             <div>
-              <p className="mb-3 text-xs font-semibold tracking-[0.2em] text-white/70">
+              <p className="mb-3 text-xs font-semibold tracking-[0.2em] text-[#a17435]">
                 SOCIAL MEDIA
               </p>
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 pt-1">
+                {/* Twitter / X */}
                 <a
-                  href="https://www.facebook.com/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="grid size-10 place-items-center rounded-full border border-white/70 text-sm font-semibold text-white transition hover:bg-white hover:text-[#3e98a5]"
+                  href="#"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-black/10 text-black transition-all hover:bg-white hover:text-black"
                 >
-                  FB
+                  <svg className="h-5 w-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
                 </a>
 
+                {/* Facebook */}
                 <a
-                  href="https://www.instagram.com/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="grid size-10 place-items-center rounded-full border border-white/70 text-sm font-semibold text-white transition hover:bg-white hover:text-[#3e98a5]"
+                  href="#"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-black/10 text-black transition-all hover:bg-white hover:text-black"
                 >
-                  IG
+                  <svg className="h-5 w-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                  </svg>
                 </a>
 
+                {/* Instagram */}
                 <a
-                  href="https://www.youtube.com/"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="grid size-10 place-items-center rounded-full border border-white/70 text-sm font-semibold text-white transition hover:bg-white hover:text-[#3e98a5]"
+                  href="#"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-black/10 text-black transition-all hover:bg-white hover:text-black"
                 >
-                  YT
+                  <svg className="h-5 w-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                  </svg>
                 </a>
               </div>
             </div>
@@ -312,14 +372,14 @@ export default function AboutPage() {
         </div>
       </section>
       {/* 頁尾 CTA */}
-      <section className=" px-6 py-20 text-center sm:px-10 lg:py-28">
-        <p className="mb-4 text-sm font-bold tracking-[0.22em] text-[#557473]">
+      <section className="flex flex-col items-center px-6 py-20 text-center sm:px-10 lg:py-30 lg:pb-60">
+        {/* <p className="mb-4 text-center text-sm font-bold tracking-[0.22em] text-[#557473]">
           MEET LOCALS
-        </p>
-        <h2 className="font-besley mx-auto max-w-3xl text-4xl! leading-tight! font-normal! text-[#1e3435] sm:text-6xl!">
-          下一次旅行，
+        </p> */}
+        <h2 className="mx-auto max-w-xl text-center text-4xl! leading-tight! font-normal! text-[#1e3435] sm:text-6xl!">
+          “ 下一次旅行，
           <br />
-          玩得像個當地人。
+          玩得像個當地人 ”
         </h2>
       </section>
     </main>

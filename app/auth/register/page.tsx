@@ -128,20 +128,14 @@ export default function RegisterPage() {
       }
 
       if (response.ok) {
-        
         toast.success(result.message || "註冊成功(前端)");
-        /* 註冊成功後要進行信箱驗證
-        const r = await fetch(`${API_SERVER}/api/auth/verify-email`)
-        */
-
-        // 之後你可以改成 router.push("/")
         router.push("/auth/login");
         return;
       }
 
     } catch (error) {
       console.warn(error);
-      toast.error("系統發生錯誤，請稍後再試(後端有問題)");
+      toast.error("系統發生錯誤，請稍後再試");
     } finally {
       setIsLoading(false);
     }
@@ -212,7 +206,15 @@ export default function RegisterPage() {
             </div>
 
             {/* 右側：註冊表單 */}
-            <div className="flex w-full items-center justify-center px-5 py-10 sm:px-8 sm:py-12 xl:w-1/2 xl:px-16 xl:px-20">
+            <div className="relative flex w-full items-center justify-center px-5 py-10 sm:px-8 sm:py-12 xl:w-1/2 xl:px-16 xl:px-20">
+              {/* 一鍵輸入的隱藏按鈕 */}
+              {/* 註冊帳號 */}
+              <button
+                  type="button"
+                  onClick={() => {setName("陳彥程"); setEmail("kenny94crazy@gmail.com"); setPassword("a123456789"); setConfirmPassword("a123456789")}}
+                  aria-label="顯示或隱藏密碼"
+                  className="absolute top-1 left-1  w-10 h-10 hover:cursor-pointer"
+                ></button>
               <form onSubmit={handleRegister} className="w-full max-w-[470px]">
                 <h2 className="mb-2 text-center xl:mb-4">建立帳號</h2>
 
@@ -248,6 +250,7 @@ export default function RegisterPage() {
                       name="password"
                       onChange={(e) => setPassword(e.target.value)}
                       className="pr-14"
+                      autoComplete="new-password"
                     />
 
                     <button
@@ -271,6 +274,7 @@ export default function RegisterPage() {
                       name="confirmPassword"
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       className="pr-14"
+                      autoComplete="new-password"
                     />
 
                     <button

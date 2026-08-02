@@ -8,12 +8,13 @@ import Navbar from "@/components/navbar/index";
 import FooterGuard from "@/components/FooterGuard";
 import { AuthRouteGuard } from "@/components/AuthRouteGuard";
 import { Toaster } from "react-hot-toast";
+import { PageTitle } from "@/components/PageTitle";
 
 export const metadata: Metadata = {
-  title: "Meet Local", // 👈 更改瀏覽器分頁標題
+  // title: "Meet Local", // 👈 更改瀏覽器分頁標題
   description: "旅遊網站",
   icons: {
-    icon: "/icon/oldlogo1.svg", // 👈 更改瀏覽器分頁圖示 (預設讀取 public 資料夾下的檔案)
+    icon: "/icon/logo1.svg", // 👈 更改瀏覽器分頁圖示 (預設讀取 public 資料夾下的檔案)
   },
 };
 
@@ -32,6 +33,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`flex min-h-full flex-col ${besley.variable}`}
       >
+        <PageTitle />
         <Toaster />
         <AuthContextProvider>
           <FavoriteProvider>

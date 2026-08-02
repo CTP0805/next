@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type MouseEvent, useEffect, useState } from "react";
 import { API_SERVER } from "@/config/api-path";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
-import { HiChevronDown } from "react-icons/hi";
 import { useAuth } from "@/contexts/auth-context";
 
+// TS 型別專區
 type ProfileData = {
   name: string;
   email: string;
@@ -17,6 +17,39 @@ type ProfileData = {
   birthday: string;
 };
 
+// 後端 GET / PUT profile 回傳的會員資料。
+// 可為 null 的欄位，要如實標註 null。
+type ProfileApiData = {
+  name: string;
+  email: string;
+  phone: string | null;
+  gender: string | null;
+  birthday: string | null;
+};
+
+// API 成功時一定有 data。
+type ProfileSuccessResponse = {
+  success: true;
+  message: string;
+  data: ProfileApiData;
+};
+
+// API 失敗時後端只需要回傳錯誤訊息。
+type ProfileFailureResponse = {
+  success: false;
+  message: string;
+};
+
+// GET 與 PUT profile 都使用這個型別。
+type ProfileResponse = ProfileSuccessResponse | ProfileFailureResponse;
+
+// 修改密碼不會回傳會員資料
+type ChangePasswordResponse = {
+  success: boolean;
+  message: string;
+};
+
+// 格式驗證專區
 const changePasswordSchema = z
   .object({
     newPassword: z
@@ -40,6 +73,7 @@ const changePasswordSchema = z
   });
 
 export default function ProfileFormTabs() {
+  // 切換 "基本資料"、"修改密碼"
   const [activeTab, setActiveTab] = useState<"profile" | "password">("profile");
 
   // Part1. 基本資料
@@ -50,12 +84,13 @@ export default function ProfileFormTabs() {
   const [email, setEmail] = useState("");
 
   const today = new Date().toISOString().split("T")[0]; // 取得今天日期 生日不能是未來日期
-  const [date, setDate] = useState<Date | undefined>();
 
-  // 保存「剛從後端取得時」的原始資料，用來判斷使用者有沒有修改
+  // 保存「剛從後端取得時」的原始資料，用來判斷使用者有沒有修改，有修改才能按下"儲存"按鈕
   const [originalProfile, setOriginalProfile] = useState<ProfileData | null>(
     null,
   );
+
+  const { auth, setAuth } = useAuth();
 
   // Part2. 修改密碼
   const [oldPassword, setOldPassword] = useState("");
@@ -70,7 +105,8 @@ export default function ProfileFormTabs() {
 
   const router = useRouter();
 
-  // step1-1. 先取得使用者資料
+  // step1-1. 先取得使用者資料(也可從auth-context裡面拿)
+  /*
   useEffect(() => {
     const getUserProfile = async () => {
       const response = await fetch(`${API_SERVER}/api/member/profile`, {
@@ -78,9 +114,12 @@ export default function ProfileFormTabs() {
         credentials: "include",
       });
 
-      // step3. 解析回應
-      const result = await response.json();
-      console.log(result);
+      const result = (await response.json()) as ProfileResponse;
+
+      if (!response.ok || !result.success) {
+        toast.error(result.message);
+        return;
+      }
 
       const profileData: ProfileData = {
         name: result.data.name ?? "",
@@ -102,6 +141,26 @@ export default function ProfileFormTabs() {
     };
     getUserProfile();
   }, []);
+  */
+  useEffect(()=>{
+    const profileData: ProfileData = {
+        name: auth.name ?? "",
+        email: auth.email ?? "",
+        phone: auth.phone ?? "",
+        gender: auth.gender ?? "",
+        birthday: auth.birthday ?? "",
+      };
+
+    // 填入畫面上的 input
+    setName(profileData.name);
+    setEmail(profileData.email);
+    setPhone(profileData.phone);
+    setGender(profileData.gender);
+    setBirthday(profileData.birthday);
+
+    // 存到 state 裡，作為「尚未修改」的基準
+    setOriginalProfile(profileData);
+  },[])
 
   // step1-2. 按鈕開關
   // originalProfile 還沒拿到時，先不能儲存。
@@ -119,7 +178,9 @@ export default function ProfileFormTabs() {
 
   // step1-4. fetch [基本資料] 修改到後端
 
-  const handleProfile = async (e) => {
+  const handleProfile = async (
+    e: MouseEvent<HTMLButtonElement>,
+  ): Promise<void> => {
     e.preventDefault();
     try {
       const response = await fetch(`${API_SERVER}/api/member/profile`, {
@@ -136,9 +197,9 @@ export default function ProfileFormTabs() {
         }),
       });
 
-      const result = await response.json();
+      const result = (await response.json()) as ProfileResponse;
 
-      if (!response.ok) {
+      if (!response.ok || !result.success) {
         toast.error(result.message);
         return;
       }
@@ -162,14 +223,18 @@ export default function ProfileFormTabs() {
       setOriginalProfile(profileData);
 
       toast.success(result.message);
-      window.location.reload();
+      // window.location.reload();
+    
+      setAuth({ ...auth, ...profileData }); // 更新 auth-context
     } catch (error) {
       console.warn(error);
       toast.error("系統發生錯誤，請稍後再試(後端有問題)");
     }
   };
 
-  const handlePassword = async (e) => {
+  const handlePassword = async (
+    e: MouseEvent<HTMLButtonElement>,
+  ): Promise<void> => {
     e.preventDefault();
 
     // step2-1. 前端格式驗證
@@ -199,7 +264,7 @@ export default function ProfileFormTabs() {
         }),
       });
 
-      const result = await response.json();
+      const result = (await response.json()) as ChangePasswordResponse;
 
       if (!response.ok) {
         toast.error(result.message);
@@ -223,6 +288,7 @@ export default function ProfileFormTabs() {
       <div className="min-h-[740px] w-full">
         <div className="border-b border-[#d9d9d9]">
           <div className="flex gap-8">
+            {/* 基本資料分頁切換按鈕 */}
             <button
               type="button"
               onClick={() => setActiveTab("profile")}
@@ -235,6 +301,7 @@ export default function ProfileFormTabs() {
               基本資料
             </button>
 
+            {/* 修改密碼分頁切換按鈕 */}
             <button
               type="button"
               onClick={() => setActiveTab("password")}
@@ -250,6 +317,7 @@ export default function ProfileFormTabs() {
         </div>
 
         <form className="mt-9">
+          {/* 基本資料表單 */}
           {activeTab === "profile" && (
             <div className="grid grid-cols-1 gap-x-12 gap-y-9 md:grid-cols-2">
               <div>
@@ -326,14 +394,13 @@ export default function ProfileFormTabs() {
                   id="gender"
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
-                  className="select select-bordered h-[45px] min-h-10 rounded-[12px] border border-[#E1E5E7] bg-white pr-10 pl-4 text-[16px]  text-[#454B50] outline-none "
+                  className="select select-bordered h-[45px] min-h-10 rounded-[12px] border border-[#E1E5E7] bg-white pr-10 pl-4 text-[16px] text-[#454B50] outline-none"
                 >
                   <option value="">請選擇...</option>
                   <option value="男">男</option>
                   <option value="女">女</option>
                   <option value="其他">非二元性別</option>
                 </select>
-                
               </div>
 
               <div>
@@ -349,12 +416,10 @@ export default function ProfileFormTabs() {
                   onChange={(e) => setBirthday(e.target.value)}
                 />
               </div>
-
-              
             </div>
-            
           )}
 
+          {/* 修改密碼表單 */}
           {activeTab === "password" && (
             <div className="w-full max-w-[352px] space-y-9">
               <div className="relative">
@@ -430,7 +495,8 @@ export default function ProfileFormTabs() {
           )}
 
           <div className="mt-16 border-t border-[#d9d9d9]" />
-
+          
+          {/* 基本資料儲存按鈕 */}
           {activeTab === "profile" && (
             <div className="mt-11 flex justify-end">
               <button
@@ -444,6 +510,7 @@ export default function ProfileFormTabs() {
             </div>
           )}
 
+          {/* 修改密碼儲存按鈕 */}
           {activeTab === "password" && (
             <div className="mt-11 flex justify-end">
               <button
@@ -456,7 +523,6 @@ export default function ProfileFormTabs() {
             </div>
           )}
         </form>
-    
       </div>
     </section>
   );
