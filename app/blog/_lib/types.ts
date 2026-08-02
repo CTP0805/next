@@ -113,6 +113,7 @@ export interface BlogComment {
   author_avatar: string | null;
   content: string;
   created_at: string;
+  updated_at: string;
 }
 
 /**

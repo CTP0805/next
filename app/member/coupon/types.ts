@@ -3,7 +3,7 @@
  * 【新手導讀】Coupon／M 幣 TypeScript 型別
  * =============================================================================
  * PointWallet        = 餘額卡片
- * PointTransaction   = M 幣流水一筆（從訂單推導）
+ * PointTransaction   = M 幣流水一筆（從訂單與訂單明細推導）
  * Coupon             = 券目錄（coupons 表）
  * MemberCouponView   = 我持有的券 + 狀態 available/used/...
  * MemberBenefitsPayload = benefits API 整包 data
@@ -22,7 +22,7 @@ export interface PointWallet {
 }
 
 /**
- * M幣流水（由 order_main.points_earned / points_redeemed 推導）
+ * M幣流水（由 order_main 回饋／折抵與 order_items 取消退款推導）
  * DB 無獨立流水表
  */
 export interface PointTransaction {
