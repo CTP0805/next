@@ -14,6 +14,8 @@ interface RecommendProduct {
   city: string;
   primaryImage: string | null;
   minPrice: string | number | null;
+  rating?: number | string | null; 
+  review_count?: number | string | null; 
 }
 
 interface CartItem {
@@ -21,7 +23,7 @@ interface CartItem {
   experienceId: number;
   sessionId: number;
   name: string;
-  price: number;
+  price?: number;
   adultPrice?: number;
   childPrice?: number;
   adultQuantity?: number;
@@ -184,7 +186,7 @@ useEffect(() => {
   const selectedTotalAmount = selectedItems.reduce((acc, item) => {
     const adult = Number(item.adultQuantity) || 0;
     const child = Number(item.childQuantity) || 0;
-    const adultP = Number(item.adultPrice) || Number(item.price) || 0;
+    const adultP = Number(item.adultPrice) || 0;
     const childP = Number(item.childPrice) || 0;
     return acc + (adult * adultP + child * childP);
   }, 0);
@@ -258,7 +260,7 @@ useEffect(() => {
                     : Number(item.childQuantity) || 0;
 
                   const adultPrice =
-                    Number(item.adultPrice) || Number(item.price) || 0;
+                    Number(item.adultPrice) || 0;
                   const childPrice = Number(item.childPrice) || 0;
 
                   // 計算該卡片項目的總小計金額
