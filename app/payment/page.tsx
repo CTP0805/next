@@ -206,28 +206,35 @@ export default function PaymentPage() {
               </div>
 
               {/* 區塊 B：同意條款與確認付款大方塊 */}
-              <div className="flex flex-col items-center justify-between gap-6 rounded-lg border border-gray-100 bg-white p-8 shadow-sm md:flex-row">
-                {/* 左側：隱私權條款勾選說明 */}
-                <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-600">
-                  {/* 修正：條款同意應該是 checkbox 樣式，這裡改回 checkbox 確保勾選視覺 */}
-                  <input
-                    type="checkbox"
-                    name="agreement"
-                    className="checkbox checkbox-sm rounded border-gray-300 text-white checked:border-cyan-500 checked:bg-cyan-500"
-                    checked={isAgreed}
-                    onChange={(e) => setIsAgreed(e.target.checked)}
-                  />
-                  <span>我了解並同意 MeetLocals 服務條款與隱私權</span>
-                </label>
+              <div className="flex flex-col gap-4 rounded-lg border border-gray-100 bg-white p-8 shadow-sm">
+                {/* 1. 上半部：同意條款 (左) 與 金額 (右) 左右對齊 */}
+                <div className="flex items-center justify-between gap-4">
+                  {/* 左側：隱私權條款勾選說明 */}
+                  <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-600">
+                    {/* 修正：條款同意應該是 checkbox 樣式，這裡改回 checkbox 確保勾選視覺 */}
+                    <input
+                      type="checkbox"
+                      name="agreement"
+                      className="checkbox checkbox-sm rounded border-gray-300 text-white checked:border-cyan-500 checked:bg-cyan-500"
+                      checked={isAgreed}
+                      onChange={(e) => setIsAgreed(e.target.checked)}
+                    />
+                    <span className="inline-block translate-y-[2px]">
+                      我了解並同意 MeetLocals 服務條款與隱私權
+                    </span>
+                  </label>
 
-                {/* 右側：金額顯示與確認付款按鈕 */}
-                <div className="flex flex-col items-center gap-2 md:items-end">
-                  <span className="text-xl font-bold text-cyan-500">
+                  {/* 右側：金額 */}
+                  <span className="text-xl leading-none font-bold text-cyan-500">
                     NT$ {finalAmount.toLocaleString()}
                   </span>
+                </div>
+
+                {/* 2. 下半部：確認付款按鈕 (靠右排列) */}
+                <div className="flex justify-end">
                   <button
                     onClick={handlePayment}
-                    className="button-main px-6 py-2.5 text-base font-semibold md:px-8 md:py-3 md:text-lg"
+                    className="button-main px-6 py-2.5 text-base"
                   >
                     確認付款
                   </button>

@@ -112,7 +112,7 @@ export default function HostSection({
               <button
                 type="button"
                 onClick={() => setIsContactOpen(false)}
-                className="rounded-lg border border-[#DDE3E5] px-5 py-3 font-bold"
+                className="button-white"
               >
                 取消
               </button>
@@ -125,7 +125,7 @@ export default function HostSection({
                   setContactMessage("");
                   setIsContactOpen(false);
                 }}
-                className="rounded-lg bg-[#68BBC3] px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="button-main"
               >
                 送出訊息
               </button>

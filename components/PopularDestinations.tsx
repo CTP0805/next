@@ -39,10 +39,11 @@ export default function PopularDestinations() {
   return (
     <section className="mt-10 py-12">
       <div className="mb-10 text-center">
-        <h2 className="inline-block rounded-[16px] bg-[#45cad5] px-8 py-2 text-xl font-bold text-white">
-          熱門地區
+        <h2 className="relative inline-block text-3xl font-extrabold tracking-tight text-[#2E3338]">
+          <span className="relative z-10">熱門地區</span>
+          <span className="absolute right-0 -bottom-1 z-0 h-3 w-full bg-[#BCEFF2]" />
         </h2>
-        <p className="mt-4 text-gray-500">下一站，去哪裡？</p>
+        <p className="mt-4 text-sm text-gray-500">下一站，去哪裡？</p>
       </div>
 
       {/* 手機版滑動區 */}

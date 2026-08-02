@@ -27,10 +27,14 @@ export default function Features() {
   return (
     <section className="mx-auto max-w-7xl px-6 pt-10">
       <div className="text-center">
-        <h2 className="mb-20 inline-block w-[240px] rounded-[16px] bg-[#45cad5] px-6 py-2 text-xl font-bold text-white">
-          四大保證
+        <h2 className="relative inline-block text-3xl font-extrabold tracking-tight text-[#2E3338] ">
+          <span className="relative z-10">四大特色</span>
+          <span className="absolute right-0 -bottom-1 z-0 h-3 w-full bg-[#BCEFF2]"/>
         </h2>
-        <div className="mx-auto grid max-w-[1280px] grid-cols-2 md:grid-cols-4 md:gap-20">
+         <p className="mt-4 text-sm text-gray-500">
+          跟著在地職人隨時出發，獨旅或小團都能輕鬆享受深度旅程。
+        </p>
+        <div className="pt-14 mx-auto grid max-w-[1280px] grid-cols-2 md:grid-cols-4 md:gap-20">
           {data.map((v, i) => {
             return (
               <div key={i} className="mb-10 flex w-full flex-col items-center">

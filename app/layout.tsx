@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   // title: "Meet Local", // 👈 更改瀏覽器分頁標題
   description: "旅遊網站",
   icons: {
-    icon: "/icon/logo1.svg", // 👈 更改瀏覽器分頁圖示 (預設讀取 public 資料夾下的檔案)
+    icon: "/icon/logo_title.svg", // 👈 更改瀏覽器分頁圖示 (預設讀取 public 資料夾下的檔案)
   },
 };
 

@@ -238,7 +238,7 @@ useEffect(() => {
                     </span>
                   </label>
                   <button
-                    className="btn btn-outline btn-sm rounded-lg text-gray-600 hover:bg-gray-100"
+                    className="btn btn-outline btn-sm rounded-md border-gray-300 text-gray-600 hover:bg-gray-100"
                     onClick={handleRemoveSelected}
                   >
                     刪除選中活動
@@ -565,10 +565,10 @@ useEffect(() => {
           </p>
           <div className="modal-action">
             <form method="dialog">
-              <button className="btn btn-ghost">取消</button>
+              <button className="button-white">取消</button>
             </form>
             <button
-              className="btn btn-error text-white"
+              className="button-red"
               onClick={confirmDelete}
             >
               確定刪除

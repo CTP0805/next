@@ -114,11 +114,12 @@ export default function Home() {
 
   return (
     <section className="mx-auto max-w-7xl px-6 py-10">
-      <div className="mb-10 text-center">
-        <h2 className="inline-block w-[240px] rounded-[16px] bg-[#45cad5] px-6 py-2 text-xl font-bold text-white">
-          旅人好評
+      <div className="mb-10 text-center pb-10">
+        <h2 className="relative inline-block text-3xl font-extrabold tracking-tight text-[#2E3338]">
+          <span className="relative z-10">旅人好評</span>
+           <span className="absolute right-0 -bottom-1 z-0 h-3 w-full bg-[#BCEFF2]" />
         </h2>
-        <p className="mt-4 text-gray-500">
+        <p className="mt-4 text-sm text-gray-500">
           已有超過 10,000 位探險家在 Meet Locals 寫下故事
         </p>
       </div>

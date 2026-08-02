@@ -78,7 +78,7 @@ export default function Footer() {
 
         {/* 社群媒體（內建純白質感 SVG，絕不報錯） */}
         <nav className="flex flex-col gap-3">
-          <h6 className="text-xl font-bold md:text-2xl">社群媒體</h6>
+          <h6 className="text-xl md:text-2xl">社群媒體</h6>
           <div className="flex gap-3 pt-1">
             {/* Twitter / X */}
             <a

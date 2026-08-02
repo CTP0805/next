@@ -215,7 +215,7 @@ export default function OrderPage() {
 
                 {/* 訂單編號與狀態標籤 */}
                 <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-bold text-gray-700">
+                  <span className="text-md font-bold text-gray-700">
                     訂單編號：{order.order_id}
                   </span>
 
@@ -288,9 +288,9 @@ export default function OrderPage() {
                       onClick={() =>
                         router.push(`/payment?order_id=${order.order_id}`)
                       }
-                      className="button-main !h-auto min-h-0 !px-4 !py-2 !text-xs"
+                      className="button-orange !h-auto min-h-0 !px-4 !py-2 !text-xs"
                     >
-                      前往付款
+                      重新付款
                     </button>
                   )}
 
@@ -438,11 +438,11 @@ export default function OrderPage() {
           </p>
           <div className="modal-action">
             <form method="dialog">
-              <button className="btn btn-ghost btn-sm">取消</button>
+              <button className="button-white">取消</button>
             </form>
             <button
               type="button"
-              className="btn btn-error btn-sm text-white"
+              className="button-red"
               onClick={confirmCancelOrder}
             >
               確定取消

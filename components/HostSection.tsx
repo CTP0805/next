@@ -27,8 +27,9 @@ export default function HostSection() {
   return (
     <section className="mx-auto max-w-7xl px-6 py-20">
       <div className="text-center">
-        <h2 className="inline-block w-[240px] rounded-[16px] bg-[#45cad5] px-6 py-2 text-xl font-bold text-white">
-          在地嚮導們
+       <h2 className="relative inline-block text-3xl font-extrabold tracking-tight text-[#2E3338]">
+           <span className="relative z-10">在地嚮導們</span>
+           <span className="absolute right-0 -bottom-1 z-0 h-3 w-full bg-[#BCEFF2]" />
         </h2>
         <p className="mt-4 mb-10 text-gray-500">為你帶來最道地的體驗 </p>
         <div className="mx-auto grid max-w-[1280px] grid-cols-2 md:grid-cols-4 md:gap-20">

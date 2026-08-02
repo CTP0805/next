@@ -39,7 +39,7 @@ export default function SearchBar() {
         type="search"
         defaultValue={urlKeyword}
         placeholder="搜尋城市、分類或體驗"
-        className="h-[40px] w-full rounded-[25px] bg-gray-300/20 pr-4 pl-10 text-[16px] placeholder:text-white/70 focus:outline-none [&::-webkit-search-cancel-button]:cursor-pointer"
+        className="h-[40px] w-full rounded-[25px] bg-gray-300/20 pr-4 pl-10 text-[16px] placeholder:text-white/70 text-white focus:outline-none [&::-webkit-search-cancel-button]:cursor-pointer [&::-webkit-search-cancel-button]:brightness-0 [&::-webkit-search-cancel-button]:invert"
       />
     </form>
   );

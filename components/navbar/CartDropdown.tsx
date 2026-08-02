@@ -43,7 +43,7 @@ export default function CartDropdown() {
             </Link>
             <Link
               href="/cart"
-              className="block w-full text-center button-main"
+              className="button-main block w-full py-2.5 text-center text-xs font-bold"
             >
               前往購物車
             </Link>

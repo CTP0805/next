@@ -274,10 +274,11 @@ body {
   #printable-voucher * {
     visibility: visible !important;
   }
-}
+
 
   /* 5. 隱藏憑證底部的按鈕群 (同時兼顧兩種 class 拼寫) */
   #printable-voucher .print-btn-group,
   #printable-voucher [class*="print-btn"] {
     display: none !important;
   }
+}
