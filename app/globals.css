@@ -112,7 +112,7 @@
   }
 
   .button-circle {
-    @apply rounded-full bg-[#45cad5]  px-7 py-2 font-bold text-white shadow-sm transition hover:bg-[#53AAB2] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply rounded-full bg-[#45cad5] px-7 py-2 font-bold text-white shadow-sm transition hover:bg-[#53AAB2] disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .button-status-focus {
@@ -163,4 +163,56 @@ body {
 
 @theme {
   --font-besley: var(--font-besley);
+}
+
+/* 今天、左右箭頭、選取日期的外框：統一品牌色 */
+.rdp-root {
+  --rdp-accent-color: #45cad5 !important;
+  --rdp-today-color: #45cad5 !important;
+}
+
+.rdp-root .rdp-chevron {
+  fill: #4f575c !important;
+}
+
+.rdp-root .rdp-day_button:focus-visible {
+  outline-color: #45cad5 !important;
+}
+
+/* 選取日期：品牌色實心圓 */
+.rdp-root .rdp-selected .rdp-day_button {
+  background-color: #45cad5 !important;
+  color: #ffffff !important;
+  border-color: #45cad5 !important;
+  border-radius: 9999px;
+}
+
+/* 未選取、可點選日期 hover：淡灰色圓形 */
+.rdp-root .rdp-day_button:not([disabled]):not([aria-selected="true"]):hover {
+  background-color: #f1f3f4;
+  border-radius: 9999px;
+}
+
+/* 日期按鈕本體縮小，hover 與選取圓圈會一起縮小 */
+.rdp-root .rdp-day_button {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  border-radius: 9999px;
+}
+
+/* 月份標題 */
+.rdp-root .rdp-caption_label {
+  font-size: 16px;
+}
+
+/* 星期文字 */
+.rdp-root .rdp-weekday {
+  font-size: 16px;
+}
+
+/* 日期數字 */
+.rdp-root .rdp-day_button {
+  font-size: 16px;
 }

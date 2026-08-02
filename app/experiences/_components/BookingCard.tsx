@@ -1,7 +1,16 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { DayPicker } from "react-day-picker";
+import "react-day-picker/style.css";
+import { zhTW } from "react-day-picker/locale";
 import Stepper from "./Stepper";
-import { HiOutlineCalendar, HiChevronDown } from "react-icons/hi";
+import {
+  HiChevronDown,
+  HiChevronLeft,
+  HiChevronRight,
+  HiOutlineCalendar,
+  HiX,
+} from "react-icons/hi";
 import toast from "react-hot-toast";
 
 type ExperienceSession = {
@@ -12,6 +21,7 @@ type ExperienceSession = {
   child_price: number;
   min_participants: number;
   max_participants: number;
+  remaining_participants: number;
 };
 
 type BookingCardProps = {
@@ -19,6 +29,8 @@ type BookingCardProps = {
   isEditMode?: boolean;
   oldSessionId?: number | null;
   oldQty?: number | null;
+  mobileMode?: "cart" | "direct";
+  onClose?: () => void;
   onSubmit: (
     sessionId: number,
     adultQty: number,
@@ -32,8 +44,15 @@ type BookingCardProps = {
     sessionName: string,
   ) => void;
 };
-const formatDateValue = (dateString: string) => {
-  return new Date(dateString).toISOString().slice(0, 10);
+
+const formatDateValue = (date: Date | string) => {
+  const value = typeof date === "string" ? new Date(date) : date;
+
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 };
 
 const formatTimeRange = (start: string, end: string) => {
@@ -55,20 +74,80 @@ export default function BookingCard({
   oldQty = null,
   onSubmit,
   onDirectBook,
+  mobileMode,
+  onClose,
 }: BookingCardProps) {
   const [adults, setAdults] = useState(oldQty ?? 1);
   const [children, setChildren] = useState(0);
-  const dateInputRef = useRef<HTMLInputElement>(null);
 
-  const today = new Date().toISOString().slice(0, 10);
-
-  const firstSession = sessions[0];
-  const minDate = firstSession ? formatDateValue(firstSession.start_time) : "";
+  const firstSession =
+    sessions.find((session) => session.remaining_participants > 0) ??
+    sessions[0];
 
   const [selectedDate, setSelectedDate] = useState(
     firstSession ? formatDateValue(firstSession.start_time) : "",
   );
+  const availableDateSet = useMemo(
+    () =>
+      new Set(sessions.map((session) => formatDateValue(session.start_time))),
+    [sessions],
+  );
+  const getMonthKey = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
 
+    return `${year}-${month}`;
+  };
+
+  const availableMonthSet = useMemo(
+    () =>
+      new Set(
+        sessions.map((session) => getMonthKey(new Date(session.start_time))),
+      ),
+    [sessions],
+  );
+
+  const [displayMonth, setDisplayMonth] = useState(() => {
+    const initialDate = firstSession
+      ? new Date(firstSession.start_time)
+      : new Date();
+
+    return new Date(initialDate.getFullYear(), initialDate.getMonth(), 1);
+  });
+
+  const previousMonth = new Date(
+    displayMonth.getFullYear(),
+    displayMonth.getMonth() - 1,
+    1,
+  );
+
+  const nextMonth = new Date(
+    displayMonth.getFullYear(),
+    displayMonth.getMonth() + 1,
+    1,
+  );
+
+  const canGoPrevious = availableMonthSet.has(getMonthKey(previousMonth));
+  const canGoNext = availableMonthSet.has(getMonthKey(nextMonth));
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const calendarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        calendarRef.current &&
+        !calendarRef.current.contains(event.target as Node)
+      ) {
+        setIsCalendarOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   const sessionsByDate = sessions.filter(
     (session) => formatDateValue(session.start_time) === selectedDate,
   );
@@ -88,6 +167,11 @@ export default function BookingCard({
   const childPrice = selectedSession?.child_price ?? 0;
   const total = adults * adultPrice + children * childPrice;
 
+  const selectedQty = adults + children;
+  const isSoldOut = (selectedSession?.remaining_participants ?? 0) <= 0;
+  const exceedsRemainingSeats =
+    selectedQty > (selectedSession?.remaining_participants ?? 0);
+
   // 🚀 格式化完整場次日期與時間字串
   const sessionName = selectedSession
     ? `${formatDateValue(selectedSession.start_time)} ${formatTimeRange(
@@ -96,14 +180,14 @@ export default function BookingCard({
       )}`
     : "";
 
-  // 🚀 取得當前選中場次的人數上限 (若資料庫沒給預設 8 人)
-  const maxLimit = selectedSession?.max_participants ?? 8;
+  // 🚀 取得當前選中場次的人數上限 (剩餘名額)
+  const maxLimit = selectedSession?.remaining_participants ?? 0;
 
   // 🚀 處理成人數量變更防呆
   const handleAdultChange = (nextAdults: number) => {
     // 增加人數時，檢查總人數是否超過上限
     if (nextAdults > adults && nextAdults + children > maxLimit) {
-      toast.error(`該場次最多只能選擇 ${maxLimit} 位！`);
+      toast.error(`此場次僅剩 ${maxLimit} 位名額`);
       return;
     }
     // 防呆：如果有兒童，成人至少 1 人
@@ -125,7 +209,7 @@ export default function BookingCard({
     }
 
     if (validChildren > children && neededAdults + validChildren > maxLimit) {
-      toast.error(`該場次最多只能選擇 ${maxLimit} 位！`);
+      toast.error(`此場次僅剩 ${maxLimit} 位名額`);
       return;
     }
 
@@ -136,7 +220,29 @@ export default function BookingCard({
   };
 
   return (
-    <aside className="sticky top-28 rounded-lg border border-[#DDE3E5] bg-white p-6 shadow-[0_8px_24px_rgba(34,57,61,0.10)]">
+    <aside
+      className={
+        mobileMode
+          ? "relative bg-white p-6"
+          : "sticky top-28 rounded-lg border border-[#DDE3E5] bg-white p-6 shadow-[0_8px_24px_rgba(34,57,61,0.10)]"
+      }
+    >
+      {mobileMode && (
+        <div className="-mx-6 -mt-6 mb-6 flex items-center justify-between border-b border-[#E8ECEE] px-6 py-5">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="關閉預訂選擇"
+            className="text-[#30363A]"
+          >
+            <HiX className="size-7" />
+          </button>
+
+          <h2 className="text-xl font-extrabold text-[#292E33]">預訂選擇</h2>
+
+          <span className="size-7" />
+        </div>
+      )}
       <p className="text-[15px] font-bold text-[#858D92]">
         <span className="text-[26px] font-extrabold text-[#68BBC3]">
           NT${adultPrice.toLocaleString("zh-TW")}
@@ -148,35 +254,83 @@ export default function BookingCard({
           選擇日期
         </span>
 
-        <div className="relative">
-          <input
-            ref={dateInputRef}
-            type="date"
-            value={selectedDate}
-            min={minDate}
-            onChange={(e) => {
-              const nextDate = e.target.value;
-              setSelectedDate(nextDate);
-
-              const firstSessionOnDate = sessions.find(
-                (session) => formatDateValue(session.start_time) === nextDate,
-              );
-
-              if (firstSessionOnDate) {
-                setSelectedSessionId(firstSessionOnDate.id);
-              }
-            }}
-            className="h-11 w-full rounded-md border border-[#DCE2E4] px-3 pr-10 text-sm text-[#4F575C] outline-none focus:border-[#68BBC3] focus:ring-2 focus:ring-[#68BBC3]/20 [&::-webkit-calendar-picker-indicator]:opacity-0"
-          />
-
+        <div ref={calendarRef} className="relative">
           <button
             type="button"
-            onClick={() => dateInputRef.current?.showPicker()}
-            className="absolute top-1/2 right-3 -translate-y-1/2 text-[#8B9297] hover:text-[#68BBC3]"
-            aria-label="選擇日期"
+            onClick={() => setIsCalendarOpen((open) => !open)}
+            className="flex h-11 w-full items-center justify-between rounded-md border border-[#DCE2E4] px-3 text-left text-sm text-[#4F575C]"
           >
-            <HiOutlineCalendar className="size-5" />
+            <span>{selectedDate || "請選擇日期"}</span>
+
+            <HiOutlineCalendar className="size-5 text-[#8B9297]" />
           </button>
+
+          {isCalendarOpen && (
+            <div className="absolute z-20 mt-2 w-full rounded-lg border border-[#DCE2E4] bg-white p-3 shadow-lg">
+              <DayPicker
+                mode="single"
+                locale={zhTW}
+                selected={new Date(`${selectedDate}T12:00:00`)}
+                disabled={(date) => {
+                  const dateKey = formatDateValue(date);
+                  const todayKey = formatDateValue(new Date());
+
+                  return dateKey < todayKey || !availableDateSet.has(dateKey);
+                }}
+                onSelect={(date) => {
+                  if (!date) return;
+
+                  const nextDate = formatDateValue(date);
+                  const sessionsOnDate = sessions.filter(
+                    (session) =>
+                      formatDateValue(session.start_time) === nextDate,
+                  );
+
+                  const firstSessionOnDate =
+                    sessionsOnDate.find(
+                      (session) => session.remaining_participants > 0,
+                    ) ?? sessionsOnDate[0];
+
+                  if (!firstSessionOnDate) return;
+
+                  setSelectedDate(nextDate);
+                  setSelectedSessionId(firstSessionOnDate.id);
+                  setIsCalendarOpen(false);
+                }}
+                month={displayMonth}
+                onMonthChange={setDisplayMonth}
+                components={{
+                  Nav: () => (
+                    <div className="rdp-nav">
+                      <button
+                        type="button"
+                        disabled={!canGoPrevious}
+                        onClick={() =>
+                          canGoPrevious && setDisplayMonth(previousMonth)
+                        }
+                        aria-label="上一個月份"
+                        className="rdp-button_previous text-[#4F575C] disabled:text-[#C7CDD0] disabled:opacity-50"
+                      >
+                        <HiChevronLeft className="size-6" />
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={!canGoNext}
+                        onClick={() => canGoNext && setDisplayMonth(nextMonth)}
+                        aria-label="下一個月份"
+                        className="rdp-button_next text-[#4F575C] disabled:text-[#C7CDD0] disabled:opacity-50"
+                      >
+                        <HiChevronRight className="size-6" />
+                      </button>
+                    </div>
+                  ),
+                }}
+
+                className="!text-[#4F575C]"
+              />
+            </div>
+          )}
         </div>
       </label>
       <label className="mt-4 block">
@@ -189,14 +343,27 @@ export default function BookingCard({
             value={selectedSession?.id ?? ""}
             disabled={sessionsByDate.length === 0}
             onChange={(e) => setSelectedSessionId(Number(e.target.value))}
-            className="h-11 w-full appearance-none rounded-md border border-[#DCE2E4] bg-white px-3 pr-11 text-sm text-[#4F575C] outline-none focus:border-[#68BBC3] disabled:bg-[#F3F5F6] disabled:text-[#A0A7AC]"
+            className="h-11 w-full appearance-none rounded-md border border-[#DCE2E4] bg-white px-3 pr-11 text-sm text-[#4F575C] outline-none disabled:bg-[#F3F5F6] disabled:text-[#A0A7AC]"
           >
             {sessionsByDate.length > 0 ? (
-              sessionsByDate.map((session) => (
-                <option key={session.id} value={session.id}>
-                  {formatTimeRange(session.start_time, session.end_time)}
-                </option>
-              ))
+              sessionsByDate.map((session) => {
+                const remaining = session.remaining_participants;
+
+                return (
+                  <option
+                    key={session.id}
+                    value={session.id}
+                    disabled={remaining <= 0}
+                  >
+                    {formatTimeRange(session.start_time, session.end_time)}
+                    {remaining <= 0
+                      ? "　（已額滿）"
+                      : remaining <= 3
+                        ? `　🔥 僅剩 ${remaining} 位名額`
+                        : ""}
+                  </option>
+                );
+              })
             ) : (
               <option value="">無可預訂場次</option>
             )}
@@ -219,6 +386,7 @@ export default function BookingCard({
           label="成人"
           price={adultPrice}
           min={1}
+          disabled={isSoldOut}
         />
 
         <Stepper
@@ -227,6 +395,7 @@ export default function BookingCard({
           label="孩童"
           price={childPrice}
           min={0}
+          disabled={isSoldOut}
         />
       </div>
       <div className="my-5 flex items-center justify-between border-t border-[#E8ECEE] pt-5">
@@ -235,33 +404,45 @@ export default function BookingCard({
           NT$ {total.toLocaleString("zh-TW")}
         </strong>
       </div>
-      ·
-      <div className="grid grid-cols-2 gap-3">
-        {/* 加入購物車 / 確認修改按鈕 */}
-        <button
-          type="button"
-          disabled={!selectedSession || sessionsByDate.length === 0}
-          onClick={() =>
-            selectedSession &&
-            onSubmit(selectedSession.id, adults, children, sessionName)
-          }
-          className="h-12 rounded-xl bg-[#FF9224] text-[16px] font-extrabold text-white transition-colors hover:bg-[#F48312] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF9224]"
-        >
-          {isEditMode ? "確認修改" : "加入購物車"}
-        </button>
 
-        {/* 立即預訂按鈕 */}
-        <button
-          type="button"
-          disabled={!selectedSession || sessionsByDate.length === 0}
-          onClick={() =>
-            selectedSession &&
-            onDirectBook(selectedSession.id, adults, children, sessionName)
-          }
-          className="h-12 rounded-xl bg-[#68BBC3] text-[16px] font-extrabold text-white transition-colors hover:bg-[#55AAB2] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#68BBC3]"
-        >
-          立即預訂
-        </button>
+      <div className={mobileMode ? "block" : "grid grid-cols-2 gap-3"}>
+        {mobileMode !== "direct" && (
+          <button
+            type="button"
+            disabled={
+              !selectedSession ||
+              sessionsByDate.length === 0 ||
+              isSoldOut ||
+              exceedsRemainingSeats
+            }
+            onClick={() =>
+              selectedSession &&
+              onSubmit(selectedSession.id, adults, children, sessionName)
+            }
+            className="button-orange w-full font-bold"
+          >
+            {isEditMode ? "確認修改" : "加入購物車"}
+          </button>
+        )}
+
+        {mobileMode !== "cart" && (
+          <button
+            type="button"
+            disabled={
+              !selectedSession ||
+              sessionsByDate.length === 0 ||
+              isSoldOut ||
+              exceedsRemainingSeats
+            }
+            onClick={() =>
+              selectedSession &&
+              onDirectBook(selectedSession.id, adults, children, sessionName)
+            }
+            className="button-main w-full font-bold"
+          >
+            立即預訂
+          </button>
+        )}
       </div>
       <p className="mt-4 text-center text-[12px] text-[#8B9297]">
         預訂前不會向您收費

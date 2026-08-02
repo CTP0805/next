@@ -168,6 +168,37 @@ export default function ExperienceListPage() {
   }, []);
 
   useEffect(() => {
+    if (!isFilterOpen) return;
+
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
+  }, [isFilterOpen]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 1023px)");
+
+    const handleViewportChange = (event: MediaQueryListEvent) => {
+      if (!event.matches) {
+        setIsFilterOpen(false);
+      }
+    };
+
+    mediaQuery.addEventListener("change", handleViewportChange);
+
+    return () => {
+      mediaQuery.removeEventListener("change", handleViewportChange);
+    };
+  }, []);
+
+  useEffect(() => {
     if (previousKeywordRef.current === keyword) return;
 
     previousKeywordRef.current = keyword;
@@ -528,7 +559,7 @@ export default function ExperienceListPage() {
               </div>
 
               {activeFilterCount > 0 && (
-                <div className="flex items-center gap-3 rounded-md bg-[#F4FAFA] px-3 py-2 max-sm:justify-between">
+                <div className="flex items-center gap-3 rounded-md bg-[#F4FAFA] px-3 py-2">
                   <p className="text-sm font-bold text-[#596066]">
                     已套用 {activeFilterCount} 個篩選條件
                   </p>
@@ -536,7 +567,7 @@ export default function ExperienceListPage() {
                   <button
                     type="button"
                     onClick={clearFilters}
-                    className="shrink-0 text-sm font-medium whitespace-nowrap text-[#489DA5] underline underline-offset-4 hover:text-[#287D85]"
+                    className="hidden border-l border-[#9FCED2] pl-3 text-sm font-bold text-[#419AA2] hover:underline lg:block"
                   >
                     清除
                   </button>
@@ -674,13 +705,24 @@ export default function ExperienceListPage() {
         <div className="fixed inset-0 z-50 flex h-[100dvh] flex-col bg-white lg:hidden">
           {/* 彈窗頂部列 */}
           <div className="flex items-center justify-between border-b border-[#ECEFF0] px-6 py-4">
-            <h3 className="text-lg font-extrabold text-[#292E33]">篩選條件</h3>
             <button
               type="button"
               onClick={() => setIsFilterOpen(false)}
-              className="text-2xl font-bold text-gray-400 hover:text-black"
+              className="text-3xl leading-none text-[#555D62]"
+              aria-label="關閉篩選"
             >
               ×
+            </button>
+
+            <h3 className="text-lg font-extrabold text-[#292E33]">篩選條件</h3>
+
+            <button
+              type="button"
+              onClick={clearFilters}
+              disabled={activeFilterCount === 0}
+              className="text-base font-bold text-[#292E33] underline underline-offset-4 disabled:opacity-40"
+            >
+              清除
             </button>
           </div>
           {/* 彈窗內容：直接把原本的 FilterPanel 塞進來，加上滾動條 */}
@@ -705,9 +747,9 @@ export default function ExperienceListPage() {
             <button
               type="button"
               onClick={() => setIsFilterOpen(false)}
-              className="h-12 w-full rounded-xl bg-[#68BBC3] font-bold text-white shadow-lg"
+              className="button-main w-full text-lg font-bold"
             >
-              查看結果
+              查看 {pagination.total.toLocaleString("zh-TW")} 項結果
             </button>
           </div>
         </div>

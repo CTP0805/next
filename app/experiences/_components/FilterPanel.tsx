@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, type PointerEvent } from "react";
-import { HiChevronDown, HiOutlineCalendar } from "react-icons/hi";
+import { HiChevronDown, HiOutlineCalendar, HiX } from "react-icons/hi";
 
 type Category = {
   id: number;
@@ -121,7 +121,7 @@ export default function FilterPanel({
             <select
               value={city}
               onChange={(e) => onCityChange(e.target.value)}
-              className="h-11 w-full cursor-pointer appearance-none rounded-md border border-[#E1E5E7] bg-white px-3 pr-11 text-sm font-medium text-[#565D63] transition-colors outline-none hover:border-[#68BBC3]"
+              className="h-11 w-full cursor-pointer appearance-none rounded-md border border-[#E1E5E7] bg-white px-3 pr-11 text-sm font-medium text-[#565D63] transition-colors outline-none hover:border-[#68BBC3] max-md:text-[14px]"
             >
               <option value="">全部城市</option>
               <option value="倫敦">倫敦</option>
@@ -170,11 +170,15 @@ export default function FilterPanel({
           <div className="grid grid-cols-[0.8fr_1.2fr] gap-3">
             <button
               type="button"
-              onClick={() => onSelectedDateChange("tomorrow")}
+              onClick={() =>
+                onSelectedDateChange(
+                  selectedDate === "tomorrow" ? "" : "tomorrow",
+                )
+              }
               className={`h-10 rounded-md border text-xs font-bold transition-colors ${
                 selectedDate === "tomorrow"
                   ? "border-[#68BBC3] text-[#489DA5]"
-                  : "border-[#E1E5E7] text-[#71787E] hover:border-[#68BBC3] hover:text-[#489DA5]"
+                  : "border-[#E1E5E7] text-[#71787E]"
               }`}
             >
               明天
@@ -195,13 +199,24 @@ export default function FilterPanel({
                 }}
                 className={`flex h-10 w-full items-center justify-center gap-2 rounded-md border text-xs font-bold transition-colors ${
                   isCustomDate
-                    ? "border-[#68BBC3] text-[#489DA5]"
-                    : "border-[#E1E5E7] text-[#71787E] hover:border-[#68BBC3] hover:text-[#489DA5]"
+                    ? "border-[#68BBC3] pr-9 text-[#489DA5]"
+                    : "border-[#E1E5E7] text-[#71787E]"
                 }`}
               >
                 <HiOutlineCalendar className="size-5" />
                 {displayedDate}
               </button>
+
+              {isCustomDate && (
+                <button
+                  type="button"
+                  aria-label="清除日期篩選"
+                  onClick={() => onSelectedDateChange("")}
+                  className="absolute top-1/2 right-2 z-10 grid size-6 -translate-y-1/2 place-items-center rounded-full text-[#489DA5] hover:bg-[#EAF7F8] hover:text-[#489DA5]"
+                >
+                  <HiX className="size-4" />
+                </button>
+              )}
 
               <input
                 ref={dateInputRef}

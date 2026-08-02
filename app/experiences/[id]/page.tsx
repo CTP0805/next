@@ -16,6 +16,7 @@ import {
   HiOutlineShoppingCart,
   HiChevronUp,
   HiCheck,
+  HiOutlinePhotograph,
 } from "react-icons/hi";
 
 import HostSection from "@/app/experiences/_components/HostSection";
@@ -24,6 +25,10 @@ import ReviewsSection from "@/app/experiences/_components/ReviewsSection";
 import NotesSection from "@/app/experiences/_components/NotesSection";
 import BookingCard from "@/app/experiences/_components/BookingCard";
 import Loading from "@/components/Loading";
+import ImageLightbox from "@/app/experiences/_components/ImageLightbox";
+import RelatedExperiences, {
+  type RelatedExperience,
+} from "@/app/experiences/_components/RelatedExperiences";
 
 // 最近瀏覽
 import { API_SERVER } from "@/config/api-path";
@@ -141,11 +146,25 @@ export default function ExperienceDetailPage() {
   const { isFavorite, toggleFavorite } = useFavorites();
   const id = params.id as string;
   const [experience, setExperience] = useState<Experience | null>(null);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [mobileBookingMode, setMobileBookingMode] = useState<
+    "cart" | "direct" | null
+  >(null);
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setIsLightboxOpen(true);
+  };
+
+  const [relatedExperiences, setRelatedExperiences] = useState<
+    RelatedExperience[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [activeSection, setActiveSection] = useState("overview");
   // 1. 控制回到頂端按鈕的顯示狀態
   const [showScrollTop, setShowScrollTop] = useState(false);
+
   const isEditMode = searchParams.get("edit") === "true";
   const oldSessionId = searchParams.get("oldSession")
     ? Number(searchParams.get("oldSession"))
@@ -212,6 +231,17 @@ export default function ExperienceDetailPage() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    setActiveSection("overview");
+
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "auto",
+    });
+  }, [id]);
+
   useEffect(() => {
     if (!id) return;
 
@@ -239,6 +269,58 @@ export default function ExperienceDetailPage() {
 
     getExperience();
   }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const getRelatedExperiences = async () => {
+      try {
+        const res = await fetch(
+          `http://localhost:3001/api/experiences/${id}/related`,
+        );
+        const resData = await res.json();
+
+        if (resData.status === "success") {
+          setRelatedExperiences(resData.data);
+        }
+      } catch (error) {
+        console.error("取得相關體驗失敗:", error);
+      }
+    };
+
+    void getRelatedExperiences();
+  }, [id]);
+
+  useEffect(() => {
+    if (!mobileBookingMode) return;
+
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
+  }, [mobileBookingMode]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+
+    const handleViewportChange = (event: MediaQueryListEvent) => {
+      if (!event.matches) {
+        setMobileBookingMode(null);
+      }
+    };
+
+    mediaQuery.addEventListener("change", handleViewportChange);
+
+    return () => {
+      mediaQuery.removeEventListener("change", handleViewportChange);
+    };
+  }, []);
 
   // 最近瀏覽
   useEffect(() => {
@@ -533,14 +615,31 @@ export default function ExperienceDetailPage() {
         <section className="mt-7 grid h-[510px] grid-cols-2 gap-2 overflow-hidden rounded-lg max-md:h-auto max-md:grid-cols-1 max-sm:relative max-sm:left-1/2 max-sm:mt-0 max-sm:w-screen max-sm:-translate-x-1/2 max-sm:rounded-none">
           {/* 第一張主圖容器 (在手機版將作為所有浮動按鈕的基地) */}
           <div className="relative min-h-[360px] overflow-hidden max-sm:h-[280px] max-sm:min-h-0">
-            <Image
-              src={galleryImages[0].image_url}
-              alt={`${experience.title}主圖`}
-              fill
-              priority
-              sizes="(max-width: 768px) 100vw, 62vw"
-              className="object-cover"
-            />
+            <button
+              type="button"
+              onClick={() => openLightbox(0)}
+              className="absolute inset-0 cursor-pointer"
+              aria-label="查看體驗主圖"
+            >
+              <Image
+                src={galleryImages[0].image_url}
+                alt={`${experience.title}主圖`}
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 62vw"
+                className="object-cover transition-transform duration-300 hover:scale-[1.02]"
+              />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => openLightbox(0)}
+              className="absolute right-4 bottom-4 z-10 hidden items-center gap-1 rounded-md bg-white/75 px-2.5 py-1.5 text-xs font-bold text-[#30363A] shadow-sm backdrop-blur-sm transition active:scale-95 max-sm:inline-flex"
+              aria-label="查看全部體驗圖片"
+            >
+              <HiOutlinePhotograph className="size-4" />
+              {galleryImages.length}
+            </button>
 
             {/* 📱 手機版專屬：2. 左上角「回上一頁」 */}
             <button
@@ -581,17 +680,45 @@ export default function ExperienceDetailPage() {
 
           {/* 右側四張圖拼圖區：加上 max-sm:hidden，手機版直接隱藏不顯示 */}
           <div className="grid grid-cols-2 grid-rows-2 gap-2 max-md:h-[320px] max-sm:hidden">
-            {galleryImages.slice(1, 5).map((photo, index) => (
-              <div key={photo.id} className="relative overflow-hidden">
-                <Image
-                  src={photo.image_url}
-                  alt={`${experience.title}照片 ${index + 2}`}
-                  fill
-                  sizes="(max-width: 768px) 50vw, 20vw"
-                  className="object-cover"
-                />
-              </div>
-            ))}
+            {galleryImages.slice(1, 5).map((photo, index) => {
+              const isLastPhoto = index === 3;
+
+              return (
+                <div
+                  key={photo.id}
+                  className="relative h-full w-full overflow-hidden"
+                >
+                  {/* 點圖片：從該張開始 */}
+                  <button
+                    type="button"
+                    onClick={() => openLightbox(index + 1)}
+                    className="absolute inset-0 cursor-pointer"
+                    aria-label={`查看第 ${index + 2} 張體驗圖片`}
+                  >
+                    <Image
+                      src={photo.image_url}
+                      alt={`${experience.title}照片 ${index + 2}`}
+                      fill
+                      sizes="(max-width: 768px) 50vw, 20vw"
+                      className="object-cover transition-transform duration-300 hover:scale-[1.03]"
+                    />
+                  </button>
+
+                  {/* 點數量按鈕：永遠從第一張開始 */}
+                  {isLastPhoto && (
+                    <button
+                      type="button"
+                      onClick={() => openLightbox(0)}
+                      className="absolute right-3 bottom-3 z-10 inline-flex items-center gap-1.5 rounded-md bg-white/70 px-3 py-2 text-sm font-bold text-[#30363A] shadow-sm backdrop-blur-sm transition hover:bg-white/95"
+                      aria-label="查看全部體驗圖片"
+                    >
+                      <HiOutlinePhotograph className="size-5" />
+                      {galleryImages.length}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </section>
 
@@ -713,8 +840,7 @@ export default function ExperienceDetailPage() {
             />
             <NotesSection notes={experience.notes} />
           </div>
-          {/* 讓最後一個區塊有足夠空間捲到導覽列下方 */}
-          <div aria-hidden="true" className="hidden h-[20vh] max-sm:block" />
+
           <div className="hidden lg:sticky lg:top-20 lg:block">
             <BookingCard
               sessions={experience.sessions}
@@ -726,6 +852,8 @@ export default function ExperienceDetailPage() {
             />
           </div>
         </div>
+
+        <RelatedExperiences experiences={relatedExperiences} />
         {/* 📱 手機版專屬：右下角圓形回到頂端按鈕（避開底部浮動條，改用 bottom-36 飄在它上方） */}
         <button
           type="button"
@@ -739,6 +867,9 @@ export default function ExperienceDetailPage() {
         >
           <HiChevronUp className="size-6 stroke-[1.5]" />
         </button>
+        {/* 讓最後一個區塊有足夠空間捲到導覽列下方 */}
+        <div aria-hidden="true" className="hidden h-[10vh] max-sm:block" />
+
         {/* 📱 手機版專屬：底部雙按鈕浮動條 (上下分層版) */}
         <div className="fixed bottom-0 left-0 z-50 flex w-full flex-col border-t border-[#ECEFF0] bg-white px-4 pt-3 pb-4 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] md:hidden">
           {/* 1. 上層：左上角的價格資訊 */}
@@ -755,14 +886,9 @@ export default function ExperienceDetailPage() {
             {/* 橘色按鈕：加入購物車 */}
             <button
               type="button"
-              onClick={() => {
-                const session = experience.sessions[0];
-                if (session) {
-                  handleCartSubmit(session.id, 1, 0, session.start_time);
-                }
-              }}
+              onClick={() => setMobileBookingMode("cart")}
               disabled={experience.sessions.length === 0}
-              className="flex-1 rounded-xl bg-[#FF9224] py-4 text-center text-sm font-black text-white transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+              className="button-orange inline-flex flex-1 items-center justify-center gap-1.5 font-bold disabled:cursor-not-allowed disabled:opacity-50"
             >
               加入購物車
             </button>
@@ -770,20 +896,45 @@ export default function ExperienceDetailPage() {
             {/* 藍綠色按鈕：立即預訂 */}
             <button
               type="button"
-              onClick={() => {
-                const session = experience.sessions[0];
-                if (session) {
-                  handleDirectBook(session.id, 1, 0, session.start_time);
-                }
-              }}
+              onClick={() => setMobileBookingMode("direct")}
               disabled={experience.sessions.length === 0}
-              className="flex-1 rounded-xl bg-[#68BBC3] py-4 text-center text-sm font-black text-white transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+              className="button-main inline-flex flex-1 items-center justify-center gap-1.5 font-bold disabled:cursor-not-allowed disabled:opacity-50"
             >
               立即預訂
             </button>
           </div>
         </div>
       </main>
+      {mobileBookingMode && (
+        <div className="fixed inset-0 z-[60] md:hidden">
+          <button
+            type="button"
+            aria-label="關閉預訂選擇"
+            onClick={() => setMobileBookingMode(null)}
+            className="absolute inset-0 bg-black/45"
+          />
+
+          <div className="absolute right-0 bottom-0 left-0 max-h-[90dvh] overflow-y-auto rounded-t-3xl bg-white">
+            <BookingCard
+              sessions={experience.sessions}
+              isEditMode={isEditMode}
+              oldSessionId={oldSessionId}
+              oldQty={oldQty}
+              onSubmit={handleCartSubmit}
+              onDirectBook={handleDirectBook}
+              mobileMode={mobileBookingMode}
+              onClose={() => setMobileBookingMode(null)}
+            />
+          </div>
+        </div>
+      )}
+      <ImageLightbox
+        images={galleryImages}
+        currentIndex={lightboxIndex}
+        isOpen={isLightboxOpen}
+        onClose={() => setIsLightboxOpen(false)}
+        onIndexChange={setLightboxIndex}
+      />
     </div>
   );
 }

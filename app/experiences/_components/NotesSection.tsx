@@ -11,7 +11,7 @@ export default function NotesSection({ notes }: NotesSectionProps) {
   return (
     <section
       id="notes"
-      className="scroll-mt-20 border-t border-[#DDE3E5] pt-14 pb-8"
+      className="scroll-mt-20 border-t border-b border-[#DDE3E5] pt-14 pb-8"
     >
       <h4>注意事項</h4>
 

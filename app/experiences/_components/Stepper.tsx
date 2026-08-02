@@ -4,6 +4,7 @@ type StepperProps = {
   label: string;
   price?: number;
   min?: number;
+  disabled?: boolean;
 };
 
 export default function Stepper({
@@ -12,6 +13,7 @@ export default function Stepper({
   label,
   price,
   min = 0,
+  disabled = false,
 }: StepperProps) {
   return (
     <div className="flex items-center justify-between border-b border-[#EBEEEF] py-4 last:border-0">
@@ -28,6 +30,7 @@ export default function Stepper({
       <div className="flex items-center gap-4">
         <button
           type="button"
+          disabled={disabled}
           aria-label={`減少${label}人數`}
           onClick={() => onChange(Math.max(min, value - 1))}
           className="grid size-7 place-items-center rounded-full border border-[#D9DFE1] text-[#697178] hover:border-[#68BBC3]"
@@ -39,6 +42,7 @@ export default function Stepper({
 
         <button
           type="button"
+          disabled={disabled}
           aria-label={`增加${label}人數`}
           onClick={() => onChange(value + 1)}
           className="grid size-7 place-items-center rounded-full border border-[#D9DFE1] text-[#697178] hover:border-[#68BBC3]"

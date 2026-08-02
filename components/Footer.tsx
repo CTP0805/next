@@ -17,7 +17,7 @@ export default function Footer() {
       {/* 2. 內層容器：限制最大寬度、水平置中並設定間距 */}
       <div className="z-2 mx-auto hidden max-w-7xl gap-30 pt-24 pb-8 text-white md:flex">
         <nav className="flex flex-col gap-2">
-          <h6 className="text-xl md:text-2xl">認識 Meet</h6>
+          <h6 className="text-xl md:text-2xl">認識 MeetLocals</h6>
           <Link href="/about" className="link link-hover">
             關於我們
           </Link>
@@ -41,10 +41,10 @@ export default function Footer() {
             合作夥伴
           </Link>
           <Link href="/blog" className="link link-hover">
-            Meet部落格
+            部落格
           </Link>
           <Link href="/rewards" className="link link-hover">
-            酷幣兌換
+            M幣兌換
           </Link>
         </nav>
 
@@ -110,7 +110,7 @@ export default function Footer() {
               </svg>
             </a>
           </div>
-        </nav>     
+        </nav>
       </div>
     </footer>
   );

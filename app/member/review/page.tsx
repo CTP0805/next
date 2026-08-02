@@ -14,11 +14,17 @@ import {
 import { z } from "zod";
 import { getApiServer } from "@/config/api-path";
 
+const reviewImageSchema = z.object({
+  id: z.coerce.number(),
+  image_url: z.string(),
+  sort_order: z.coerce.number(),
+});
+
 const reviewSchema = z.object({
   id: z.coerce.number(),
   rating: z.coerce.number(),
   comment: z.string(),
-  image_url: z.string().nullable(),
+  images: z.array(reviewImageSchema),
   created_at: z.string().nullable(),
 });
 
@@ -63,6 +69,16 @@ const actionResponseSchema = z.object({
 type MemberOrder = z.infer<typeof memberOrderSchema>;
 type OrderItem = z.infer<typeof orderItemSchema>;
 type ReviewTab = "pending" | "completed";
+type ReviewPhoto = {
+  id: string;
+  file: File;
+  previewUrl: string;
+};
+
+type CropJob = {
+  id: string;
+  file: File;
+};
 
 interface ReviewEntry {
   order: MemberOrder;
@@ -169,8 +185,9 @@ export default function ReviewPage() {
   const [expandedItemId, setExpandedItemId] = useState<number | null>(null);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [reviewPhotos, setReviewPhotos] = useState<ReviewPhoto[]>([]);
+  const [cropQueue, setCropQueue] = useState<CropJob[]>([]);
+  const [activeCropJob, setActiveCropJob] = useState<CropJob | null>(null);
   const [cropSourceUrl, setCropSourceUrl] = useState<string | null>(null);
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -247,12 +264,18 @@ export default function ReviewPage() {
     [cropSourceUrl],
   );
 
-  useEffect(
-    () => () => {
-      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
-    },
-    [imagePreviewUrl],
-  );
+  useEffect(() => {
+    if (activeCropJob || cropQueue.length === 0) return;
+
+    const [nextJob, ...remainingJobs] = cropQueue;
+
+    setCropQueue(remainingJobs);
+    setActiveCropJob(nextJob);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedAreaPixels(null);
+    setCropSourceUrl(URL.createObjectURL(nextJob.file));
+  }, [activeCropJob, cropQueue]);
 
   const entries = useMemo<ReviewEntry[]>(
     () =>
@@ -272,8 +295,11 @@ export default function ReviewPage() {
     activeTab === "pending" ? pendingEntries : completedEntries;
 
   function clearSelectedImage() {
-    setImageFile(null);
-    setImagePreviewUrl(null);
+    reviewPhotos.forEach((photo) => URL.revokeObjectURL(photo.previewUrl));
+
+    setReviewPhotos([]);
+    setCropQueue([]);
+    setActiveCropJob(null);
     setCropSourceUrl(null);
     setCroppedAreaPixels(null);
   }
@@ -295,21 +321,43 @@ export default function ReviewPage() {
     resetReviewForm();
   }
 
-  function handleSelectedImage(file: File | undefined) {
-    if (!file) return;
-    if (!REVIEW_IMAGE_TYPES.includes(file.type)) {
-      toast.error("圖片僅支援 JPG、PNG、WebP");
-      return;
-    }
-    if (file.size > MAX_REVIEW_IMAGE_SIZE) {
-      toast.error("圖片不可超過 5MB");
+  function handleSelectedImages(files: FileList | null) {
+    if (!files) return;
+
+    const selectedFiles = Array.from(files);
+    const availableCount =
+      6 - reviewPhotos.length - cropQueue.length - (activeCropJob ? 1 : 0);
+
+    if (availableCount <= 0) {
+      toast.error("最多可選擇 6 張圖片");
       return;
     }
 
-    setCrop({ x: 0, y: 0 });
-    setZoom(1);
-    setCroppedAreaPixels(null);
-    setCropSourceUrl(URL.createObjectURL(file));
+    const validFiles = selectedFiles.filter((file) => {
+      if (!REVIEW_IMAGE_TYPES.includes(file.type)) {
+        toast.error(`${file.name} 格式不支援`);
+        return false;
+      }
+
+      if (file.size > MAX_REVIEW_IMAGE_SIZE) {
+        toast.error(`${file.name} 超過 5MB`);
+        return false;
+      }
+
+      return true;
+    });
+
+    if (validFiles.length > availableCount) {
+      toast.error(`最多可選擇 6 張圖片，這次只加入前 ${availableCount} 張`);
+    }
+
+    setCropQueue((current) => [
+      ...current,
+      ...validFiles.slice(0, availableCount).map((file) => ({
+        id: crypto.randomUUID(),
+        file,
+      })),
+    ]);
   }
 
   const handleCropComplete = useCallback(
@@ -332,8 +380,18 @@ export default function ReviewPage() {
         throw new Error("裁切後圖片仍超過 5MB，請改選較小的圖片");
       }
 
-      setImageFile(croppedFile);
-      setImagePreviewUrl(URL.createObjectURL(croppedFile));
+      if (!activeCropJob) return;
+
+      setReviewPhotos((current) => [
+        ...current,
+        {
+          id: activeCropJob.id,
+          file: croppedFile,
+          previewUrl: URL.createObjectURL(croppedFile),
+        },
+      ]);
+
+      setActiveCropJob(null);
       setCropSourceUrl(null);
       toast.success("已套用圖片裁切");
     } catch (error) {
@@ -343,27 +401,37 @@ export default function ReviewPage() {
     }
   }
 
-  async function uploadReviewImage(): Promise<string | null> {
-    if (!imageFile) return null;
+  async function uploadReviewImages(): Promise<string[]> {
+    const paths: string[] = [];
 
-    const formData = new FormData();
-    formData.append("image", imageFile);
-    const response = await fetch(
-      `${getApiServer()}/api/member-order/review-image`,
-      {
-        method: "POST",
-        credentials: "include",
-        body: formData,
-      },
-    );
-    const payload: unknown = await response.json();
-    const parsed = actionResponseSchema.safeParse(payload);
+    for (const photo of reviewPhotos) {
+      const formData = new FormData();
+      formData.append("image", photo.file);
 
-    if (!response.ok || !parsed.success || !parsed.data.success) {
-      throw new Error(getMessage(payload, "評價圖片上傳失敗"));
+      const response = await fetch(
+        `${getApiServer()}/api/member-order/review-image`,
+        {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        },
+      );
+
+      const payload: unknown = await response.json();
+      const parsed = actionResponseSchema.safeParse(payload);
+
+      if (!response.ok || !parsed.success || !parsed.data.success) {
+        throw new Error(getMessage(payload, "評價圖片上傳失敗"));
+      }
+
+      if (!parsed.data.path) {
+        throw new Error("上傳成功但未取得圖片路徑");
+      }
+
+      paths.push(parsed.data.path);
     }
 
-    return parsed.data.path ?? null;
+    return paths;
   }
 
   async function submitReview(itemId: number) {
@@ -379,7 +447,7 @@ export default function ReviewPage() {
 
     setSubmitting(true);
     try {
-      const imageUrl = await uploadReviewImage();
+      const imageUrls = await uploadReviewImages();
       const response = await fetch(
         `${getApiServer()}/api/member-order/items/${itemId}/review`,
         {
@@ -389,7 +457,7 @@ export default function ReviewPage() {
           body: JSON.stringify({
             rating,
             comment: trimmedComment,
-            image_url: imageUrl,
+            image_urls: imageUrls,
           }),
         },
       );
@@ -634,61 +702,65 @@ export default function ReviewPage() {
 
                     <div className="mt-4">
                       <span className="mb-2 block text-sm font-semibold text-gray-700">
-                        附加照片（選填，最多 5MB）
+                        附加照片（選填，最多 6 張，每張 5MB）
                       </span>
 
-                      {imagePreviewUrl ? (
-                        <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3 sm:flex-row sm:items-center">
-                          <div
-                            role="img"
-                            aria-label="裁切後的評價圖片預覽"
-                            className="aspect-[4/3] w-full rounded-lg bg-gray-100 bg-cover bg-center sm:w-36"
-                            style={{
-                              backgroundImage: `url("${imagePreviewUrl}")`,
-                            }}
-                          />
-                          <div className="flex flex-1 flex-wrap gap-2">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (imageFile) {
-                                  setCrop({ x: 0, y: 0 });
-                                  setZoom(1);
-                                  setCroppedAreaPixels(null);
-                                  setCropSourceUrl(
-                                    URL.createObjectURL(imageFile),
+                      {reviewPhotos.length > 0 && (
+                        <div className="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                          {reviewPhotos.map((photo, index) => (
+                            <div
+                              key={photo.id}
+                              className="relative overflow-hidden rounded-xl border border-gray-200 bg-white"
+                            >
+                              <div
+                                role="img"
+                                aria-label={`第 ${index + 1} 張評價圖片`}
+                                className="aspect-[4/3] bg-gray-100 bg-cover bg-center"
+                                style={{
+                                  backgroundImage: `url("${photo.previewUrl}")`,
+                                }}
+                              />
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  URL.revokeObjectURL(photo.previewUrl);
+                                  setReviewPhotos((current) =>
+                                    current.filter(
+                                      (item) => item.id !== photo.id,
+                                    ),
                                   );
-                                }
-                              }}
-                              className="rounded-lg border border-teal-200 px-3 py-2 text-xs font-semibold text-teal-700 hover:bg-teal-50"
-                            >
-                              重新裁切
-                            </button>
-                            <button
-                              type="button"
-                              onClick={clearSelectedImage}
-                              className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-500 hover:bg-red-50"
-                            >
-                              移除圖片
-                            </button>
-                          </div>
+                                }}
+                                className="absolute top-2 right-2 rounded-md bg-black/60 px-2 py-1 text-xs font-semibold text-white hover:bg-black/80"
+                              >
+                                移除
+                              </button>
+                            </div>
+                          ))}
                         </div>
-                      ) : null}
+                      )}
 
                       <label
                         htmlFor={`review-image-${item.id}`}
-                        className={`mt-3 flex cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-white px-4 py-5 text-sm font-semibold text-gray-500 transition hover:border-[#45cad5] hover:bg-teal-50 hover:text-teal-700 ${
-                          imagePreviewUrl ? "py-3" : ""
+                        className={`flex items-center justify-center rounded-xl border-2 border-dashed px-4 py-5 text-sm font-semibold transition ${
+                          reviewPhotos.length >= 6
+                            ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+                            : "cursor-pointer border-gray-300 bg-white text-gray-500 hover:border-[#45cad5] hover:bg-teal-50 hover:text-teal-700"
                         }`}
                       >
-                        {imagePreviewUrl ? "更換圖片" : "選擇圖片並預覽裁切"}
+                        {reviewPhotos.length >= 6
+                          ? "已達 6 張上限"
+                          : `選擇圖片並依序裁切（${reviewPhotos.length}/6）`}
                       </label>
+
                       <input
                         id={`review-image-${item.id}`}
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
+                        multiple
+                        disabled={reviewPhotos.length >= 6}
                         onChange={(event) => {
-                          handleSelectedImage(event.target.files?.[0]);
+                          handleSelectedImages(event.target.files);
                           event.currentTarget.value = "";
                         }}
                         className="sr-only"
@@ -724,15 +796,20 @@ export default function ReviewPage() {
                     id={`completed-review-${item.id}`}
                     className="border-t border-gray-100 bg-gray-50/80 px-4 py-4 sm:px-6"
                   >
-                    {item.review.image_url ? (
-                      <div
-                        role="img"
-                        aria-label={`${item.title}的評論圖片`}
-                        className="mb-3 aspect-[4/3] w-full max-w-md rounded-xl bg-gray-100 bg-cover bg-center"
-                        style={{
-                          backgroundImage: `url("${resolveImageUrl(item.review.image_url)}")`,
-                        }}
-                      />
+                    {item.review.images.length > 0 ? (
+                      <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                        {item.review.images.map((image) => (
+                          <div
+                            key={image.id}
+                            role="img"
+                            aria-label={`${item.title}的評論圖片`}
+                            className="aspect-[4/3] rounded-xl bg-gray-100 bg-cover bg-center"
+                            style={{
+                              backgroundImage: `url("${resolveImageUrl(image.image_url)}")`,
+                            }}
+                          />
+                        ))}
+                      </div>
                     ) : null}
                     <p className="text-sm leading-6 text-gray-700">
                       {item.review.comment}
@@ -795,7 +872,10 @@ export default function ReviewPage() {
               <div className="flex justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setCropSourceUrl(null)}
+                  onClick={() => {
+                    setActiveCropJob(null);
+                    setCropSourceUrl(null);
+                  }}
                   disabled={applyingCrop}
                   className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 disabled:opacity-50"
                 >
