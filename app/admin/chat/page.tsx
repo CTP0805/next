@@ -21,6 +21,7 @@ export default function ChatListPage() {
     const timer = setInterval(getRooms, 3000);
     return () => clearInterval(timer);
   }, []);
+  
   return (
     <div className="p-8">
       <h1 className="mb-6 text-2xl font-bold">客服聊天室</h1>

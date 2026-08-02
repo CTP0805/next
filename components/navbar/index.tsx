@@ -25,7 +25,6 @@ export default function Navbar() {
   const { auth, isAuthenticated, logout } = useAuth();
   const { totalQty } = useCart();
   const pathname = usePathname();
-  const [member, setMember] = useState(null);
   const navLinks: NavLink[] = [
     { name: "關於我們", href: "/about" },
     { name: "部落格", href: "/blog" },
@@ -94,15 +93,7 @@ export default function Navbar() {
 
   const isHomePage = pathname === "/";
   const [isScrolled, setIsScrolled] = useState(false);
-  useEffect(() => {
-    fetch(`http://localhost:3001/api/member/profile`, {
-      method: "GET",
-      credentials: "include", //帶上cookie驗證身份
-    })
-      .then((data) => data.json())
-      .then((data) => setMember(data.data))
-      .catch((error) => console.error(error));
-  }, [member, isAuthenticated]);
+
   useEffect(() => {
     if (!isHomePage) return;
     const handleScroll = () => {
@@ -154,7 +145,7 @@ export default function Navbar() {
         {isAuthenticated && <CartDropdown />}
 
         {isAuthenticated ? (
-          <MemberMenu auth={member} logout={logout} memberLists={memberLists} />
+          <MemberMenu auth={auth} logout={logout} memberLists={memberLists} />
         ) : (
           <li className="flex items-center">
             <div className="px-2">
