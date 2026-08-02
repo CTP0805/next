@@ -18,11 +18,8 @@ type ChatMessage = {
 const socket = io("http://localhost:3001");
 
 export default function ChatWidget() {
-  const { auth } = useAuth();
+  const { auth, isAuthenticated } = useAuth();
   // 沒有登入就不顯示聊天室
-  if (!auth?.id) {
-    return null;
-  }
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -31,9 +28,10 @@ export default function ChatWidget() {
     file: File;
     url: string;
   } | null>(null);
+  const [isAdminTyping, setIsAdminTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
+  const [adminOnline, setAdminOnline] = useState(false);
   // 歷史訊息
   useEffect(() => {
     if (!auth.id) return;
@@ -41,7 +39,18 @@ export default function ChatWidget() {
       .then((res) => res.json())
       .then((data) => setMessages(data));
   }, [auth.id]);
+  useEffect(() => {
+    const handleAdminStatus = (data: { online: boolean }) => {
+      console.log("客服狀態:", data);
+      setAdminOnline(data.online);
+    };
 
+    socket.on("admin-status", handleAdminStatus);
+
+    return () => {
+      socket.off("admin-status", handleAdminStatus);
+    };
+  }, []);
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -51,19 +60,18 @@ export default function ChatWidget() {
     const roomId = `user-${auth.id}`;
 
     socket.emit("join-room", roomId);
-
+    socket.emit("check-admin-status");
     const handleMessage = (data: ChatMessage) => {
-      console.log("收到 socket 訊息:", data);
+      // 客服送出後停止顯示輸入中
+      if (data.sender === "admin") {
+        setIsAdminTyping(false);
+      }
 
       setMessages((prev) => {
-        // 優先替換最後一個有 tempId 的訊息（避免重複）
         const tempIndex = prev.findLastIndex((m) => m.tempId);
 
         if (tempIndex !== -1) {
           const newMessages = [...prev];
-          if (newMessages[tempIndex].image_url?.startsWith("blob:")) {
-            URL.revokeObjectURL(newMessages[tempIndex].image_url!);
-          }
           newMessages[tempIndex] = { ...data };
           return newMessages;
         }
@@ -80,12 +88,18 @@ export default function ChatWidget() {
       );
     };
 
+    const handleAdminTyping = () => {
+      setIsAdminTyping(true);
+      // 確保看得到
+      requestAnimationFrame(() => scrollToBottom());
+    };
     socket.on("receive-message", handleMessage);
     socket.on("messages-read", handleMessagesRead);
-
+    socket.on("admin-typing", handleAdminTyping);
     return () => {
       socket.off("receive-message", handleMessage);
       socket.off("messages-read", handleMessagesRead);
+      socket.off("admin-typing", handleAdminTyping);
     };
   }, [auth.id]);
 
@@ -238,6 +252,7 @@ export default function ChatWidget() {
     if (url.startsWith("blob:") || url.startsWith("http")) return url;
     return `http://localhost:3001${url.startsWith("/") ? "" : "/"}${url}`;
   };
+  if (!isAuthenticated) return null;
 
   return (
     <div className="fixed right-6 bottom-6 z-50">
@@ -252,7 +267,8 @@ export default function ChatWidget() {
         <div className="absolute right-0 bottom-20 flex h-[480px] w-80 flex-col overflow-hidden rounded-2xl border bg-white shadow-2xl">
           {/* Header */}
           <div className="flex items-center gap-2 bg-[#45cad5] p-4 font-semibold text-white">
-            線上客服
+            線上客服{" "}
+            <div className="text-xs">{adminOnline ? "🟢 " : "⚪ "}</div>
           </div>
 
           {/* 訊息區域 */}
@@ -325,6 +341,9 @@ export default function ChatWidget() {
                 </div>
               );
             })}
+            {isAdminTyping && (
+              <div className="text-xs text-gray-400 italic">客服回覆中...</div>
+            )}
             <div ref={messagesEndRef} />
           </div>
 
