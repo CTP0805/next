@@ -82,7 +82,7 @@ export default function BlogEditPage() {
   }, [slug, authInit, isAuthenticated, auth.id, auth.role]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>

@@ -264,7 +264,7 @@ function MemberEditPostContent() {
                     key={opt.value}
                     type="button"
                     onClick={() => setFilter(opt.value)}
-                    className={`rounded-[12px] px-3 py-1.5 text-sm font-medium transition ${
+                    className={`button-status-focus ${
                       active
                         ? "bg-gray-900 text-white"
                         : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
@@ -368,8 +368,7 @@ function MemberEditPostContent() {
                           {post.status === "published" ? (
                             <Link
                               href={`/blog/${post.slug}`}
-                              className="rounded-[12px] border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
-                            >
+                              className="button-s-white">
                               查看
                             </Link>
                           ) : null}
@@ -384,7 +383,7 @@ function MemberEditPostContent() {
                           ) : null}
                           <Link
                             href={`/member/edit-post?tab=create&draft=${post.id}`}
-                            className="rounded-[12px] border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-800 hover:bg-teal-100"
+                            className="button-s-green"
                           >
                             編輯
                           </Link>
@@ -392,7 +391,7 @@ function MemberEditPostContent() {
                             type="button"
                             disabled={busy}
                             onClick={() => setDeletePost(post)}
-                            className="rounded-[12px] border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-60"
+                            className="button-s-red"
                           >
                             {busy ? "刪除中…" : "刪除"}
                           </button>
@@ -496,7 +495,7 @@ function MemberEditPostContent() {
           >
             <h2
               id="reject-reason-title"
-              className="text-lg font-bold text-gray-900"
+              className="button-s-yellow"
             >
               退回原因
             </h2>

@@ -73,7 +73,7 @@ export default async function BlogDetail({
 
   if (!post) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center bg-gray-50 px-6 text-center">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
         <p className="mb-2 text-sm font-medium tracking-wide text-teal-600 uppercase">
           404
         </p>
@@ -117,7 +117,7 @@ export default async function BlogDetail({
   const cityLabel = blogCityLabel(post);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen ">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
         <nav
           aria-label="麵包屑"

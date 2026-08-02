@@ -147,7 +147,7 @@ export default function BlogListPage() {
     : featuredPosts.length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen ">
       {/* Hero */}
       <header className="relative h-[360px] overflow-hidden sm:h-[400px] md:h-[440px]">
         <Image
@@ -174,10 +174,10 @@ export default function BlogListPage() {
             <button
               type="button"
               onClick={() => setSelectedCountry(null)}
-              className={`rounded-[12px] px-4 py-2 text-sm font-medium shadow-md transition-all duration-300 sm:px-5 sm:py-2.5 sm:text-base ${
+              className={`button-status-blog-focus px-4 py-2 text-sm font-medium shadow-md transition-all duration-300 sm:px-5 sm:py-2.5  ${
                 selectedCountry === null
-                  ? "scale-105 bg-white text-teal-700 shadow-lg"
-                  : "border border-white/35 bg-white/15 text-white backdrop-blur hover:bg-white/25"
+                  ? "scale-105 shadow-lg"
+                  : "button-status-blog"
               }`}
             >
               全部
@@ -191,10 +191,10 @@ export default function BlogListPage() {
                     country === selectedCountry ? null : country,
                   )
                 }
-                className={`rounded-[12px] px-4 py-2 text-sm font-medium shadow-md transition-all duration-300 sm:px-5 sm:py-2.5 sm:text-base ${
+                className={`button-status-blog-focus px-4 py-2 text-sm font-medium shadow-md transition-all duration-300 sm:px-5 sm:py-2.5 ${
                   selectedCountry === country
-                    ? "scale-105 bg-white text-teal-700 shadow-lg"
-                    : "border border-white/35 bg-white/15 text-white backdrop-blur hover:bg-white/25"
+                    ? "scale-105 shadow-lg"
+                    : "button-status-blog "
                 }`}
               >
                 {country}
@@ -228,11 +228,11 @@ export default function BlogListPage() {
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             {(auth?.role === "管理者" || auth?.role === "會員") && ( 
             <>
-            <Link href="/member/edit-post" className="inline-flex items-center gap-1.5 rounded-[12px] border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">
+            <Link href="/member/edit-post" className="button-white">
               管理文章
             </Link>
             {auth?.role === "會員" && (
-            <Link href="/member/edit-post?tab=create" className="inline-flex items-center gap-1.5 rounded-[12px] bg-[#45cad5] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#36b3be] hover:shadow-lg">
+            <Link href="/member/edit-post?tab=create" className="button-main">
               <span aria-hidden>+</span> 新增文章
             </Link>) }
             </>

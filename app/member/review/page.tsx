@@ -598,9 +598,9 @@ export default function ReviewPage() {
 
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h4 className="truncate font-bold text-gray-900">
+                      <h5 className="truncate font-bold text-gray-900">
                         {item.title}
-                      </h4>
+                      </h5>
                       <span className="rounded bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-600">
                         已付款
                       </span>
@@ -621,7 +621,7 @@ export default function ReviewPage() {
                       onClick={() => toggleReview(item.id)}
                       aria-expanded={isExpanded}
                       aria-controls={`review-form-${item.id}`}
-                      className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#45cad5] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#36b3be]"
+                      className="button-main flex shrink-0 items-center gap-2 sm:gap-3"
                     >
                       {isExpanded ? "收合留言板" : "撰寫評價"}
                       {isExpanded ? (
@@ -775,7 +775,7 @@ export default function ReviewPage() {
                           resetReviewForm();
                         }}
                         disabled={submitting}
-                        className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="button-white"
                       >
                         取消
                       </button>
@@ -783,7 +783,7 @@ export default function ReviewPage() {
                         type="button"
                         onClick={() => void submitReview(item.id)}
                         disabled={submitting || !comment.trim()}
-                        className="rounded-lg bg-[#45cad5] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#36b3be] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="button-main"
                       >
                         {submitting ? "送出中…" : "送出評價"}
                       </button>
