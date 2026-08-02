@@ -434,6 +434,12 @@ export default function ExperienceDetailPage() {
     childQty: number,
     sessionName: string,
   ) => {
+    if (!isAuthenticated) {
+      toast.error("請先完成登入");
+      router.push("/auth/login");
+      return;
+    }
+
     if (!experience) return;
 
     // 找出使用者選中的 Session 以確保拿到正確金額
@@ -513,6 +519,13 @@ export default function ExperienceDetailPage() {
     childQty: number,
     sessionName: string,
   ) => {
+    // 🔴 【新增攔截未登入】
+    if (!isAuthenticated) {
+      toast.error("請先完成登入");
+      router.push("/login");
+      return;
+    }
+
     if (!experience) return;
 
     const targetSession = experience.sessions.find((s) => s.id === sessionId);
@@ -524,34 +537,36 @@ export default function ExperienceDetailPage() {
       return;
     }
 
-    const productInfo = {
+    // 🚀 核心修改：不呼叫 onAdd，而是建立獨立的預訂物件
+    try {
+    const directItem = {
       experienceId: experience.id,
+      sessionId: sessionId,
       name: experience.title,
-      price:
-        targetSession?.adult_price ??
-        experience.adult_price ??
-        experience.price ??
-        0,
       adultPrice:
         targetSession?.adult_price ??
         experience.adult_price ??
         experience.price ??
         0,
       childPrice: targetSession?.child_price ?? experience.child_price ?? 0,
+      adultQuantity: adultQty,
+      childQuantity: childQty,
+      quantity: adultQty + childQty,
+      sessionName: sessionName,
       image: experience.image_url ?? undefined,
     };
+    
+    // 4. 寫入 sessionStorage，不寫入購物車 DB
+    sessionStorage.setItem("directBookItem", JSON.stringify(directItem));
 
-    try {
-      // 1. 寫入購物車後跳轉
-      await onAdd(productInfo, sessionId, adultQty, childQty, sessionName);
-      // 2. 順暢跳轉至結帳頁面
-      toast.success("正在前往結帳頁面");
-      router.push("/checkout");
-    } catch (error) {
-      console.error("立即預訂失敗:", error);
-      toast.error("預訂失敗，請重試！");
-    }
-  };
+    // 5. 提示並跳轉（帶上 direct=true 參數）
+    toast.success("正在前往結帳頁面");
+    router.push("/checkout?direct=true");
+  } catch (error) {
+    console.error("立即預訂發生錯誤:", error);
+    toast.error("預訂過程發生錯誤，請稍後再試！");
+  }
+};
 
   // 【型別與載入保護】絕對不能刪！有這兩段 TypeScript 才知道底下的 experience 絕對不為 null
   if (isLoading) {
@@ -874,7 +889,7 @@ export default function ExperienceDetailPage() {
         <div className="fixed bottom-0 left-0 z-50 flex w-full flex-col border-t border-[#ECEFF0] bg-white px-4 pt-3 pb-4 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] md:hidden">
           {/* 1. 上層：左上角的價格資訊 */}
           <div className="mb-2.5 flex items-baseline gap-1.5">
-            <span className="text-xs font-bold text-[#7B8388]">每人只要</span>
+            <span className="text-[#7 B8388] text-xs font-bold">每人只要</span>
             {/* 💡 暫時寫死：等之後串 API 時，再把它換回 {experience?.price} */}
             <span className="text-[18px] font-black text-[#30353A]">
               NT$ {experience.adult_price.toLocaleString("zh-TW")} 起

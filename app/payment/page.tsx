@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { CreditCard } from "lucide-react";
 
 type OrderDetail = {
   id: string;
@@ -79,7 +80,7 @@ export default function PaymentPage() {
       try {
         // 先用 fetch 拿到 LINE Pay 的跳轉網址
         const response = await fetch(
-          `http://localhost:3001/linepay/reserve?amount=${amount}&items=${encodeURIComponent(items)}&order_id=${order.id}`
+          `http://localhost:3001/linepay/reserve?amount=${amount}&items=${encodeURIComponent(items)}&order_id=${order.id}`,
         );
         const result = await response.json();
 
@@ -139,32 +140,63 @@ export default function PaymentPage() {
               <div className="rounded-lg border border-gray-100 bg-white p-6 shadow-sm">
                 <div className="flex flex-col gap-4">
                   {/* 選項 1：信用卡/記帳卡 */}
-                  <label className="flex cursor-pointer items-center justify-between rounded-xl border border-transparent p-4 text-gray-800 transition hover:border-black hover:bg-slate-50/50">
+                  <label
+                    className={`flex cursor-pointer items-center justify-between rounded-xl border p-4 transition ${
+                      paymentMethod === "ecpay"
+                        ? "border-cyan-500 bg-cyan-50/20"
+                        : "border-gray-200 hover:border-gray-300 hover:bg-slate-50/50"
+                    }`}
+                  >
                     <div className="flex items-center gap-3">
                       {/* 修正：type 改為 radio */}
                       <input
                         type="radio"
                         name="payment-method"
-                        className="radio radio-error radio-sm"
+                        className="radio radio-sm checked:border-cyan-500 checked:bg-cyan-500"
                         checked={paymentMethod === "ecpay"}
                         onChange={() => setPaymentMethod("ecpay")}
                       />
-                      <span className="text-sm font-medium">信用卡/記帳卡</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        信用卡/記帳卡
+                      </span>
+                    </div>
+
+                    {/* 🌟 新增：右側信用卡圖示/標籤 */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="rounded bg-blue-600 px-1.5 py-0.5 text-[10px] font-black text-white italic">
+                        VISA
+                      </span>
+                      <span className="rounded bg-red-500 px-1.5 py-0.5 text-[10px] font-black text-white italic">
+                        MC
+                      </span>
+                      <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] font-black text-white italic">
+                        JCB
+                      </span>
+                      {/* 如果有 import CreditCard，放大尺寸至 h-6 w-6 */}
+                      <CreditCard className="ml-1 h-6 w-6 text-gray-500" />
                     </div>
                   </label>
 
                   {/* 選項 2：LINE Pay */}
-                  <label className="flex cursor-pointer items-center justify-between rounded-xl border border-transparent p-4 text-gray-800 transition hover:border-black hover:bg-slate-50/50">
+                  <label
+                    className={`flex cursor-pointer items-center justify-between rounded-xl border p-4 transition ${
+                      paymentMethod === "linepay"
+                        ? "border-cyan-500 bg-cyan-50/20"
+                        : "border-gray-200 hover:border-gray-300 hover:bg-slate-50/50"
+                    }`}
+                  >
                     <div className="flex items-center gap-3">
                       {/* 修正：type 改為 radio */}
                       <input
                         type="radio"
                         name="payment-method"
-                        className="radio radio-error radio-sm"
+                        className="radio radio-sm checked:border-cyan-500 checked:bg-cyan-500"
                         checked={paymentMethod === "linepay"}
                         onChange={() => setPaymentMethod("linepay")}
                       />
-                      <span className="text-sm font-medium">LINE Pay</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        LINE Pay
+                      </span>
                     </div>
                     <span className="rounded bg-[#00c300] px-2 py-1 text-[10px] font-bold text-white">
                       LINE Pay
@@ -181,7 +213,7 @@ export default function PaymentPage() {
                   <input
                     type="checkbox"
                     name="agreement"
-                    className="checkbox checkbox-error checkbox-sm rounded"
+                    className="checkbox checkbox-sm rounded border-gray-300 text-white checked:border-cyan-500 checked:bg-cyan-500"
                     checked={isAgreed}
                     onChange={(e) => setIsAgreed(e.target.checked)}
                   />
@@ -195,7 +227,7 @@ export default function PaymentPage() {
                   </span>
                   <button
                     onClick={handlePayment}
-                    className="btn border-none bg-[#45cad5] px-10 text-white hover:bg-[#36b3be]"
+                    className="button-main px-6 py-2.5 text-base font-semibold md:px-8 md:py-3 md:text-lg"
                   >
                     確認付款
                   </button>

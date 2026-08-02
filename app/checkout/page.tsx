@@ -1,13 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCart } from "@/contexts/cart";
 import { useAuth } from "@/contexts/auth-context";
 import { HiOutlineTicket, HiCurrencyDollar, HiUser } from "react-icons/hi";
 import toast from "react-hot-toast";
 
-// 在元件最上方定義後端傳過來的真實優惠券型別
+// 定義後端傳過來的真實優惠券型別
 type CouponType = {
   coupon_id: number;
   coupon_name: string;
@@ -23,8 +23,59 @@ const isValidTaiwanMobile = (phone: string) => {
 
 export default function CheckPage() {
   const router = useRouter();
-  const { items, totalAmount } = useCart();
+  const searchParams = useSearchParams();
+  const isDirect = searchParams.get("direct") === "true"; // 🚀 判斷是否為立即預訂
+
+  const { items: cartItems } = useCart();
   const { auth, isAuthenticated, authInit } = useAuth();
+
+  // 🚀 本頁顯示與計算用的真實結帳清單
+  const [checkoutItems, setCheckoutItems] = useState<any[]>([]);
+
+  // 🚀 根據網址參數，判定拿 sessionStorage 的獨立商品，還是購物車勾選商品
+  useEffect(() => {
+    // 情況 A：立即預訂模式 (?direct=true)
+    if (isDirect) {
+      const savedItem = sessionStorage.getItem("directBookItem");
+      if (savedItem) {
+        try {
+          setCheckoutItems([JSON.parse(savedItem)]);
+          return; // 🚀 成功設定即結束，防止後續覆蓋
+        } catch (e) {
+          console.error("解析 directBookItem 失敗", e);
+        }
+      }
+    }
+
+    // 情況 B：購物車勾選結帳模式
+    const savedItems = sessionStorage.getItem("checkoutItems");
+    if (savedItems) {
+      try {
+        const parsed = JSON.parse(savedItems);
+        // 🚀 核心防護：只要 sessionStorage 裡面有勾選的商品陣列，就用它！
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setCheckoutItems(parsed);
+          return; // 🚀 成功設定即結束，絕對不執行下面拿全額 cartItems 的邏輯！
+        }
+      } catch (e) {
+        console.error("解析 checkoutItems 失敗", e);
+      }
+    }
+
+    // 情況 C：備用防呆 (真的都沒暫存時，才使用全購物車商品)
+    if (cartItems && cartItems.length > 0) {
+      setCheckoutItems(cartItems);
+    }
+  }, [isDirect]); // 🚀 關鍵把 cartItems 從依賴陣列中移除！避免背景 API 更新時重跑覆蓋！
+
+  // 🚀 計算本頁實際要結帳的商品總金額
+  const currentTotalAmount = checkoutItems.reduce((acc, item) => {
+    const adultQty = Number(item.adultQuantity) || 0;
+    const childQty = Number(item.childQuantity) || 0;
+    const adultP = Number(item.adultPrice) || 0;
+    const childP = Number(item.childPrice) || 0;
+    return acc + (adultQty * adultP + childQty * childP);
+  }, 0);
 
   // --- 狀態管理 ---
   // 聯絡人資料狀態
@@ -104,7 +155,18 @@ export default function CheckPage() {
         .then((res) => res.json())
         .then((result) => {
           if (result.success) {
-            setCoupons(result.coupons || []); // 將真實優惠券塞入狀態
+            const rawCoupons: CouponType[] = result.coupons || []; // 將真實優惠券塞入狀態
+
+            // 根據折扣金額 (discount_amount) 由大到小排序 (由最划算排到最不划算)
+            const sortedCoupons = [...rawCoupons].sort(
+              (a, b) => Number(b.discount_amount) - Number(a.discount_amount),
+            );
+            setCoupons(sortedCoupons);
+
+            // 自動預設勾選「最划算」的那一張 (即排序後的第 0 個)
+            if (sortedCoupons.length > 0) {
+              setSelectedCouponId(String(sortedCoupons[0].coupon_id));
+            }
           }
         })
         .catch((err) => console.error("撈取優惠券失敗:", err));
@@ -136,6 +198,7 @@ export default function CheckPage() {
     setShowForm(true);
   };
 
+  // 會員階級設定
   // 對齊「金 9折 (回饋5%)」、「銀 95折 (回饋3%)」、「銅 原價 (回饋1%)」
   const getLevelConfig = (level: string | undefined) => {
     if (level === "環遊旅人") return { discountRate: 0.9, rewardRate: 0.05 };
@@ -147,14 +210,16 @@ export default function CheckPage() {
 
   // --- 精準動態折扣計算 useEffect (隨購物車與折扣動態變更) ---
   useEffect(() => {
-    let currentPrice = totalAmount;
+    let currentPrice = currentTotalAmount; // 🚀 改用本頁專屬的 currentTotalAmount
     let levelDiscount = 0;
     let couponDiscount = 0;
 
     // A. 優先判定並套用會員階級折抵
     if (useLevelDiscount) {
       // 算出打折後省了多少錢 (四捨五入)
-      levelDiscount = Math.round(totalAmount * (1 - levelConfig.discountRate));
+      levelDiscount = Math.round(
+        currentTotalAmount * (1 - levelConfig.discountRate),
+      );
       currentPrice -= levelDiscount;
     }
 
@@ -181,7 +246,7 @@ export default function CheckPage() {
     setCouponDiscountAmount(couponDiscount);
     setFinalPrice(currentPrice);
   }, [
-    totalAmount,
+    currentTotalAmount,
     useLevelDiscount,
     selectedCouponId,
     mCoinsInput,
@@ -197,7 +262,7 @@ export default function CheckPage() {
     // 計算扣除「會員等級折扣」與「優惠券」後，還剩下的應付金額
     const amountAfterDiscounts = Math.max(
       0,
-      totalAmount - levelDiscountAmount - couponDiscountAmount,
+      currentTotalAmount - levelDiscountAmount - couponDiscountAmount,
     );
 
     // 🚀 核心邏輯：單筆訂單最多折抵剩餘金額的 50% (四捨五入)
@@ -251,7 +316,9 @@ export default function CheckPage() {
             contact_email: formData.email || auth.email,
             coupon_id: selectedCouponId ? Number(selectedCouponId) : null, // 選中的券 ID
             points_redeemed: mCoinsInput, // 扣除的點數
-            payment_method: "credit_card" // 預設帶入信用卡
+            payment_method: "credit_card", // 預設帶入信用卡
+            is_direct: isDirect, // 🚀 告訴後端是否為立即預訂
+            items: checkoutItems, // 🚀 將本頁實際要結帳的商品明細傳給後端
           }),
         },
       );
@@ -260,6 +327,9 @@ export default function CheckPage() {
 
       if (result.success) {
         toast.success("訂單建立成功！準備前往付款");
+        // 🚀 清空暫存
+        sessionStorage.removeItem("directBookItem");
+        sessionStorage.removeItem("checkoutItems");
         // 🚀 建立訂單成功！後端此時已清空購物車與扣點數。
         // 立刻將使用者引導至下一步的付款畫面
         router.push(`/payment?order_id=${result.order_id}`);
@@ -275,7 +345,7 @@ export default function CheckPage() {
   // 在 return 畫面之前計算給 UI 顯示用
   const amountAfterDiscounts = Math.max(
     0,
-    totalAmount - levelDiscountAmount - couponDiscountAmount,
+    currentTotalAmount - levelDiscountAmount - couponDiscountAmount,
   );
   const maxFiftyPercentAllowed = Math.floor(amountAfterDiscounts * 0.5);
   const maxUsableMCoins = Math.min(
@@ -317,13 +387,13 @@ export default function CheckPage() {
                   預訂行程明細
                 </h3>
 
-                {items.length === 0 ? (
+                {checkoutItems.length === 0 ? (
                   <p className="py-2 text-sm text-gray-400">
                     目前沒有選購任何商品，請返回購物車。
                   </p>
                 ) : (
                   <div className="divide-y divide-gray-100">
-                    {items.map((item) => {
+                    {checkoutItems.map((item) => {
                       // 正確計算大人/小孩小計金額
                       const adultQty = Number(item.adultQuantity) || 0;
                       const childQty = Number(item.childQuantity) || 0;
@@ -384,7 +454,7 @@ export default function CheckPage() {
                   </span>
                   <button
                     onClick={handleQuickInput}
-                    className="btn rounded-full border-[#45cad5] bg-[#45cad5]/10 px-4 font-bold text-[#45cad5] hover:bg-[#45cad5] hover:text-white"
+                    className="btn rounded-full border border-[#45cad5] bg-white px-3 py-1 text-xs font-medium text-[#45cad5] transition-colors hover:bg-[#45cad5] hover:text-white"
                   >
                     {auth.name || "載入中"}
                   </button>
@@ -521,7 +591,7 @@ export default function CheckPage() {
                     <div className="mt-4 flex justify-end">
                       <button
                         onClick={() => setShowForm(false)}
-                        className="btn btn-sm rounded-md border-none bg-[#45cad5] px-6 text-white"
+                        className="button-main px-3 py-1.5 text-sm md:px-4 md:py-2 md:text-base"
                       >
                         套用變更
                       </button>
@@ -565,9 +635,9 @@ export default function CheckPage() {
 
                   {coupons.length > 0 ? (
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                      {coupons.map((coupon) => (
+                      {coupons.map((coupon, index) => (
                         <label
-                          key={coupon.coupon_id}
+                          key={`${coupon.coupon_id}-${index}`}
                           className={`flex cursor-pointer flex-col justify-between rounded-xl border p-3.5 text-left transition-all ${
                             selectedCouponId === String(coupon.coupon_id)
                               ? "border-[#45cad5] bg-[#45cad5]/5 ring-1 ring-[#45cad5]"
@@ -668,7 +738,7 @@ export default function CheckPage() {
                 </span>
                 <button
                   onClick={handleSubmitOrder}
-                  className="btn border-none bg-[#45cad5] whitespace-nowrap text-white hover:bg-[#36b3be] sm:px-10"
+                  className="button-main px-6 py-2 text-sm md:px-8 md:py-2.5 md:text-base"
                 >
                   前往付款
                 </button>
@@ -686,7 +756,7 @@ export default function CheckPage() {
                 <div className="mt-2 flex flex-col gap-1 border-t border-gray-100 pt-3 text-xs">
                   <div className="flex justify-between text-gray-500">
                     <span>商品原始總價</span>
-                    <span>NT$ {totalAmount.toLocaleString()}</span>
+                    <span>NT$ {currentTotalAmount.toLocaleString()}</span>
                   </div>
                   {useLevelDiscount && (
                     <div className="flex justify-between text-emerald-600">
