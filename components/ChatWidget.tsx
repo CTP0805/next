@@ -367,7 +367,7 @@ export default function ChatWidget() {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className={`mb-2.5 flex-shrink-0 self-end text-xl text-gray-500 hover:text-[#45cad5] ${
+                className={`mb-3 flex-shrink-0 self-end text-xl text-gray-500 hover:text-[#45cad5] ${
                   isUploading ? "pointer-events-none opacity-50" : ""
                 }`}
               >
