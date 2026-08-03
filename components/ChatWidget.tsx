@@ -16,10 +16,10 @@ type ChatMessage = {
 };
 
 const socket = io("http://localhost:3001");
-console.log("ChatWidget render");
+
 export default function ChatWidget() {
   const { auth, isAuthenticated } = useAuth();
-  // 沒有登入就不顯示聊天室
+
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -29,9 +29,12 @@ export default function ChatWidget() {
     url: string;
   } | null>(null);
   const [isAdminTyping, setIsAdminTyping] = useState(false);
+  const [adminOnline, setAdminOnline] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [adminOnline, setAdminOnline] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   // 歷史訊息
   useEffect(() => {
     if (!auth.id) return;
@@ -40,41 +43,40 @@ export default function ChatWidget() {
       .then((res) => res.json())
       .then((data) => {
         setMessages((prev) => {
-          if (prev.length > 0) {
-            return prev;
-          }
-
+          if (prev.length > 0) return prev;
           return data;
         });
       });
   }, [auth.id]);
+
+  // 客服在線狀態
   useEffect(() => {
     const handleAdminStatus = (data: { online: boolean }) => {
-      console.log("客服狀態:", data);
       setAdminOnline(data.online);
     };
 
     socket.on("admin-status", handleAdminStatus);
-
     return () => {
       socket.off("admin-status", handleAdminStatus);
     };
   }, []);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // 加入房間 + 監聽訊息
   useEffect(() => {
     if (!auth.id) return;
     const roomId = `user-${auth.id}`;
 
     socket.emit("join-room", roomId);
     socket.emit("check-admin-status");
+
     const handleMessage = (data: ChatMessage) => {
       if (data.sender === "admin") {
         setIsAdminTyping(false);
       }
-
       setMessages((prev) => [...prev, data]);
     };
 
@@ -88,18 +90,33 @@ export default function ChatWidget() {
 
     const handleAdminTyping = () => {
       setIsAdminTyping(true);
-      // 確保看得到
       requestAnimationFrame(() => scrollToBottom());
     };
+
     socket.on("receive-message", handleMessage);
     socket.on("messages-read", handleMessagesRead);
     socket.on("admin-typing", handleAdminTyping);
+
     return () => {
       socket.off("receive-message", handleMessage);
       socket.off("messages-read", handleMessagesRead);
       socket.off("admin-typing", handleAdminTyping);
     };
   }, [auth.id]);
+
+  // 訊息更新時滾動到底
+  useEffect(() => {
+    if (isOpen) {
+      requestAnimationFrame(() => scrollToBottom());
+    }
+  }, [messages, isOpen]);
+
+  // 重置 textarea 高度
+  const resetTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "44px";
+    }
+  };
 
   // 發送文字訊息
   const sendMessage = () => {
@@ -119,6 +136,7 @@ export default function ChatWidget() {
 
     setMessages((prev) => [...prev, tempMessage]);
     setInput("");
+    resetTextareaHeight();
 
     socket.emit("send-message", {
       roomId: `user-${auth.id}`,
@@ -166,16 +184,14 @@ export default function ChatWidget() {
 
     setIsUploading(true);
 
-    const tempUrl = previewImage.url;
     const tempId = `temp-${Date.now()}`;
     const file = previewImage.file;
     const messageText = input.trim();
 
-    // 樂觀更新
     const tempMessage: ChatMessage = {
       roomId: `user-${auth.id}`,
       text: messageText,
-      image_url: tempUrl,
+      image_url: previewImage.url,
       sender: "user",
       created_at: new Date().toISOString(),
       is_read: 0,
@@ -185,6 +201,7 @@ export default function ChatWidget() {
     setMessages((prev) => [...prev, tempMessage]);
     setPreviewImage(null);
     setInput("");
+    resetTextareaHeight();
 
     try {
       const formData = new FormData();
@@ -198,7 +215,6 @@ export default function ChatWidget() {
       if (!res.ok) throw new Error("上傳失敗");
 
       const data = await res.json();
-      console.log("上傳成功:", data);
 
       socket.emit("send-message", {
         roomId: `user-${auth.id}`,
@@ -231,12 +247,6 @@ export default function ChatWidget() {
     });
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      requestAnimationFrame(() => scrollToBottom());
-    }
-  }, [messages, isOpen]);
-
   const handleToggleChat = () => {
     if (auth?.role === "客服") {
       window.location.href = "http://localhost:3000/admin/chat";
@@ -250,6 +260,7 @@ export default function ChatWidget() {
     if (url.startsWith("blob:") || url.startsWith("http")) return url;
     return `http://localhost:3001${url.startsWith("/") ? "" : "/"}${url}`;
   };
+
   if (!isAuthenticated) return null;
 
   return (
@@ -265,8 +276,8 @@ export default function ChatWidget() {
         <div className="absolute right-0 bottom-20 flex h-[480px] w-80 flex-col overflow-hidden rounded-2xl border bg-white shadow-2xl">
           {/* Header */}
           <div className="flex items-center gap-2 bg-[#45cad5] p-4 font-semibold text-white">
-            線上客服{" "}
-            <div className="text-xs">{adminOnline ? "🟢 " : "⚪ "}</div>
+            線上客服
+            <div className="text-xs">{adminOnline ? "🟢" : "⚪"}</div>
           </div>
 
           {/* 訊息區域 */}
@@ -292,11 +303,10 @@ export default function ChatWidget() {
                       isUser ? "flex-row-reverse" : "flex-row"
                     }`}
                   >
-                    {/* ===== 訊息本體 ===== */}
                     <div
                       className={`max-w-[75%] overflow-hidden ${
                         hasImage && !hasText
-                          ? "" // 純圖片不需要氣泡背景
+                          ? ""
                           : `rounded-2xl px-3 py-2 text-[13px] leading-5 ${
                               isUser
                                 ? "bg-[#45cad5] text-white"
@@ -304,9 +314,8 @@ export default function ChatWidget() {
                             }`
                       }`}
                     >
-                      {/* 圖片 */}
                       {hasImage && (
-                        <div className={`${hasText ? "mb-2" : ""}`}>
+                        <div className={hasText ? "mb-2" : ""}>
                           <img
                             src={getImageSrc(m.image_url)}
                             alt="圖片"
@@ -314,13 +323,11 @@ export default function ChatWidget() {
                             onError={(e) => {
                               (e.target as HTMLImageElement).style.display =
                                 "none";
-                              console.error("圖片載入失敗:", m.image_url);
                             }}
                           />
                         </div>
                       )}
 
-                      {/* 文字 */}
                       {hasText && (
                         <div className="break-all whitespace-pre-wrap">
                           {m.text}
@@ -328,7 +335,6 @@ export default function ChatWidget() {
                       )}
                     </div>
 
-                    {/* 時間與已讀 */}
                     <div className="mb-1 flex flex-col items-end gap-0.5 text-[10px] whitespace-nowrap text-gray-400">
                       {isUser && (
                         <div>{Number(m.is_read) === 1 ? "已讀" : "未讀"}</div>
@@ -339,6 +345,7 @@ export default function ChatWidget() {
                 </div>
               );
             })}
+
             {isAdminTyping && (
               <div className="text-xs text-gray-400 italic">客服回覆中...</div>
             )}
@@ -347,9 +354,8 @@ export default function ChatWidget() {
 
           {/* 輸入區 */}
           <div className="border-t bg-white p-3">
-            {/* 輸入框（含縮圖預覽） */}
-            <div className="flex gap-2">
-              {/* 圖片選擇 */}
+            <div className="flex items-end gap-2">
+              {/* 圖片上傳按鈕 */}
               <input
                 type="file"
                 accept="image/*"
@@ -361,7 +367,7 @@ export default function ChatWidget() {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className={`flex-shrink-0 text-xl text-gray-500 hover:text-[#45cad5] ${
+                className={`mb-2.5 flex-shrink-0 self-end text-xl text-gray-500 hover:text-[#45cad5] ${
                   isUploading ? "pointer-events-none opacity-50" : ""
                 }`}
               >
@@ -371,9 +377,12 @@ export default function ChatWidget() {
                   <FaRegImage />
                 )}
               </button>
+
+              {/* 輸入框本體 */}
               <div className="relative flex flex-1 items-end rounded-2xl border border-gray-300 bg-white focus-within:border-[#45cad5]">
+                {/* 圖片預覽 */}
                 {previewImage && (
-                  <div className="relative mb-2 ml-2 flex-shrink-0">
+                  <div className="relative mb-2 ml-2 flex-shrink-0 self-end">
                     <img
                       src={previewImage.url}
                       alt="預覽"
@@ -389,9 +398,13 @@ export default function ChatWidget() {
                 )}
 
                 <textarea
+                  ref={textareaRef}
                   value={input}
-                  onChange={(e) => {setInput(e.target.value);e.target.style.height = "auto";
-          e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;}}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    e.target.style.height = "auto";
+                    e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;
+                  }}
                   onKeyDown={(e) => {
                     if (
                       e.key === "Enter" &&
@@ -406,10 +419,11 @@ export default function ChatWidget() {
                       }
                     }
                   }}
-
                   rows={1}
                   className="max-h-32 min-h-[44px] flex-1 resize-none overflow-y-auto bg-transparent px-3 py-3 text-sm text-black outline-none"
+                  style={{ height: "44px" }}
                 />
+
                 {/* 發送按鈕 */}
                 <button
                   onClick={() => {
@@ -420,7 +434,7 @@ export default function ChatWidget() {
                     }
                   }}
                   disabled={isUploading || (!input.trim() && !previewImage)}
-                  className="mr-1 mb-1 flex-shrink-0 rounded-full bg-[#45cad5] p-2 text-white transition-colors hover:bg-[#3bb8c3] disabled:opacity-50"
+                  className="mb-1.5 mr-1.5 flex-shrink-0 self-end rounded-full bg-[#45cad5] p-2 text-white transition-colors hover:bg-[#3bb8c3] disabled:opacity-50"
                 >
                   <Send size={18} />
                 </button>
