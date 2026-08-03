@@ -62,7 +62,7 @@ export default function CartDropdown() {
                 const adultQty = Number(item.adultQuantity) || 0;
                 const childQty = Number(item.childQuantity) || 0;
                 const adultPrice =
-                  Number(item.adultPrice) || Number(item.price) || 0;
+                  Number(item.adultPrice) || 0;
                 const childPrice = Number(item.childPrice) || 0;
 
                 const subtotal =

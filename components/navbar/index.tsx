@@ -105,7 +105,6 @@ export default function Navbar() {
 
   const navStyle = isHomePage && !isScrolled ? "bg-white/20" : "bg-[#45cad5]";
   const navPosition = isHomePage ? "fixed" : "sticky";
-  console.log(auth);
   return (
     <nav
       className={`${navPosition} top-0 left-0 z-50 box-border flex h-[60px] w-full items-center justify-between p-2 text-white xl:px-37.5 ${navStyle}`}

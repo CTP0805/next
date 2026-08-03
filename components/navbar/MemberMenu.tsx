@@ -4,13 +4,22 @@ import Link from "next/link";
 import Image from "next/image";
 import { FiLogOut } from "react-icons/fi";
 import type { MemberList } from "@/types/navbar";
+ type Auth = {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  member_level?: string;
+  current_points?: number;
+  role?: string;
+  avatar_url?: string | null;
+  gender?: string;
+  birthday?: string;
+};
 
 type MemberMenuProps = {
-  auth: {
-    name?: string;
-    avatar_url?: string;
-    member_level?: string;
-  };
+  auth: Auth|null;
+   
   logout: () => void;
   memberLists: MemberList[];
 };
