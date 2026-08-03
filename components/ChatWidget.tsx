@@ -347,7 +347,7 @@ export default function ChatWidget() {
 
           {/* 輸入區 */}
           <div className="border-t bg-white p-3">
-            <div className="flex items-end gap-2">
+            <div className="flex gap-2">
               {/* 圖片選擇 */}
               <input
                 type="file"
@@ -360,7 +360,7 @@ export default function ChatWidget() {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className={`mb-2 flex-shrink-0 text-xl text-gray-500 hover:text-[#45cad5] ${
+                className={`flex-shrink-0 text-xl text-gray-500 hover:text-[#45cad5] ${
                   isUploading ? "pointer-events-none opacity-50" : ""
                 }`}
               >
