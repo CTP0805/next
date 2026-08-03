@@ -29,7 +29,6 @@ export default function Navbar() {
     { name: "關於我們", href: "/about" },
     { name: "部落格", href: "/blog" },
   ];
-
   const memberListsBase: MemberList[] = [
     {
       label: "會員資料",
@@ -95,13 +94,14 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
+    refreshAuth();
     if (!isHomePage) return;
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 0.1);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [isHomePage]);
+  }, [isHomePage, refreshAuth]);
 
   const navStyle = isHomePage && !isScrolled ? "bg-white/20" : "bg-[#45cad5]";
   const navPosition = isHomePage ? "fixed" : "sticky";
