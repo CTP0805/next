@@ -46,7 +46,7 @@ export default function IconMenu() {
     <section className="flex justify-center">
       {/* 核心容器：設定最大寬度、左右內距與背景樣式 */}
       <div className="w-full max-w-[1280px]">
-        <div className="flex scrollbar-none items-center gap-6 overflow-x-auto rounded-[32px] bg-white p-6 backdrop-blur md:justify-around md:gap-4 md:shadow-2xl">
+        <div className="flex scrollbar-none items-center justify-around gap-6 overflow-x-auto rounded-[32px] bg-white p-6 backdrop-blur md:gap-4 md:shadow-2xl">
           {features.map((item, index) => (
             <div key={index} className="flex gap-3">
               <Link
