@@ -84,6 +84,7 @@ export default function BlogCommentSection({
   const [editContent, setEditContent] = useState("");
   const [actionId, setActionId] = useState<number | null>(null);
   const [actionError, setActionError] = useState("");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -185,8 +186,6 @@ export default function BlogCommentSection({
   }
 
   async function handleDelete(commentId: number) {
-    if (!window.confirm("確定要刪除這則留言嗎？")) return;
-
     setActionId(commentId);
     setActionError("");
     try {
@@ -198,6 +197,7 @@ export default function BlogCommentSection({
         setEditingId(null);
         setEditContent("");
       }
+      setDeleteConfirmId(null);
     } catch (error) {
       setActionError(error instanceof Error ? error.message : "刪除留言失敗");
     } finally {
@@ -358,7 +358,7 @@ export default function BlogCommentSection({
                     </button>
                     <button
                       type="button"
-                      onClick={() => void handleDelete(comment.id)}
+                      onClick={() => setDeleteConfirmId(comment.id)}
                       disabled={actionId === comment.id}
                       className="font-medium text-red-500 transition hover:text-red-600 disabled:opacity-50"
                     >
@@ -385,14 +385,14 @@ export default function BlogCommentSection({
                       type="button"
                       onClick={cancelEditing}
                       disabled={actionId === comment.id}
-                      className="rounded-[10px] border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-50"
+                      className="button-white px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-50"
                     >
                       取消
                     </button>
                     <button
                       type="submit"
                       disabled={actionId === comment.id}
-                      className="rounded-[10px] bg-[#45cad5] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#36b3be] disabled:opacity-50"
+                      className="button-main px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#36b3be] disabled:opacity-50"
                     >
                       {actionId === comment.id ? "儲存中…" : "儲存"}
                     </button>
@@ -407,6 +407,53 @@ export default function BlogCommentSection({
           ))
         )}
       </div>
+
+      {deleteConfirmId !== null ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && actionId === null) {
+              setDeleteConfirmId(null);
+            }
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-comment-title"
+            className="w-full max-w-sm rounded-[16px] bg-white p-6 shadow-2xl"
+          >
+            <h3
+              id="delete-comment-title"
+              className="text-lg font-bold text-gray-900"
+            >
+              確認刪除留言
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-gray-600">
+              確定要刪除這則留言嗎？刪除後將無法復原。
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmId(null)}
+                disabled={actionId === deleteConfirmId}
+                className="button-white px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-50"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleDelete(deleteConfirmId)}
+                disabled={actionId === deleteConfirmId}
+                className="button-red px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {actionId === deleteConfirmId ? "刪除中…" : "確認刪除"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
