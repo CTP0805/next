@@ -21,8 +21,9 @@ import NavLinks from "./NavLinks";
 import CartDropdown from "./CartDropdown";
 import MemberMenu from "./MemberMenu";
 import MobileMenu from "./MobileMenu";
-export default function Navbar() {
+export default  function Navbar() {
   const { auth, isAuthenticated, refreshAuth, logout } = useAuth();
+  
   const { totalQty } = useCart();
   const pathname = usePathname();
   const navLinks: NavLink[] = [
@@ -95,6 +96,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
+     refreshAuth();
     if (!isHomePage) return;
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 0.1);

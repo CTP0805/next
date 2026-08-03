@@ -158,7 +158,7 @@ function createCroppedImage(imageSrc: string, crop: Area): Promise<File> {
 
 export default function MemberPanel() {
   const pathname = usePathname();
-  const { auth, refreshAuth } = useAuth();
+  const { auth, refreshAuth, setAuth } = useAuth();
 
   // ⭐ 阿偉：依 role 顯示「管理文章」或「文章審查」
   const memberLists: MemberList[] = [
@@ -430,7 +430,7 @@ export default function MemberPanel() {
 
       // API 成功後，立刻把畫面頭像換回預設圖片
       setAvatarUrl(DEFAULT_AVATAR_URL);
-
+      await refreshAuth();
       // 關閉確認視窗
       setIsRemoveAvatarModalOpen(false);
 

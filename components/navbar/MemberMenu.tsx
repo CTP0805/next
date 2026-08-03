@@ -32,7 +32,7 @@ export default function MemberMenu({
   if (!auth) {
     return null;
   }
-
+  console.log(auth);
   // 處理頭像網址的函式
   const getAvatarUrl = (avatarUrl?: string | null) => {
     if (!avatarUrl) return "/images/member-avatar/angry-man.jpg";
