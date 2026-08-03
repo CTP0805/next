@@ -88,6 +88,7 @@ function MemberEditPostContent() {
   const [keyword, setKeyword] = useState("");
   const [actingId, setActingId] = useState<number | null>(null);
   const [deletePost, setDeletePost] = useState<BlogPost | null>(null);
+  const [unpublishPost, setUnpublishPost] = useState<BlogPost | null>(null);
   const [notePost, setNotePost] = useState<BlogPost | null>(null);
   const [viewPost, setViewPost] = useState<BlogPost | null>(null);
 
@@ -195,13 +196,13 @@ function MemberEditPostContent() {
   }
 
   async function handleUnpublish(post: BlogPost) {
-    if (!window.confirm(`確定要下架「${post.title}」嗎？`)) return;
     setActingId(post.id);
     try {
       const updated = await unpublishBlogPost(post.id);
       setPosts((prev) =>
         prev.map((item) => (item.id === updated.id ? updated : item)),
       );
+      setUnpublishPost(null);
       toast.success(`「${post.title}」已下架`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "下架文章失敗");
@@ -457,7 +458,7 @@ function MemberEditPostContent() {
                             <button
                               type="button"
                               disabled={busy}
-                              onClick={() => void handleUnpublish(post)}
+                              onClick={() => setUnpublishPost(post)}
                               className="button-s-red"
                             >
                               {busy ? "下架中…" : "下架"}
@@ -543,6 +544,44 @@ function MemberEditPostContent() {
             disabled={actingId === deletePost.id}
             aria-label="關閉刪除確認視窗"
             onClick={() => setDeletePost(null)}
+          >
+            關閉
+          </button>
+        </dialog>
+      ) : null}
+
+      {unpublishPost ? (
+        <dialog open className="modal">
+          <div className="modal-box rounded-[12px] border border-[#e5e7eb] bg-white text-[#111827] shadow-2xl">
+            <h2 className="text-lg font-bold">確認下架文章</h2>
+            <p className="py-4 text-sm text-[#4b5563]">
+              確定要下架「{unpublishPost.title}」嗎？下架後文章將不會顯示在公開頁面。
+            </p>
+            <div className="modal-action">
+              <button
+                type="button"
+                className="rounded-[12px] border border-[#d1d5db] bg-white px-5 py-2.5 text-sm font-semibold text-[#374151] hover:bg-[#f3f4f6]"
+                disabled={actingId === unpublishPost.id}
+                onClick={() => setUnpublishPost(null)}
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                className="rounded-[12px] border border-[#dc2626] bg-[#dc2626] px-5 py-2.5 text-sm font-semibold text-white hover:border-[#b91c1c] hover:bg-[#b91c1c]"
+                disabled={actingId === unpublishPost.id}
+                onClick={() => void handleUnpublish(unpublishPost)}
+              >
+                {actingId === unpublishPost.id ? "下架中…" : "確認下架"}
+              </button>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="modal-backdrop bg-black/40"
+            disabled={actingId === unpublishPost.id}
+            aria-label="關閉下架確認視窗"
+            onClick={() => setUnpublishPost(null)}
           >
             關閉
           </button>
