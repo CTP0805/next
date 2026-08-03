@@ -20,6 +20,13 @@ export type LevelBenefitRow = {
   values: Record<string, string>; // key 是後端回傳的等級名稱
 };
 
+// 1. 定義 CardTheme 型別
+export interface CardTheme {
+  start: string;
+  middle: string;
+  end: string;
+}
+
 // FAQ 一題：q=問題、a=答案
 export type LevelFaq = { q: string; a: string };
 
@@ -47,6 +54,7 @@ export type MemberLevelPayload = {
   benefit_rows: LevelBenefitRow[]; // 權益表
   thresholds: Record<string, { minOrders: number; minSpent: number }>;
   faqs: LevelFaq[];
+  card_theme: CardTheme; 
 };
 
 /**

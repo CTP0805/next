@@ -9,6 +9,7 @@ import FooterGuard from "@/components/FooterGuard";
 import { AuthRouteGuard } from "@/components/AuthRouteGuard";
 import { Toaster } from "react-hot-toast";
 import { PageTitle } from "@/components/PageTitle";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   // title: "Meet Local", // 👈 更改瀏覽器分頁標題
@@ -17,6 +18,7 @@ export const metadata: Metadata = {
     icon: "/icon/logo_title.svg", // 👈 更改瀏覽器分頁圖示 (預設讀取 public 資料夾下的檔案)
   },
 };
+
 
 const besley = Besley({
   subsets: ["latin"],
@@ -33,6 +35,8 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`flex min-h-full flex-col ${besley.variable}`}
       >
+        {/* 使用 Suspense 包裹全站內容 */}
+        <Suspense fallback={<div>Loading...</div>}>
         <PageTitle />
         <Toaster />
         <AuthContextProvider>
@@ -44,6 +48,7 @@ export default function RootLayout({
             </CartProvider>
           </FavoriteProvider>
         </AuthContextProvider>
+        </Suspense>
       </body>
     </html>
   );

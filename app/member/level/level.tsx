@@ -37,6 +37,7 @@ interface MemberLevelRightPanelProps {
   onOpenDetail: () => void;
 }
 
+
 /**
  * 【主要元件】MemberLevelRightPanel
  * React.FC<Props>：Function Component，props 型別是 Props
