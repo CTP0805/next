@@ -295,7 +295,7 @@ export default function BlogCommentSection({
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-[12px] bg-[#45cad5] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#36b3be] disabled:cursor-not-allowed disabled:opacity-60"
+              className="button-main"
             >
               {submitting ? "送出中…" : "送出留言"}
             </button>
