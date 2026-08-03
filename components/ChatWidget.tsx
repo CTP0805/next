@@ -299,8 +299,8 @@ export default function ChatWidget() {
                           ? "" // 純圖片不需要氣泡背景
                           : `rounded-2xl px-3 py-2 text-[13px] leading-5 ${
                               isUser
-                                ? "rounded-br-none bg-[#45cad5] text-white"
-                                : "rounded-bl-none border border-gray-200 bg-white text-gray-800"
+                                ? "bg-[#45cad5] text-white"
+                                : "border border-gray-200 bg-white text-gray-800"
                             }`
                       }`}
                     >
@@ -322,7 +322,7 @@ export default function ChatWidget() {
 
                       {/* 文字 */}
                       {hasText && (
-                        <div className="wrap-break-word whitespace-pre-wrap">
+                        <div className="break-all whitespace-pre-wrap">
                           {m.text}
                         </div>
                       )}
@@ -347,6 +347,7 @@ export default function ChatWidget() {
 
           {/* 輸入區 */}
           <div className="border-t bg-white p-3">
+            {/* 輸入框（含縮圖預覽） */}
             <div className="flex gap-2">
               {/* 圖片選擇 */}
               <input
@@ -370,8 +371,6 @@ export default function ChatWidget() {
                   <FaRegImage />
                 )}
               </button>
-
-              {/* 輸入框（含縮圖預覽） */}
               <div className="relative flex flex-1 items-end rounded-2xl border border-gray-300 bg-white focus-within:border-[#45cad5]">
                 {previewImage && (
                   <div className="relative mb-2 ml-2 flex-shrink-0">
@@ -391,7 +390,8 @@ export default function ChatWidget() {
 
                 <textarea
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={(e) => {setInput(e.target.value);e.target.style.height = "auto";
+          e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;}}
                   onKeyDown={(e) => {
                     if (
                       e.key === "Enter" &&
@@ -410,22 +410,21 @@ export default function ChatWidget() {
                   rows={1}
                   className="max-h-32 min-h-[44px] flex-1 resize-none overflow-y-auto bg-transparent px-3 py-3 text-sm text-black outline-none"
                 />
+                {/* 發送按鈕 */}
+                <button
+                  onClick={() => {
+                    if (previewImage) {
+                      confirmSendImage();
+                    } else {
+                      sendMessage();
+                    }
+                  }}
+                  disabled={isUploading || (!input.trim() && !previewImage)}
+                  className="mr-1 mb-1 flex-shrink-0 rounded-full bg-[#45cad5] p-2 text-white transition-colors hover:bg-[#3bb8c3] disabled:opacity-50"
+                >
+                  <Send size={18} />
+                </button>
               </div>
-
-              {/* 發送按鈕 */}
-              <button
-                onClick={() => {
-                  if (previewImage) {
-                    confirmSendImage();
-                  } else {
-                    sendMessage();
-                  }
-                }}
-                disabled={isUploading || (!input.trim() && !previewImage)}
-                className="mb-1 flex-shrink-0 rounded-full bg-[#45cad5] p-3 text-white transition-colors hover:bg-[#3bb8c3] disabled:opacity-50"
-              >
-                <Send size={18} />
-              </button>
             </div>
           </div>
         </div>
