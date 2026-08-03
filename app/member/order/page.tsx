@@ -140,7 +140,7 @@ export default function OrderPage() {
     <div className="w-full text-gray-800">
       {/* 1. 頁面大標題與頁籤分類 */}
       <div className="mb-6 flex flex-col gap-4 border-b border-gray-200 pb-4 md:flex-row md:items-center md:justify-between">
-        <h3 className="text-lg font-bold text-gray-700">歷史訂單</h3>
+        <h3 className="hidden text-lg font-bold text-gray-700 md:block">歷史訂單</h3>
 
         {/* 🌟 狀態分類 Tab 頁籤 */}
         <div className="flex flex-wrap gap-2 text-xs">

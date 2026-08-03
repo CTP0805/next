@@ -34,7 +34,6 @@ export default function LoginPage() {
   // isLoading 用來控制按下登入後，按鈕顯示「登入中」
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  
 
   const router = useRouter();
   const { login, refreshAuth } = useAuth();
@@ -55,7 +54,6 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
-
   }
 
   // google 第三方登入
@@ -115,25 +113,44 @@ export default function LoginPage() {
                 {/* 一般會員測試帳號 */}
                 <button
                   type="button"
-                  onClick={() => {setEmail("member@example.com"); setPassword("a123456789")}}
+                  onClick={() => {
+                    setEmail("member@example.com");
+                    setPassword("a123456789");
+                  }}
                   aria-label="顯示或隱藏密碼"
-                  className="absolute top-1 left-1  w-10 h-10 hover:cursor-pointer"
+                  className="absolute top-1 left-1 h-10 w-10 hover:cursor-pointer"
                 ></button>
 
                 {/* 管理員測試帳號 */}
                 <button
                   type="button"
-                  onClick={() => {setEmail("admin@example.com"); setPassword("a123456789")}}
+                  onClick={() => {
+                    setEmail("admin@example.com");
+                    setPassword("a123456789");
+                  }}
                   aria-label="顯示或隱藏密碼"
-                  className="absolute top-1 center  w-10 h-10 hover:cursor-pointer"
+                  className="center absolute top-1 h-10 w-10 hover:cursor-pointer"
                 ></button>
 
                 {/* 客服測試帳號 */}
                 <button
                   type="button"
-                  onClick={() => {setEmail("support@example.com"); setPassword("a123456789")}}
+                  onClick={() => {
+                    setEmail("support@example.com");
+                    setPassword("a123456789");
+                  }}
                   aria-label="顯示或隱藏密碼"
-                  className="absolute top-1 right-1  w-10 h-10 hover:cursor-pointer"
+                  className="absolute top-1 right-1 h-10 w-10 hover:cursor-pointer"
+                ></button>
+                {/* 博惟個人帳號（左下角） */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail("hwby2124@gmail.com");
+                    setPassword("a123456789");
+                  }}
+                  aria-label="填入我的測試帳號"
+                  className="absolute bottom-1 left-1 h-10 w-10 hover:cursor-pointer"
                 ></button>
 
                 <form onSubmit={handleLogin} className="w-full max-w-[470px]">

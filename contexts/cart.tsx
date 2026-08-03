@@ -377,7 +377,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const totalAmount = activeItems.reduce((acc, item) => {
     const adult = Number(item.adultQuantity) || 0;
     const child = Number(item.childQuantity) || 0;
-    const adultP = Number(item.adultPrice) || Number(item.price) || 0;
+    const adultP = Number(item.adultPrice) || 0;
     const childP = Number(item.childPrice) || 0;
 
     // 如果大人小孩數量都有算出來
