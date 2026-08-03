@@ -6,7 +6,7 @@
  *   後端 JSON 若少欄位，TS 會在編譯期提醒，少寫 post.tittle 這種拼錯。
  * 和後端關係：
  *   BlogPost 約略對齊 posts 表 + API 多回的 author_name 等
- *   狀態 status: draft | pending_review | published | rejected
+ *   狀態 status: draft | pending_review | published | rejected | unpublished
  *   對應後端 mapPost()：express/routes/api-blog.ts
  * =============================================================================
  */
@@ -17,7 +17,8 @@ export type BlogPostStatus =
   | "draft"
   | "pending_review"
   | "published"
-  | "rejected";
+  | "rejected"
+  | "unpublished";
 
 /** 標題上限（後端 TITLE_MAX = 20） */
 export const BLOG_TITLE_MAX = 20;
@@ -28,6 +29,7 @@ export const BLOG_STATUS_LABEL: Record<BlogPostStatus, string> = {
   pending_review: "待審核",
   published: "已上架",
   rejected: "被退回",
+  unpublished: "已下架",
 };
 
 /**
@@ -112,6 +114,7 @@ export interface BlogComment {
   author_name: string;
   author_avatar: string | null;
   content: string;
+  status: "published" | "deleted";
   created_at: string;
   updated_at: string;
 }

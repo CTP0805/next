@@ -52,7 +52,6 @@ import {
   AutoImage,
   PictureEditing,
   LinkImage,
-  Base64UploadAdapter,
   // 表格
   Table,
   TableToolbar,
@@ -85,6 +84,25 @@ import {
   SelectAll,
 } from "ckeditor5";
 import "ckeditor5/ckeditor5.css";
+import { uploadBlogImage } from "@/app/blog/_lib/api";
+import { resolveBlogMediaUrl } from "@/app/blog/_lib/media";
+
+type CKEditorFileLoader = { file: Promise<File | null> };
+
+class BlogImageUploadAdapter {
+  constructor(private readonly loader: CKEditorFileLoader) {}
+
+  async upload(): Promise<{ default: string }> {
+    const file = await this.loader.file;
+    if (!file) throw new Error("找不到要上傳的圖片");
+    const path = await uploadBlogImage(file);
+    return { default: resolveBlogMediaUrl(path) };
+  }
+
+  abort(): void {
+    // CKEditor upload adapter contract.
+  }
+}
 
 interface CKEditorWrapperProps {
   data: string;
@@ -105,6 +123,11 @@ export default function CKEditorWrapper({
         <CKEditor
           editor={ClassicEditor}
           data={data}
+          onReady={(editor) => {
+            const repository = editor.plugins.get("FileRepository");
+            repository.createUploadAdapter = (loader) =>
+              new BlogImageUploadAdapter(loader);
+          }}
           config={{
             licenseKey: "GPL",
             plugins: [
@@ -153,7 +176,6 @@ export default function CKEditorWrapper({
               AutoImage,
               PictureEditing,
               LinkImage,
-              Base64UploadAdapter,
               // 表格
               Table,
               TableToolbar,
@@ -484,7 +506,7 @@ export default function CKEditorWrapper({
         <span>
           字數約 {wordStats.words} 字 · 字元 {wordStats.characters}
         </span>
-        <span>圖片上傳以 Base64 模擬寫入內容（無需後端）</span>
+        <span>圖片會直接上傳，草稿與退回文章皆可正常顯示</span>
       </div>
     </div>
   );

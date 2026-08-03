@@ -40,13 +40,18 @@ export default function RichTextContent({ content }: Props) {
   return (
     <div
       className={[
+        "ck-content",
         "prose prose-lg max-w-none prose-headings:font-bold prose-a:text-teal-600",
-        // CKEditor 產出的表格／圖／程式碼／引用
         "prose-img:rounded-xl prose-img:shadow-md",
         "prose-table:border prose-th:bg-slate-50 prose-th:p-2 prose-td:border prose-td:p-2",
         "prose-pre:bg-slate-900 prose-pre:text-slate-100",
         "prose-blockquote:border-teal-400",
         "[&_.image]:my-6 [&_.image]:text-center",
+        "[&_.image>img]:mx-auto [&_.image>img]:h-auto [&_.image>img]:max-w-full",
+        "[&_.image_resized]:mx-auto [&_.image_resized>img]:w-full",
+        "[&_.image-style-align-left]:float-left [&_.image-style-align-left]:mr-4",
+        "[&_.image-style-align-right]:float-right [&_.image-style-align-right]:ml-4",
+        "[&_.image-style-align-center]:mx-auto",
         "[&_.image-style-side]:float-right [&_.image-style-side]:ml-4 [&_.image-style-side]:max-w-[50%]",
         "[&_.todo-list]:list-none [&_.todo-list_input]:mr-2",
         "[&_.marker-yellow]:bg-yellow-200 [&_.marker-green]:bg-green-200",
@@ -55,6 +60,7 @@ export default function RichTextContent({ content }: Props) {
         "[&_.page-break]:my-8 [&_.page-break]:border-t [&_.page-break]:border-dashed",
         "[&_figure.table]:overflow-x-auto",
         "[&_.media]:my-6",
+        "after:block after:clear-both after:content-['']",
       ].join(" ")}
       dangerouslySetInnerHTML={{ __html: htmlContent }}
       suppressHydrationWarning

@@ -237,8 +237,8 @@ export async function fetchMyBlogPosts(): Promise<BlogPost[]> {
 /**
  * 【函式】fetchPendingReviewPosts
  * 對應：GET /api/blog/pending-review
- * 誰用：member/blog-review（管理者）
- * 預設參數 status = "pending_review"：呼叫端可省略
+ * 誰用：member/blog-review、member/edit-post（管理者）
+ * 預設參數 status = "pending_review"；傳入 all 可取得所有文章
  */
 export async function fetchPendingReviewPosts(
   status = "pending_review",
@@ -414,6 +414,23 @@ export async function reviewBlogPost(
   const data = await readJson<OneResponse>(response);
   if (!response.ok || !data.post) {
     throw new Error(data.message || "審查操作失敗");
+  }
+  return data.post;
+}
+
+/**
+ * 【函式】unpublishBlogPost
+ * 對應：POST /api/blog/:id/unpublish
+ * 誰用：member/edit-post（管理者）
+ */
+export async function unpublishBlogPost(id: number): Promise<BlogPost> {
+  const response = await fetch(`${apiBase()}/api/blog/${id}/unpublish`, {
+    method: "POST",
+    credentials: "include",
+  });
+  const data = await readJson<OneResponse>(response);
+  if (!response.ok || !data.post) {
+    throw new Error(data.message || "下架文章失敗");
   }
   return data.post;
 }
