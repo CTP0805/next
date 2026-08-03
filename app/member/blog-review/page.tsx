@@ -225,7 +225,7 @@ export default function MemberBlogReviewPage() {
                     type="button"
                     disabled={acting}
                     onClick={() => void handleReview("reject")}
-                    className="rounded-[12px] border border-red-300 bg-red-50 px-5 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-60"
+                    className="button-red"
                   >
                     {acting ? "處理中…" : "駁回"}
                   </button>
@@ -233,7 +233,7 @@ export default function MemberBlogReviewPage() {
                     type="button"
                     disabled={acting}
                     onClick={() => void handleReview("approve")}
-                    className="rounded-[12px] bg-[#45cad5] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#36b3be] disabled:opacity-60"
+                    className="button-main"
                   >
                     {acting ? "處理中…" : "通過"}
                   </button>

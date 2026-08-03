@@ -510,14 +510,24 @@ export default function BlogPostForm({
         )}
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={ACCEPT_TYPES.join(",")}
-            onChange={handleImagePick}
-            disabled={busy}
-            className="block h-12 w-full rounded-[12px] border border-gray-200 bg-white text-sm text-gray-600 file:mr-4 file:h-full file:rounded-l-[12px] file:border-0 file:bg-teal-50 file:px-4 file:text-sm file:font-medium file:text-teal-700 disabled:opacity-50"
-          />
+          <div className="flex h-12 items-center">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ACCEPT_TYPES.join(",")}
+              onChange={handleImagePick}
+              disabled={busy}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={busy}
+              className="rounded-full bg-[#68BBC3] px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#53AAB2] focus:ring-4 focus:ring-[#68BBC3]/25 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              選擇圖片
+            </button>
+          </div>
           <input
             id="blog-content-image"
             type="text"
@@ -562,7 +572,7 @@ export default function BlogPostForm({
           type="button"
           disabled={busy || !authInit || !isAuthenticated}
           onClick={() => void handleSubmit("pending_review")}
-          className="rounded-[12px] bg-[#45cad5] px-6 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#36b3be] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none"
+          className="button-main"
         >
           {uploading ? "上傳封面中…" : "送出審查"}
         </button>
