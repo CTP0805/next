@@ -140,6 +140,16 @@ export function AuthContextProvider({
     void refreshAuth();
   }, [refreshAuth]);
 
+  useEffect(() => {
+    const handleFocus = () => {
+      if (authInit) {
+        void refreshAuth();
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [authInit, refreshAuth]);
   const resendVerifyEmail = async (email: string): Promise<void> => {
     try {
       // 把登入表單中的 Email 傳給後端

@@ -158,7 +158,7 @@ function createCroppedImage(imageSrc: string, crop: Area): Promise<File> {
 
 export default function MemberPanel() {
   const pathname = usePathname();
-  const { auth } = useAuth();
+  const { auth, refreshAuth } = useAuth();
 
   // ⭐ 阿偉：依 role 顯示「管理文章」或「文章審查」
   const memberLists: MemberList[] = [
@@ -185,7 +185,6 @@ export default function MemberPanel() {
 
   // 目前顯示在會員面板上的頭像
   const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR_URL);
-
 
   // 頁面剛開啟時，向後端拿資料庫已儲存的大頭貼
   useEffect(() => {
@@ -389,7 +388,7 @@ export default function MemberPanel() {
       }
 
       toast.success(result.message || "大頭貼更新成功(前端)");
-
+      await refreshAuth();
       // step4. 後端成功存檔與更新資料庫後，才換畫面上的大頭貼
       setAvatarUrl(`${API_SERVER}${result.data.avatarUrl}`);
 
@@ -551,7 +550,7 @@ export default function MemberPanel() {
           })}
         </nav>
       </aside>
-      
+
       {/* 確認 移除目前照片 彈窗 */}
       {isRemoveAvatarModalOpen && (
         <dialog open className="modal">
