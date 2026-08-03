@@ -286,7 +286,7 @@ export default function ProfileFormTabs() {
   return (
     <section className="min-h-screen">
       <div className="min-h-[740px] w-full">
-        <div className="border-b border-[#d9d9d9]">
+        <div className="border-b border-[#d9d9d9] pt-5 sm:pt-0">
           <div className="flex gap-8">
             {/* 基本資料分頁切換按鈕 */}
             <button
