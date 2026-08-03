@@ -90,7 +90,7 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
     <div className="w-full min-w-0">
       {/* ELITE STATUS 卡片 */}
       <div
-        className="relative mb-8 rounded-[12px] p-6 text-slate-900 shadow-lg transition-[background-image] duration-500 sm:p-8"
+        className="relative mb-8 rounded-[12px] p-6 text-white shadow-lg transition-[background-image] duration-500 sm:p-8"
         style={{
           backgroundImage: `linear-gradient(110deg, ${data.card_theme.start} 0%, ${data.card_theme.middle} 52%, ${data.card_theme.end} 100%)`,
         }}
@@ -137,7 +137,7 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
               style={{ width: `${progress}%` }}
             />
           </div>
-          <div className="space-y-1 text-sm text-slate-900/85">
+          <div className="space-y-1 text-sm text-white-900/85">
             {data.next_level && goalOrders != null && goalSpent != null ? (
               <>
                 <p>
@@ -153,7 +153,7 @@ const MemberLevelRightPanel: React.FC<MemberLevelRightPanelProps> = ({
                     {doneSpentText}/{goalSpentText}
                   </span>
                 </p>
-                <p className="text-slate-900/75">
+                <p className="text-white-900/75">
                   完成<span className="font-semibold">其一</span>
                   條件即可升級為{data.next_level}級。
                 </p>
