@@ -39,11 +39,14 @@ export default function ReviewsSection({
     currentIndex: number;
   } | null>(null);
 
-  const openAllReviewsOnMobile = () => {
+  const openAllReviewsOnMobile = (reviewId?: number) => {
     if (window.matchMedia("(max-width: 767px)").matches) {
+      setTargetReviewId(reviewId ?? null);
       setIsAllReviewsOpen(true);
     }
   };
+
+  const [targetReviewId, setTargetReviewId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isAllReviewsOpen) return;
@@ -76,6 +79,17 @@ export default function ReviewsSection({
       mediaQuery.removeEventListener("change", closeModalOnDesktop);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isAllReviewsOpen || !targetReviewId) return;
+
+    requestAnimationFrame(() => {
+      document.getElementById(`all-review-${targetReviewId}`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    });
+  }, [isAllReviewsOpen, targetReviewId]);
 
   const handlePreviewImageClick = (review: ExperienceReview, index: number) => {
     if (window.matchMedia("(min-width: 768px)").matches) {
@@ -114,7 +128,7 @@ export default function ReviewsSection({
         {reviews.map((review) => (
           <article
             key={review.id}
-            onClick={() => openAllReviewsOnMobile()}
+            onClick={() => openAllReviewsOnMobile(review.id)}
             className="w-full text-left max-sm:w-[80vw] max-sm:shrink-0 max-sm:snap-center max-sm:rounded-xl max-sm:border max-sm:border-[#ECEFF0] max-sm:bg-white max-sm:p-5 max-sm:shadow-sm sm:py-7 sm:first:pt-0 sm:last:pb-0"
           >
             {/* 1. 頂部資訊列 (左右分開) */}
@@ -189,7 +203,7 @@ export default function ReviewsSection({
                         <button
                           key={image.id}
                           type="button"
-                          onClick={() => openAllReviewsOnMobile()}
+                          onClick={() => openAllReviewsOnMobile(review.id)}
                           className="relative aspect-[4/3] w-full overflow-hidden rounded-lg"
                           aria-label={
                             index === 2 && remainingImageCount > 0
@@ -292,6 +306,7 @@ export default function ReviewsSection({
                   return (
                     <article
                       key={review.id}
+                      id={`all-review-${review.id}`}
                       className="rounded-2xl bg-[#FAFBFB] p-5"
                     >
                       <div className="flex items-start justify-between gap-3">

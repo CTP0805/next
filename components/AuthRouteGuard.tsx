@@ -78,7 +78,7 @@ export function AuthRouteGuard({ children }: AuthRouteGuardProps) {
         if(!showToast){
           return;
         } 
-        toast.success("登出成功(前端)");
+        toast.success("登出成功");
         return;
       }
       
