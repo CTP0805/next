@@ -55,6 +55,7 @@ type ExperienceSession = {
   child_price: number;
   min_participants: number;
   max_participants: number;
+  remaining_participants: number;
 };
 
 type ExperienceReview = {
@@ -67,6 +68,12 @@ type ExperienceReview = {
   member_name: string | null;
   member_avatar: string | null;
   departure_date: string | null;
+  member_city: string | null;
+  images: {
+    id: number;
+    image_url: string;
+    sort_order: number;
+  }[];
 };
 
 type Experience = {
@@ -196,6 +203,8 @@ export default function ExperienceDetailPage() {
   };
 
   const [isLinkCopied, setIsLinkCopied] = useState(false);
+
+  const [mobileImageIndex, setMobileImageIndex] = useState(0);
 
   const handleShareClick = async () => {
     try {
@@ -546,34 +555,34 @@ export default function ExperienceDetailPage() {
 
     // 🚀 核心修改：不呼叫 onAdd，而是建立獨立的預訂物件
     try {
-    const directItem = {
-      experienceId: experience.id,
-      sessionId: sessionId,
-      name: experience.title,
-      adultPrice:
-        targetSession?.adult_price ??
-        experience.adult_price ??
-        experience.price ??
-        0,
-      childPrice: targetSession?.child_price ?? experience.child_price ?? 0,
-      adultQuantity: adultQty,
-      childQuantity: childQty,
-      quantity: adultQty + childQty,
-      sessionName: sessionName,
-      image: experience.image_url ?? undefined,
-    };
-    
-    // 4. 寫入 sessionStorage，不寫入購物車 DB
-    sessionStorage.setItem("directBookItem", JSON.stringify(directItem));
+      const directItem = {
+        experienceId: experience.id,
+        sessionId: sessionId,
+        name: experience.title,
+        adultPrice:
+          targetSession?.adult_price ??
+          experience.adult_price ??
+          experience.price ??
+          0,
+        childPrice: targetSession?.child_price ?? experience.child_price ?? 0,
+        adultQuantity: adultQty,
+        childQuantity: childQty,
+        quantity: adultQty + childQty,
+        sessionName: sessionName,
+        image: experience.image_url ?? undefined,
+      };
 
-    // 5. 提示並跳轉（帶上 direct=true 參數）
-    toast.success("正在前往結帳頁面");
-    router.push("/checkout?direct=true");
-  } catch (error) {
-    console.error("立即預訂發生錯誤:", error);
-    toast.error("預訂過程發生錯誤，請稍後再試！");
-  }
-};
+      // 4. 寫入 sessionStorage，不寫入購物車 DB
+      sessionStorage.setItem("directBookItem", JSON.stringify(directItem));
+
+      // 5. 提示並跳轉（帶上 direct=true 參數）
+      toast.success("正在前往結帳頁面");
+      router.push("/checkout?direct=true");
+    } catch (error) {
+      console.error("立即預訂發生錯誤:", error);
+      toast.error("預訂過程發生錯誤，請稍後再試！");
+    }
+  };
 
   // 【型別與載入保護】絕對不能刪！有這兩段 TypeScript 才知道底下的 experience 絕對不為 null
   if (isLoading) {
@@ -636,7 +645,7 @@ export default function ExperienceDetailPage() {
 
         <section className="mt-7 grid h-[510px] grid-cols-2 gap-2 overflow-hidden rounded-lg max-md:h-auto max-md:grid-cols-1 max-sm:relative max-sm:left-1/2 max-sm:mt-0 max-sm:w-screen max-sm:-translate-x-1/2 max-sm:rounded-none">
           {/* 第一張主圖容器 (在手機版將作為所有浮動按鈕的基地) */}
-          <div className="relative min-h-[360px] overflow-hidden max-sm:h-[280px] max-sm:min-h-0">
+          <div className="relative min-h-[360px] overflow-hidden max-sm:hidden">
             <button
               type="button"
               onClick={() => openLightbox(0)}
@@ -652,52 +661,6 @@ export default function ExperienceDetailPage() {
                 className="object-cover transition-transform duration-300 hover:scale-[1.02]"
               />
             </button>
-
-            <button
-              type="button"
-              onClick={() => openLightbox(0)}
-              className="absolute right-4 bottom-4 z-10 hidden items-center gap-1 rounded-md bg-white/75 px-2.5 py-1.5 text-xs font-bold text-[#30363A] shadow-sm backdrop-blur-sm transition active:scale-95 max-sm:inline-flex"
-              aria-label="查看全部體驗圖片"
-            >
-              <HiOutlinePhotograph className="size-4" />
-              {galleryImages.length}
-            </button>
-
-            {/* 📱 手機版專屬：2. 左上角「回上一頁」 */}
-            <button
-              type="button"
-              onClick={() => window.history.back()}
-              className="absolute top-4 left-4 z-10 hidden size-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-transform active:scale-90 max-sm:flex"
-              aria-label="回上一頁"
-            >
-              <HiChevronLeft className="-ml-0.5 size-6" />
-            </button>
-
-            {/* 📱 手機版專屬：3. 右上角「愛心與購物車組合」 */}
-            <div className="absolute top-4 right-4 z-10 hidden items-center gap-3 max-sm:flex">
-              {/* 愛心按鈕 */}
-              <button
-                type="button"
-                onClick={handleFavoriteClick}
-                aria-label={favorite ? "取消收藏" : "加入我的最愛"}
-                aria-pressed={favorite}
-                className="flex size-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-transform active:scale-90"
-              >
-                {favorite ? (
-                  <HiHeart className="size-5 text-red-500" />
-                ) : (
-                  <HiOutlineHeart className="size-5" />
-                )}
-              </button>
-              {/* 購物車按鈕 */}
-              <button
-                type="button"
-                className="flex size-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-transform active:scale-90"
-                aria-label="查看購物車"
-              >
-                <HiOutlineShoppingCart className="size-5" />
-              </button>
-            </div>
           </div>
 
           {/* 右側四張圖拼圖區：加上 max-sm:hidden，手機版直接隱藏不顯示 */}
@@ -741,6 +704,79 @@ export default function ExperienceDetailPage() {
                 </div>
               );
             })}
+          </div>
+          <div className="relative hidden h-[280px] overflow-hidden max-sm:block">
+            <div
+              className="flex h-full snap-x snap-mandatory [scrollbar-width:none] overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:hidden"
+              onScroll={(event) => {
+                const { scrollLeft, clientWidth } = event.currentTarget;
+                setMobileImageIndex(Math.round(scrollLeft / clientWidth));
+              }}
+            >
+              {galleryImages.map((photo, index) => (
+                <button
+                  key={photo.id}
+                  type="button"
+                  onClick={() => openLightbox(index)}
+                  className="relative h-full w-full shrink-0 snap-center"
+                  aria-label={`查看第 ${index + 1} 張體驗圖片`}
+                >
+                  <Image
+                    src={photo.image_url}
+                    alt={`${experience.title}照片 ${index + 1}`}
+                    fill
+                    priority={index === 0}
+                    sizes="100vw"
+                    className="object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+            <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-1.5">
+              {galleryImages.map((photo, index) => (
+                <span
+                  key={photo.id}
+                  className={`size-1.5 rounded-full ${
+                    index === mobileImageIndex ? "bg-white" : "bg-white/50"
+                  }`}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => openLightbox(0)}
+              className="absolute right-4 bottom-4 z-10 hidden items-center gap-1 rounded-md bg-white/75 px-2.5 py-1.5 text-xs font-bold text-[#30363A] shadow-sm backdrop-blur-sm transition active:scale-95 max-sm:inline-flex"
+              aria-label="查看全部體驗圖片"
+            >
+              <HiOutlinePhotograph className="size-4" />
+              {galleryImages.length}
+            </button>
+            {/* 📱 手機版專屬：2. 左上角「回上一頁」 */}
+            <button
+              type="button"
+              onClick={() => window.history.back()}
+              className="absolute top-4 left-4 z-10 hidden size-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-transform active:scale-90 max-sm:flex"
+              aria-label="回上一頁"
+            >
+              <HiChevronLeft className="-ml-0.5 size-6" />
+            </button>
+            {/* 📱 手機版專屬：3. 右上角「愛心與購物車組合」 */}
+            <div className="absolute top-4 right-4 z-10 hidden items-center gap-3 max-sm:flex">
+              {/* 愛心按鈕 */}
+              <button
+                type="button"
+                onClick={handleFavoriteClick}
+                aria-label={favorite ? "取消收藏" : "加入我的最愛"}
+                aria-pressed={favorite}
+                className="flex size-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition-transform active:scale-90"
+              >
+                {favorite ? (
+                  <HiHeart className="size-5 text-red-500" />
+                ) : (
+                  <HiOutlineHeart className="size-5" />
+                )}
+              </button>
+            </div>
           </div>
         </section>
 
