@@ -424,7 +424,7 @@ export default function CheckPage() {
                             <h4 className="truncate text-sm font-bold text-gray-800">
                               {item.name}
                             </h4>
-                            <p className="mt-1 text-xs text-gray-400">
+                            <p className="mt-1 text-xs text-gray-400 whitespace-nowrap truncate">
                               {item.sessionName || "選擇場次"} × {totalPeople}人
                             </p>
                           </div>
@@ -648,7 +648,7 @@ export default function CheckPage() {
                             <input
                               type="radio"
                               name="checkout-coupon"
-                              className="radio radio-xs radio-accent mt-0.5"
+                              className="radio radio-sm shrink-0 checked:border-[#45cad5] checked:bg-[#45cad5]"
                               checked={
                                 selectedCouponId === String(coupon.coupon_id)
                               }
@@ -686,12 +686,13 @@ export default function CheckPage() {
 
                 {/* 3.M 幣折抵控制項 */}
                 <div className="flex flex-col gap-2 border-t border-gray-100 pt-4 text-sm">
-                  <div className="flex items-center justify-between">
+                  {/* ✨ 手機版改為 flex-col，桌機維持 flex-row */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                     <span className="flex items-center gap-1 font-bold text-gray-700">
                       <HiCurrencyDollar className="size-4 text-orange-400" /> M
                       幣點數折抵：
                     </span>
-                    <div className="text-right text-xs text-gray-400">
+                   <div className="text-left sm:text-right text-xs text-gray-400 flex flex-wrap items-center gap-x-2">
                       <span>
                         目前可用：
                         <strong className="text-gray-600">
@@ -705,7 +706,8 @@ export default function CheckPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 rounded-xl border border-orange-100/60 bg-orange-50/50 p-3">
+                  {/* ✨ 輸入框列：手機版排版優化 */}
+                 <div className="flex items-center justify-between gap-2 rounded-xl border border-orange-100/60 bg-orange-50/50 p-3">
                     <div className="flex flex-1 items-center gap-2">
                       <input
                         type="number"
@@ -732,13 +734,13 @@ export default function CheckPage() {
               </div>
 
               {/* 底部提示文字與主要按鈕 */}
-              <div className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm lg:border-none lg:bg-transparent lg:p-0 lg:shadow-none">
-                <span className="text-xs text-gray-500 sm:w-1/3 lg:w-2/3">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-lg border bg-white p-4 shadow-sm lg:border-none lg:bg-transparent lg:p-0 lg:shadow-none">
+                <span className="text-xs text-gray-500 text-center sm:text-left">
                   前往付款後，訂單即送出，請於下一步選擇付款方式
                 </span>
                 <button
                   onClick={handleSubmitOrder}
-                  className="button-main px-6 py-2 text-sm md:px-8 md:py-2.5 md:text-base"
+                  className="button-main w-full sm:w-auto shrink-0 px-6 py-2.5 text-sm md:px-8 md:py-2.5 md:text-base font-bold whitespace-nowrap"
                 >
                   前往付款
                 </button>

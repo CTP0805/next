@@ -124,8 +124,8 @@ export default function PaymentPage() {
         {/* 核心主容器：最大寬度 1280px，mx-auto 負責在大螢幕下置中 */}
         <div className="mx-auto w-full max-w-[1280px] px-4">
           {/* ==================== 1. 頂部步驟進度條 (DaisyUI Steps) ==================== */}
-          <div className="mb-10 flex w-full justify-center">
-            <ul className="steps grid w-full max-w-7xl grid-cols-3 text-sm">
+          <div className="mb-6 flex w-full justify-center md:mb-10">
+            <ul className="steps grid w-full max-w-7xl grid-cols-3 text-xs md:text-sm">
               <li className="step step-accent">填寫資料</li>
               <li className="step step-accent">選擇付款</li>
               <li className="step">完成付款</li>
@@ -143,7 +143,7 @@ export default function PaymentPage() {
                   <label
                     className={`flex cursor-pointer items-center justify-between rounded-xl border p-4 transition ${
                       paymentMethod === "ecpay"
-                        ? "border-cyan-500 bg-cyan-50/20"
+                        ? "border-[#45cad5] bg-[#45cad5]/5 ring-1 ring-[#45cad5]"
                         : "border-gray-200 hover:border-gray-300 hover:bg-slate-50/50"
                     }`}
                   >
@@ -152,7 +152,7 @@ export default function PaymentPage() {
                       <input
                         type="radio"
                         name="payment-method"
-                        className="radio radio-sm checked:border-cyan-500 checked:bg-cyan-500"
+                        className="radio radio-sm shrink-0 checked:border-[#45cad5] checked:bg-[#45cad5]"
                         checked={paymentMethod === "ecpay"}
                         onChange={() => setPaymentMethod("ecpay")}
                       />
@@ -181,7 +181,7 @@ export default function PaymentPage() {
                   <label
                     className={`flex cursor-pointer items-center justify-between rounded-xl border p-4 transition ${
                       paymentMethod === "linepay"
-                        ? "border-cyan-500 bg-cyan-50/20"
+                        ? "border-[#45cad5] bg-[#45cad5]/5 ring-1 ring-[#45cad5]"
                         : "border-gray-200 hover:border-gray-300 hover:bg-slate-50/50"
                     }`}
                   >
@@ -190,7 +190,7 @@ export default function PaymentPage() {
                       <input
                         type="radio"
                         name="payment-method"
-                        className="radio radio-sm checked:border-cyan-500 checked:bg-cyan-500"
+                        className="radio radio-sm shrink-0 checked:border-[#45cad5] checked:bg-[#45cad5]"
                         checked={paymentMethod === "linepay"}
                         onChange={() => setPaymentMethod("linepay")}
                       />
@@ -206,35 +206,35 @@ export default function PaymentPage() {
               </div>
 
               {/* 區塊 B：同意條款與確認付款大方塊 */}
-              <div className="flex flex-col gap-4 rounded-lg border border-gray-100 bg-white p-8 shadow-sm">
+              <div className="flex flex-col gap-4 rounded-lg border border-gray-100 bg-white p-5 sm:p-8 shadow-sm">
                 {/* 1. 上半部：同意條款 (左) 與 金額 (右) 左右對齊 */}
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center justify-between gap-3">
                   {/* 左側：隱私權條款勾選說明 */}
-                  <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-600">
+                  <label className="flex cursor-pointer items-center gap-2 text-xs sm:text-sm text-gray-600">
                     {/* 修正：條款同意應該是 checkbox 樣式，這裡改回 checkbox 確保勾選視覺 */}
                     <input
                       type="checkbox"
                       name="agreement"
-                      className="checkbox checkbox-sm rounded border-gray-300 text-white checked:border-cyan-500 checked:bg-cyan-500"
+                      className="checkbox checkbox-sm shrink-0 rounded border-gray-300 text-white checked:border-cyan-500 checked:bg-cyan-500"
                       checked={isAgreed}
                       onChange={(e) => setIsAgreed(e.target.checked)}
                     />
-                    <span className="inline-block translate-y-[2px]">
-                      我了解並同意 MeetLocals 服務條款與隱私權
+                    <span className="leading-tight">
+                      同意服務條款與隱私權政策
                     </span>
                   </label>
 
                   {/* 右側：金額 */}
-                  <span className="text-xl leading-none font-bold text-cyan-500">
+                  <span className="text-lg sm:text-xl font-bold text-cyan-500 whitespace-nowrap shrink-0">
                     NT$ {finalAmount.toLocaleString()}
                   </span>
                 </div>
 
                 {/* 2. 下半部：確認付款按鈕 (靠右排列) */}
-                <div className="flex justify-end">
+                <div className="flex justify-end pt-2">
                   <button
                     onClick={handlePayment}
-                    className="button-main px-6 py-2.5 text-base"
+                    className="button-main w-full sm:w-auto px-8 py-2.5 text-sm sm:text-base font-bold whitespace-nowrap"
                   >
                     確認付款
                   </button>
