@@ -16,7 +16,7 @@ type ChatMessage = {
 };
 
 const socket = io("http://localhost:3001");
-
+console.log("ChatWidget render");
 export default function ChatWidget() {
   const { auth, isAuthenticated } = useAuth();
   // 沒有登入就不顯示聊天室
@@ -35,9 +35,18 @@ export default function ChatWidget() {
   // 歷史訊息
   useEffect(() => {
     if (!auth.id) return;
+
     fetch(`http://localhost:3001/api/chat/${auth.id}/messages`)
       .then((res) => res.json())
-      .then((data) => setMessages(data));
+      .then((data) => {
+        setMessages((prev) => {
+          if (prev.length > 0) {
+            return prev;
+          }
+
+          return data;
+        });
+      });
   }, [auth.id]);
   useEffect(() => {
     const handleAdminStatus = (data: { online: boolean }) => {
@@ -62,22 +71,11 @@ export default function ChatWidget() {
     socket.emit("join-room", roomId);
     socket.emit("check-admin-status");
     const handleMessage = (data: ChatMessage) => {
-      // 客服送出後停止顯示輸入中
       if (data.sender === "admin") {
         setIsAdminTyping(false);
       }
 
-      setMessages((prev) => {
-        const tempIndex = prev.findLastIndex((m) => m.tempId);
-
-        if (tempIndex !== -1) {
-          const newMessages = [...prev];
-          newMessages[tempIndex] = { ...data };
-          return newMessages;
-        }
-
-        return [...prev, data];
-      });
+      setMessages((prev) => [...prev, data]);
     };
 
     const handleMessagesRead = () => {
