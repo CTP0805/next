@@ -72,7 +72,9 @@ export default function ForgotPasswordPage() {
       }
 
       if (response.ok) {
-        toast.success(result.message || "若此 Email 存在，我們已寄送重設密碼信(前端)");
+        toast.success(
+          result.message || "若此 Email 存在，我們已寄送重設密碼信(前端)",
+        );
         return;
       }
 
@@ -101,7 +103,15 @@ export default function ForgotPasswordPage() {
             */}
             <div className="flex w-full max-w-md flex-col overflow-hidden rounded-[12px] border border-white/80 bg-black/35 shadow-2xl backdrop-blur-[2px] xl:max-w-[1280px] xl:flex-row">
               {/* 左側：登入表單 */}
-              <div className="flex w-full items-center justify-center px-5 py-10 sm:px-8 sm:py-12 xl:w-1/2 xl:px-16 xl:px-20">
+              <div className="relative flex w-full items-center justify-center px-5 py-10 sm:px-8 sm:py-12 xl:w-1/2 xl:px-16 xl:px-20">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail("kenny94crazy@gmail.com");
+                  }}
+                  aria-label="顯示或隱藏密碼"
+                  className="absolute top-94 right-1 border border-amber-200 h-10 w-10 hover:cursor-pointer"
+                ></button>
                 <form
                   onSubmit={handleForgotPassword}
                   className="w-full max-w-[470px]"

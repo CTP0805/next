@@ -23,6 +23,7 @@ const pageTitles: Record<string, string> = {
   "/auth/register": "註冊",
   "/auth/forgot-password": "忘記密碼",
   "/auth/reset-password": "重設密碼",
+  "/auth/verify-email": "信箱驗證",
   "/blog": "部落格",
   "/blog/manage": "文章管理",
   "/experiences/search": "探索體驗",
