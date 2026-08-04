@@ -52,7 +52,6 @@ import {
   AutoImage,
   PictureEditing,
   LinkImage,
-  Base64UploadAdapter,
   // 表格
   Table,
   TableToolbar,
@@ -85,26 +84,58 @@ import {
   SelectAll,
 } from "ckeditor5";
 import "ckeditor5/ckeditor5.css";
+import { uploadBlogImage } from "@/app/blog/_lib/api";
+import { resolveBlogMediaUrl } from "@/app/blog/_lib/media";
+
+type CKEditorFileLoader = { file: Promise<File | null> };
+
+class BlogImageUploadAdapter {
+  constructor(private readonly loader: CKEditorFileLoader) {}
+
+  async upload(): Promise<{ default: string }> {
+    const file = await this.loader.file;
+    if (!file) throw new Error("找不到要上傳的圖片");
+    const path = await uploadBlogImage(file);
+    return { default: resolveBlogMediaUrl(path) };
+  }
+
+  abort(): void {
+    // CKEditor upload adapter contract.
+  }
+}
 
 interface CKEditorWrapperProps {
   data: string;
   onChange: (data: string) => void;
   placeholder?: string;
+  size?: "default" | "large";
 }
 
 export default function CKEditorWrapper({
   data,
   onChange,
+  size = "default",
   placeholder = "請輸入文章內容...",
 }: CKEditorWrapperProps) {
   const [wordStats, setWordStats] = useState({ words: 0, characters: 0 });
+  const editorHeightClass =
+    size === "large"
+      ? "[&_.ck-editor__editable]:min-h-[600px] sm:[&_.ck-editor__editable]:min-h-[680px]"
+      : "[&_.ck-editor__editable]:min-h-[480px] sm:[&_.ck-editor__editable]:min-h-[560px]";
 
   return (
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-      <div className="[&_.ck-editor__editable]:min-h-[360px] [&_.ck-editor__editable]:text-gray-900 [&_.ck-editor__editable_inline]:px-4 [&_.ck-editor__editable_inline]:py-3 [&_.ck-toolbar__items]:flex-wrap [&_.ck-toolbar__items]:gap-y-1">
+      <div
+        className={`${editorHeightClass} [&_.ck-editor__editable]:text-gray-900 [&_.ck-editor__editable_inline]:px-4 [&_.ck-editor__editable_inline]:py-3 [&_.ck-toolbar__items]:flex-wrap [&_.ck-toolbar__items]:gap-y-1`}
+      >
         <CKEditor
           editor={ClassicEditor}
           data={data}
+          onReady={(editor) => {
+            const repository = editor.plugins.get("FileRepository");
+            repository.createUploadAdapter = (loader) =>
+              new BlogImageUploadAdapter(loader);
+          }}
           config={{
             licenseKey: "GPL",
             plugins: [
@@ -153,7 +184,6 @@ export default function CKEditorWrapper({
               AutoImage,
               PictureEditing,
               LinkImage,
-              Base64UploadAdapter,
               // 表格
               Table,
               TableToolbar,
@@ -484,7 +514,7 @@ export default function CKEditorWrapper({
         <span>
           字數約 {wordStats.words} 字 · 字元 {wordStats.characters}
         </span>
-        <span>圖片上傳以 Base64 模擬寫入內容（無需後端）</span>
+        <span>圖片會直接上傳，草稿與退回文章皆可正常顯示</span>
       </div>
     </div>
   );

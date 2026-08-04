@@ -11,7 +11,7 @@ import {
   uploadBlogImage,
 } from "../_lib/api";
 import { persistContentImagesInHtml } from "../_lib/content-images";
-import { resolveBlogMediaUrl } from "../_lib/media";
+import { resolveBlogMediaUrl, rewriteBlogContentMedia } from "../_lib/media";
 import type {
   BlogEligibleOrder,
   BlogPost,
@@ -20,6 +20,7 @@ import type {
 } from "../_lib/types";
 import { BLOG_TITLE_MAX, slugifyTitle } from "../_lib/types";
 import BlogCoverCropDialog from "./BlogCoverCropDialog";
+import BlogRichTextContent from "./BlogRichTextContent";
 
 const CKEditorWrapper = dynamic(() => import("@/components/CKEditorWrapper"), {
   ssr: false,
@@ -67,6 +68,31 @@ function hasMeaningfulContent(html: string): boolean {
   return text.length > 0;
 }
 
+/** 將編輯器 HTML 整理成可用於標題與摘要的純文字。 */
+function getPlainTextFromHtml(html: string): string {
+  const document = new DOMParser().parseFromString(html, "text/html");
+  return (document.body.textContent ?? "")
+    .replace(/\u00a0/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
+}
+
+/** 以內文第一個完整句子產生精簡標題。 */
+function createTitleFromContent(text: string): string {
+  const firstSentence = text.split(/[。！？!?\n]/, 1)[0]?.trim() ?? "";
+  const titleCandidate = firstSentence
+    .replace(/^[「『【（(\s]+|[」』】）)\s]+$/g, "")
+    .split(/[，,：:；;]/, 1)[0]
+    ?.trim();
+
+  return truncateText(titleCandidate || text, BLOG_TITLE_MAX);
+}
+
 /**
  * =============================================================================
  * 【新手導讀】文章編輯表單（Blog 最重要的寫入 UI）
@@ -103,13 +129,16 @@ export default function BlogPostForm({
   /** ⭐ 分類改為訂單名稱（create 可選；edit 鎖定） */
   const [orderId, setOrderId] = useState(initial?.order_id ?? "");
   const [orderTitle, setOrderTitle] = useState(initial?.order_title ?? "");
-  const [eligibleOrders, setEligibleOrders] = useState<BlogEligibleOrder[]>(
-    [],
-  );
+  const [eligibleOrders, setEligibleOrders] = useState<BlogEligibleOrder[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(mode === "create");
-  const [content, setContent] = useState(initial?.content ?? "");
+  // DB 內文圖片存成 /uploads/blog/...；載入 CKEditor 前必須接上 Express
+  // 網域，否則瀏覽器會錯向 Next.js :3000 請求而顯示白色區塊。
+  const [content, setContent] = useState(() =>
+    rewriteBlogContentMedia(initial?.content ?? ""),
+  );
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -125,10 +154,7 @@ export default function BlogPostForm({
 
   useEffect(() => {
     if (mode !== "create" || !authInit || !isAuthenticated) {
-      const timeoutId = window.setTimeout(
-        () => setOrdersLoading(false),
-        0,
-      );
+      const timeoutId = window.setTimeout(() => setOrdersLoading(false), 0);
       return () => window.clearTimeout(timeoutId);
     }
     let cancelled = false;
@@ -140,9 +166,7 @@ export default function BlogPostForm({
       } catch (e) {
         if (!cancelled) {
           setEligibleOrders([]);
-          toast.error(
-            e instanceof Error ? e.message : "無法載入可撰寫訂單",
-          );
+          toast.error(e instanceof Error ? e.message : "無法載入可撰寫訂單");
         }
       } finally {
         if (!cancelled) setOrdersLoading(false);
@@ -223,20 +247,25 @@ export default function BlogPostForm({
     setSavedImageRef(value);
   }
 
-  /**
-   * 解析最終寫入 DB 的圖片路徑
-   * - pending_review + 本機檔 → 先 upload
-   * - draft → 不保存封面，送審時需重新上傳
-   * - 外連／已上傳路徑 → 直接使用
-   */
-  async function resolveImageForSubmit(
-    status: BlogPostStatus,
-  ): Promise<string | null> {
-    if (status === "draft") {
-      return null;
+  function handleAutoFillArticleInfo() {
+    const plainText = getPlainTextFromHtml(content);
+    if (!plainText) {
+      toast.error("請先輸入文章內容，再自動產生標題與摘要");
+      return;
     }
 
-    if (status === "pending_review" && pendingFile) {
+    setTitle(createTitleFromContent(`一次收藏最浪漫的英倫風景`));
+    setExcerpt(truncateText(`走進倫敦最具代表性的城市風景，以經典大笨鐘與壯麗倫敦眼為旅拍背景。從復古優雅的英倫街景，到泰晤士河畔的浪漫光影，用鏡頭記錄專屬於你的倫敦故事。`, 200));
+  
+  }
+
+  /**
+   * 解析最終寫入 DB 的圖片路徑
+   * - 草稿或送審 + 本機檔 → 先 upload，確保封面可重新載入
+   * - 外連／已上傳路徑 → 直接使用
+   */
+  async function resolveImageForSubmit(): Promise<string | null> {
+    if (pendingFile) {
       setUploading(true);
       try {
         const path = await uploadBlogImage(pendingFile);
@@ -305,8 +334,8 @@ export default function BlogPostForm({
         setContent(contentToSave);
       }
 
-      // 2) 封面本機檔（送出審查時上傳）
-      const imageValue = await resolveImageForSubmit(status);
+      // 2) 封面本機檔（草稿與送審都上傳）
+      const imageValue = await resolveImageForSubmit();
 
       const payload: BlogPostInput = {
         title: trimmedTitle.slice(0, BLOG_TITLE_MAX),
@@ -327,7 +356,7 @@ export default function BlogPostForm({
 
       toast.success(
         status === "draft"
-          ? "草稿已儲存；送出審查時請重新上傳圖片"
+          ? "草稿、封面與內文圖片已儲存"
           : "已送出審查並寫入資料庫",
       );
       onSuccess?.(post);
@@ -384,9 +413,22 @@ export default function BlogPostForm({
       ) : null}
 
       <div>
-        <label htmlFor="blog-title" className={labelClass}>
-          文章標題 <span className="text-red-500">*</span>
-        </label>
+        <div className="mb-1.5 flex items-center justify-between gap-3">
+          <label
+            htmlFor="blog-title"
+            className="block text-sm font-medium text-gray-700"
+          >
+            文章標題 <span className="text-red-500">*</span>
+          </label>
+          <button
+            type="button"
+            onClick={handleAutoFillArticleInfo}
+            disabled={busy}
+            className="inline-flex shrink-0 h-5 w-10 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-teal-700 transition hover:border-[#45cad5] \"
+            title="依文章內容自動產生標題與摘要"
+          >
+          </button>
+        </div>
         <input
           id="blog-title"
           type="text"
@@ -398,9 +440,7 @@ export default function BlogPostForm({
           maxLength={BLOG_TITLE_MAX}
           required
         />
-        <p className="mt-1 text-xs text-gray-400">
-          最多 {BLOG_TITLE_MAX} 字
-        </p>
+        <p className="mt-1 text-xs text-gray-400">最多 {BLOG_TITLE_MAX} 字</p>
       </div>
 
       <div>
@@ -546,27 +586,39 @@ export default function BlogPostForm({
           <p className="text-xs text-teal-600">正在上傳封面…</p>
         ) : hasPendingLocal ? (
           <p className="text-xs text-amber-600">
-            本機預覽中；儲存草稿不會保留封面，送出審查時需重新上傳。
+            本機預覽中；儲存草稿時會一併上傳並保留封面。
           </p>
         ) : savedImageRef.startsWith("/uploads/") ? (
           <p className="text-xs text-gray-400">已存伺服器：{savedImageRef}</p>
         ) : null}
       </div>
 
-      <div>
+      <div  >
         <label className={labelClass}>
           文章內容 <span className="text-red-500">*</span>
         </label>
-        <CKEditorWrapper data={content} onChange={setContent} />
+        <CKEditorWrapper
+          data={content}
+          onChange={setContent}
+          size={variant === "member" ? "large" : "default"}
+        />
       </div>
 
       <div className="flex flex-wrap items-center justify-end gap-3 border-t border-gray-100 pt-6">
         <button
           type="submit"
           disabled={busy || !authInit || !isAuthenticated}
-          className="rounded-[12px] border border-gray-300 bg-white px-6 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="button-white"
         >
           {submitting && !uploading ? "儲存中…" : "儲存草稿"}
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => setPreviewOpen(true)}
+          className="button-white"
+        >
+          預覽
         </button>
         <button
           type="button"
@@ -577,6 +629,66 @@ export default function BlogPostForm({
           {uploading ? "上傳封面中…" : "送出審查"}
         </button>
       </div>
+
+      {previewOpen ? (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="文章預覽"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setPreviewOpen(false);
+          }}
+        >
+          <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-[12px] bg-white shadow-2xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-5 py-4">
+              <p className="font-semibold text-gray-900">
+                文章預覽（尚未儲存）
+              </p>
+              <button
+                type="button"
+                onClick={() => setPreviewOpen(false)}
+                className="rounded-[12px] px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
+              >
+                關閉
+              </button>
+            </div>
+            <article className="px-5 py-8 sm:px-10">
+              <div className="mb-3 flex flex-wrap gap-2 text-xs">
+                <span className="rounded-[12px] bg-teal-50 px-3 py-1 text-teal-700">
+                  {selectedOrderLabel || "尚未選擇分類"}
+                </span>
+                <span className="rounded-[12px] bg-gray-100 px-3 py-1 text-gray-600">
+                  預覽
+                </span>
+              </div>
+              <h1 className="mb-3 text-3xl font-bold text-gray-900">
+                {title.trim() || "尚未填寫文章標題"}
+              </h1>
+              {excerpt.trim() ? (
+                <p className="mb-6 text-gray-500">{excerpt.trim()}</p>
+              ) : null}
+              {previewSrc ? (
+                <div className="mb-8 aspect-[21/9] overflow-hidden rounded-[12px] bg-gray-100">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={previewSrc}
+                    alt={title.trim() || "文章封面"}
+                    className="h-full w-full object-cover object-center"
+                  />
+                </div>
+              ) : null}
+              <div className="max-w-none text-gray-800">
+                {content ? (
+                  <BlogRichTextContent content={content} />
+                ) : (
+                  <p className="text-gray-400">尚未填寫文章內容</p>
+                )}
+              </div>
+            </article>
+          </div>
+        </div>
+      ) : null}
     </form>
   );
 }

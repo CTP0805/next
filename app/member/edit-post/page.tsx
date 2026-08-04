@@ -23,9 +23,12 @@ import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "@/contexts/auth-context";
 import BlogMediaImage from "@/app/blog/_components/BlogMediaImage";
 import BlogPostEditor from "@/app/blog/_components/BlogPostEditor";
+import BlogRichTextContent from "@/app/blog/_components/BlogRichTextContent";
 import {
   deleteBlogPost,
+  fetchPendingReviewPosts,
   fetchMyBlogPosts,
+  unpublishBlogPost,
 } from "@/app/blog/_lib/api";
 import type { BlogPost, BlogPostStatus } from "@/app/blog/_lib/types";
 import {
@@ -43,6 +46,7 @@ const FILTER_OPTIONS: { value: ManageFilter; label: string }[] = [
   { value: "pending_review", label: "待審核" },
   { value: "draft", label: "草稿" },
   { value: "rejected", label: "被退回" },
+  { value: "unpublished", label: "已下架" },
 ];
 
 const STATUS_BADGE: Record<BlogPostStatus, string> = {
@@ -50,6 +54,7 @@ const STATUS_BADGE: Record<BlogPostStatus, string> = {
   pending_review: "bg-amber-100 text-amber-800",
   published: "bg-teal-100 text-teal-700",
   rejected: "bg-red-100 text-red-700",
+  unpublished: "bg-slate-200 text-slate-700",
 };
 
 function formatDate(iso: string | null) {
@@ -83,22 +88,29 @@ function MemberEditPostContent() {
   const [keyword, setKeyword] = useState("");
   const [actingId, setActingId] = useState<number | null>(null);
   const [deletePost, setDeletePost] = useState<BlogPost | null>(null);
+  const [unpublishPost, setUnpublishPost] = useState<BlogPost | null>(null);
   const [notePost, setNotePost] = useState<BlogPost | null>(null);
+  const [viewPost, setViewPost] = useState<BlogPost | null>(null);
 
   const isAdmin = auth.role === "管理者";
-  const currentTab: PageTab = draftId != null ? "create" : activeTab;
+  const currentTab: PageTab = isAdmin
+    ? "manage"
+    : draftId != null
+      ? "create"
+      : activeTab;
   const editingPost =
     draftId == null
       ? null
       : posts.find((post) => post.id === draftId) ?? null;
-  const isLoadingPosts =
-    loading && authInit && isAuthenticated && !isAdmin;
+  const isLoadingPosts = loading && authInit && isAuthenticated;
 
   const loadPosts = useCallback(async () => {
     setLoading(true);
     setLoadError(null);
     try {
-      const list = await fetchMyBlogPosts();
+      const list = isAdmin
+        ? await fetchPendingReviewPosts("all")
+        : await fetchMyBlogPosts();
       setPosts(Array.isArray(list) ? list : []);
     } catch (e) {
       setPosts([]);
@@ -108,11 +120,11 @@ function MemberEditPostContent() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => {
     if (!authInit) return;
-    if (!isAuthenticated || isAdmin) return;
+    if (!isAuthenticated) return;
     if (currentTab === "manage" || draftId != null) {
       const timeoutId = window.setTimeout(() => void loadPosts(), 0);
       return () => window.clearTimeout(timeoutId);
@@ -133,12 +145,14 @@ function MemberEditPostContent() {
       pending_review: 0,
       draft: 0,
       rejected: 0,
+      unpublished: 0,
     };
     for (const p of posts) {
       if (p.status === "published") base.published += 1;
       else if (p.status === "pending_review") base.pending_review += 1;
       else if (p.status === "draft") base.draft += 1;
       else if (p.status === "rejected") base.rejected += 1;
+      else if (p.status === "unpublished") base.unpublished += 1;
     }
     return base;
   }, [posts]);
@@ -156,6 +170,8 @@ function MemberEditPostContent() {
           (p.experience_title ?? "").toLowerCase().includes(q) ||
           (p.city ?? "").toLowerCase().includes(q) ||
           (p.category_name ?? "").toLowerCase().includes(q) ||
+          (p.author_name ?? "").toLowerCase().includes(q) ||
+          String(p.author_id).includes(q) ||
           (p.excerpt ?? "").toLowerCase().includes(q)
         );
       })
@@ -179,21 +195,20 @@ function MemberEditPostContent() {
     }
   }
 
-  if (authInit && isAuthenticated && isAdmin) {
-    return (
-      <div className="w-full text-gray-800">
-        <h1 className="mb-2 text-xl font-bold">文章管理</h1>
-        <p className="mb-4 text-sm text-gray-500">
-          管理者請使用「文章審查」處理送審內容（僅可檢視／通過／駁回，不可編輯）。
-        </p>
-        <Link
-          href="/member/blog-review"
-          className="inline-flex rounded-[12px] bg-[#45cad5] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#36b3be]"
-        >
-          前往文章審查
-        </Link>
-      </div>
-    );
+  async function handleUnpublish(post: BlogPost) {
+    setActingId(post.id);
+    try {
+      const updated = await unpublishBlogPost(post.id);
+      setPosts((prev) =>
+        prev.map((item) => (item.id === updated.id ? updated : item)),
+      );
+      setUnpublishPost(null);
+      toast.success(`「${post.title}」已下架`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "下架文章失敗");
+    } finally {
+      setActingId(null);
+    }
   }
 
   return (
@@ -203,34 +218,50 @@ function MemberEditPostContent() {
       {/* 分頁：參考 member/profile 切換樣式 */}
       <div className="border-b border-[#d9d9d9]">
         <div className="flex gap-8">
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab("manage");
-              router.replace("/member/edit-post");
-            }}
-            className={`px-3 pb-3 text-[18px] ${
-              currentTab === "manage"
-                ? "border-b border-[#7fc4cf] text-[#6fb8c4]"
-                : "text-[#d4d4d4]"
-            }`}
-          >
-            管理文章
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab("create");
-              router.replace("/member/edit-post?tab=create");
-            }}
-            className={`px-3 pb-3 text-[18px] ${
-              currentTab === "create"
-                ? "border-b border-[#7fc4cf] text-[#6fb8c4]"
-                : "text-[#d4d4d4]"
-            }`}
-          >
-            新增文章
-          </button>
+          {isAdmin ? (
+            <>
+              <span className="border-b border-[#7fc4cf] px-3 pb-3 text-[18px] text-[#6fb8c4]">
+                所有文章
+              </span>
+              <Link
+                href="/member/blog-review"
+                className="px-3 pb-3 text-[18px] text-[#d4d4d4]"
+              >
+                審核文章
+              </Link>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("manage");
+                  router.replace("/member/edit-post");
+                }}
+                className={`px-3 pb-3 text-[18px] ${
+                  currentTab === "manage"
+                    ? "border-b border-[#7fc4cf] text-[#6fb8c4]"
+                    : "text-[#d4d4d4]"
+                }`}
+              >
+                管理文章
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("create");
+                  router.replace("/member/edit-post?tab=create");
+                }}
+                className={`px-3 pb-3 text-[18px] ${
+                  currentTab === "create"
+                    ? "border-b border-[#7fc4cf] text-[#6fb8c4]"
+                    : "text-[#d4d4d4]"
+                }`}
+              >
+                新增文章
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -238,7 +269,9 @@ function MemberEditPostContent() {
       {currentTab === "manage" ? (
         <div className="mt-9">
           <p className="mb-4 text-sm text-gray-500">
-            僅顯示您自己的文章 · 可撰寫／編輯／刪除
+            {isAdmin
+              ? "顯示所有使用者的文章"
+              : "僅顯示您自己的文章 · 可撰寫／編輯／刪除"}
             {!isLoadingPosts ? (
               <span className="ml-2 font-medium text-slate-700">
                 · 共 {posts.length} 篇
@@ -251,7 +284,11 @@ function MemberEditPostContent() {
               type="search"
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              placeholder="搜尋標題、訂單名稱、摘要…"
+              placeholder={
+                isAdmin
+                  ? "搜尋標題、作者、作者 ID、訂單名稱、摘要…"
+                  : "搜尋標題、訂單名稱、摘要…"
+              }
               className="h-11 w-full rounded-[12px] border border-gray-200 bg-white px-4 text-base text-gray-900 outline-none placeholder:text-gray-400 focus:border-[#45cad5] focus:ring-2 focus:ring-[#45cad5]/20"
             />
             <div className="flex flex-wrap gap-2">
@@ -303,15 +340,19 @@ function MemberEditPostContent() {
             <div className="rounded-[12px] border border-dashed border-gray-200 px-6 py-16 text-center">
               <p className="font-medium text-gray-600">尚無文章</p>
               <p className="mt-2 text-sm text-gray-400">
-                完成體驗訂單後，即可依訂單撰寫部落格
+                {isAdmin
+                  ? "目前還沒有任何使用者文章"
+                  : "完成體驗訂單後，即可依訂單撰寫部落格"}
               </p>
-              <button
-                type="button"
-                onClick={() => setActiveTab("create")}
-                className="mt-4 inline-flex rounded-[12px] bg-[#45cad5] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#36b3be]"
-              >
-                新增文章
-              </button>
+              {!isAdmin ? (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("create")}
+                  className="mt-4 inline-flex rounded-[12px] bg-[#45cad5] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#36b3be]"
+                >
+                  新增文章
+                </button>
+              ) : null}
             </div>
           ) : (
             <ul className="space-y-4">
@@ -324,14 +365,7 @@ function MemberEditPostContent() {
                   >
                     <div className="flex flex-col gap-4 p-4 sm:flex-row">
                       <div className="relative h-32 w-full shrink-0 overflow-hidden rounded-[12px] bg-gray-100 sm:h-24 sm:w-36">
-                        {post.status === "draft" ? (
-                          <div
-                            className="flex h-full w-full items-center justify-center bg-[#e5e7eb] text-4xl font-light text-[#9ca3af]"
-                            aria-label="草稿沒有封面圖片"
-                          >
-                            <X aria-hidden="true" size={38} strokeWidth={1.5} />
-                          </div>
-                        ) : (
+                        {post.cover_image ? (
                           <BlogMediaImage
                             src={post.cover_image}
                             alt={post.title}
@@ -339,6 +373,13 @@ function MemberEditPostContent() {
                             className="object-cover object-center"
                             sizes="144px"
                           />
+                        ) : (
+                          <div
+                            className="flex h-full w-full items-center justify-center bg-[#e5e7eb] text-4xl font-light text-[#9ca3af]"
+                            aria-label="文章沒有封面圖片"
+                          >
+                            <X aria-hidden="true" size={38} strokeWidth={1.5} />
+                          </div>
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -361,18 +402,32 @@ function MemberEditPostContent() {
                         <h2 className="text-base font-semibold text-gray-900">
                           {post.title}
                         </h2>
+                        {isAdmin ? (
+                          <p className="mt-1 text-xs text-gray-400">
+                            作者：{post.author_name || `ID ${post.author_id}`}
+                          </p>
+                        ) : null}
                         <p className="mt-1 line-clamp-2 text-sm text-gray-500">
                           {post.excerpt || "（尚無摘要）"}
                         </p>
                         <div className="mt-3 flex flex-wrap gap-2">
+                          {isAdmin ? (
+                            <button
+                              type="button"
+                              onClick={() => setViewPost(post)}
+                            className="button-s-white"
+                          >
+                              預覽內容
+                            </button>
+                          ) : null}
                           {post.status === "published" ? (
                             <Link
                               href={`/blog/${post.slug}`}
                               className="button-s-white">
-                              查看
+                              {isAdmin ? "前台查看" : "查看"}
                             </Link>
                           ) : null}
-                          {post.status === "rejected" ? (
+                          {!isAdmin && post.status === "rejected" ? (
                             <button
                               type="button"
                               onClick={() => setNotePost(post)}
@@ -381,20 +436,34 @@ function MemberEditPostContent() {
                               退回原因
                             </button>
                           ) : null}
-                          <Link
-                            href={`/member/edit-post?tab=create&draft=${post.id}`}
-                            className="button-s-green"
-                          >
-                            編輯
-                          </Link>
-                          <button
-                            type="button"
-                            disabled={busy}
-                            onClick={() => setDeletePost(post)}
-                            className="button-s-red"
-                          >
-                            {busy ? "刪除中…" : "刪除"}
-                          </button>
+                          {!isAdmin ? (
+                            <>
+                              <Link
+                                href={`/member/edit-post?tab=create&draft=${post.id}`}
+                                className="button-s-green"
+                              >
+                                編輯
+                              </Link>
+                              <button
+                                type="button"
+                                disabled={busy}
+                                onClick={() => setDeletePost(post)}
+                                className="button-s-red"
+                              >
+                                {busy ? "刪除中…" : "刪除"}
+                              </button>
+                            </>
+                          ) : null}
+                          {isAdmin && post.status === "published" ? (
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => setUnpublishPost(post)}
+                              className="button-s-red"
+                            >
+                              {busy ? "下架中…" : "下架"}
+                            </button>
+                          ) : null}
                         </div>
                       </div>
                     </div>
@@ -479,6 +548,98 @@ function MemberEditPostContent() {
             關閉
           </button>
         </dialog>
+      ) : null}
+
+      {unpublishPost ? (
+        <dialog open className="modal">
+          <div className="modal-box rounded-[12px] border border-[#e5e7eb] bg-white text-[#111827] shadow-2xl">
+            <h2 className="text-lg font-bold">確認下架文章</h2>
+            <p className="py-4 text-sm text-[#4b5563]">
+              確定要下架「{unpublishPost.title}」嗎？下架後文章將不會顯示在公開頁面。
+            </p>
+            <div className="modal-action">
+              <button
+                type="button"
+                className="rounded-[12px] border border-[#d1d5db] bg-white px-5 py-2.5 text-sm font-semibold text-[#374151] hover:bg-[#f3f4f6]"
+                disabled={actingId === unpublishPost.id}
+                onClick={() => setUnpublishPost(null)}
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                className="rounded-[12px] border border-[#dc2626] bg-[#dc2626] px-5 py-2.5 text-sm font-semibold text-white hover:border-[#b91c1c] hover:bg-[#b91c1c]"
+                disabled={actingId === unpublishPost.id}
+                onClick={() => void handleUnpublish(unpublishPost)}
+              >
+                {actingId === unpublishPost.id ? "下架中…" : "確認下架"}
+              </button>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="modal-backdrop bg-black/40"
+            disabled={actingId === unpublishPost.id}
+            aria-label="關閉下架確認視窗"
+            onClick={() => setUnpublishPost(null)}
+          >
+            關閉
+          </button>
+        </dialog>
+      ) : null}
+
+      {viewPost ? (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="admin-post-preview-title"
+          onClick={() => setViewPost(null)}
+        >
+          <div
+            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[12px] bg-white p-5 shadow-xl sm:p-7"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-gray-100 pb-4">
+              <div>
+                <span className={`mb-2 inline-flex rounded-[12px] px-2.5 py-0.5 text-xs font-medium ${STATUS_BADGE[viewPost.status]}`}>
+                  {BLOG_STATUS_LABEL[viewPost.status]}
+                </span>
+                <h2
+                  id="admin-post-preview-title"
+                  className="text-xl font-bold text-gray-900"
+                >
+                  {viewPost.title}
+                </h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  作者：{viewPost.author_name || `ID ${viewPost.author_id}`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewPost(null)}
+                className="rounded-[12px] border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
+              >
+                關閉
+              </button>
+            </div>
+            {viewPost.excerpt ? (
+              <p className="mb-5 text-sm text-gray-500">{viewPost.excerpt}</p>
+            ) : null}
+            {(viewPost.content_image || viewPost.cover_image) ? (
+              <div className="relative mb-6 aspect-[21/9] overflow-hidden rounded-[12px] bg-gray-100">
+                <BlogMediaImage
+                  src={viewPost.content_image || viewPost.cover_image}
+                  alt={viewPost.title}
+                  fill
+                  className="object-cover object-center"
+                  sizes="768px"
+                />
+              </div>
+            ) : null}
+            <BlogRichTextContent content={viewPost.content} />
+          </div>
+        </div>
       ) : null}
 
       {notePost ? (

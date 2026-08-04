@@ -109,7 +109,21 @@ export default function MemberBlogReviewPage() {
     <div className="w-full text-gray-800">
       <Toaster position="top-center" />
 
-      <div className="mb-6 border-b border-gray-100 pb-4">
+      <div className="border-b border-[#d9d9d9]">
+        <div className="flex gap-8">
+          <Link
+            href="/member/edit-post"
+            className="px-3 pb-3 text-[18px] text-[#d4d4d4]"
+          >
+            所有文章
+          </Link>
+          <span className="border-b border-[#7fc4cf] px-3 pb-3 text-[18px] text-[#6fb8c4]">
+            審核文章
+          </span>
+        </div>
+      </div>
+
+      <div className="mb-6 mt-9">
         <h1 className="text-xl font-bold text-gray-900">文章審查</h1>
         <p className="mt-1 text-sm text-gray-500">
           查看會員送審文章 · 可註解 · 通過或駁回（不可編輯內容）

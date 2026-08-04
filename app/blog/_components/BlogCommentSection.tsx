@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import toast from "react-hot-toast";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { getApiServer } from "@/config/api-path";
 import { useAuth } from "@/contexts/auth-context";
@@ -115,6 +116,10 @@ export default function BlogCommentSection({
     () => `${comments.length} 則留言`,
     [comments.length],
   );
+  const ownComment = useMemo(
+    () => comments.find((comment) => comment.member_id === auth.id),
+    [auth.id, comments],
+  );
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -138,6 +143,7 @@ export default function BlogCommentSection({
       setComments((previous) => [created, ...previous]);
       setContent("");
       setSubmitted(true);
+      toast.success("留言送出成功");
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "送出留言失敗");
     } finally {
@@ -178,6 +184,7 @@ export default function BlogCommentSection({
       );
       setEditingId(null);
       setEditContent("");
+      toast.success("留言編輯成功");
     } catch (error) {
       setActionError(error instanceof Error ? error.message : "更新留言失敗");
     } finally {
@@ -191,19 +198,51 @@ export default function BlogCommentSection({
     try {
       await deleteBlogComment(commentId);
       setComments((previous) =>
-        previous.filter((comment) => comment.id !== commentId),
+        previous.map((comment) =>
+          comment.id === commentId
+            ? { ...comment, status: "deleted" as const }
+            : comment,
+        ),
       );
       if (editingId === commentId) {
         setEditingId(null);
         setEditContent("");
       }
       setDeleteConfirmId(null);
+      toast.success("留言刪除成功");
     } catch (error) {
       setActionError(error instanceof Error ? error.message : "刪除留言失敗");
     } finally {
       setActionId(null);
     }
   }
+
+  async function handleDelete(commentId: number) {
+    setActionId(commentId);
+    setActionError("");
+    try {
+      await deleteBlogComment(commentId);
+      setComments((previous) =>
+        previous.map((comment) =>
+          comment.id === commentId
+            ? { ...comment, status: "deleted" as const }
+            : comment,
+        ),
+      );
+      if (editingId === commentId) {
+        setEditingId(null);
+        setEditContent("");
+      }
+      setDeleteConfirmId(null);
+      toast.success("留言刪除成功");
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "刪除留言失敗");
+    } finally {
+      setActionId(null);
+    }
+  }
+
+
 
   const loginHref = `/auth/login?next=${encodeURIComponent(
     `/blog/${postSlug}`,
@@ -245,6 +284,12 @@ export default function BlogCommentSection({
           >
             前往登入
           </Link>
+        </div>
+      ) : ownComment ? (
+        <div className="mb-8 rounded-[12px] border border-teal-100 bg-teal-50/70 px-5 py-6 text-sm font-medium text-teal-700">
+          {ownComment.status === "deleted"
+            ? "您曾在這篇文章留言，同一篇文章不能重複留言。"
+            : "您已留言過，同一篇文章不能重複留言；如需調整內容，請編輯原留言。"}
         </div>
       ) : (
         <form
@@ -330,11 +375,24 @@ export default function BlogCommentSection({
             還沒有留言，成為第一個留言的人吧！
           </p>
         ) : (
-          comments.map((comment) => (
+          comments.map((comment) => {
+            const isDeleted = comment.status === "deleted";
+
+            return (
             <article
               key={comment.id}
-              className="rounded-[12px] border border-gray-100 bg-gray-50/60 px-4 py-4 sm:px-5"
+              className={`rounded-[12px] border px-4 py-4 sm:px-5 ${
+                isDeleted
+                  ? "border-dashed border-gray-200 bg-gray-50"
+                  : "border-gray-100 bg-gray-50/60"
+              }`}
             >
+              {isDeleted ? (
+                <p className="py-2 text-center text-sm font-medium text-gray-400">
+                  該筆留言已被刪除
+                </p>
+              ) : (
+                <>
               <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
                 <MemberAvatar
                   name={comment.author_name}
@@ -403,8 +461,11 @@ export default function BlogCommentSection({
                   {comment.content}
                 </p>
               )}
+                </>
+              )}
             </article>
-          ))
+            );
+          })
         )}
       </div>
 
