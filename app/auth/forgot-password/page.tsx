@@ -110,7 +110,7 @@ export default function ForgotPasswordPage() {
                     setEmail("kenny94crazy@gmail.com");
                   }}
                   aria-label="顯示或隱藏密碼"
-                  className="absolute top-94 right-1 border border-amber-200 h-10 w-10 hover:cursor-pointer"
+                  className="absolute top-94 right-1 h-10 w-10 hover:cursor-pointer"
                 ></button>
                 <form
                   onSubmit={handleForgotPassword}
