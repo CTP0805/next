@@ -89,7 +89,7 @@ export default function NavLinks({ links }: NavLinksProps) {
   };
 
   return (
-    <div className="hidden items-center md:flex">
+    <div className="hidden items-center whitespace-nowrap md:flex">
       <div
         className="relative py-4"
         onMouseEnter={() => setIsOpen(true)}
@@ -147,7 +147,7 @@ export default function NavLinks({ links }: NavLinksProps) {
       {links.map((link) => (
         <div
           key={link.name}
-          className="flex items-center border-r px-5 last:border-0"
+          className="flex items-center border-r px-5 whitespace-nowrap last:border-0"
         >
           <Link href={link.href} className="hover:text-gray-300">
             {link.name}

@@ -168,18 +168,19 @@ export default function AdminChatPage() {
               className={`flex ${isAdmin ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`flex max-w-[70%] flex-col ${
-                  isAdmin ? "items-end" : "items-start"
+                className={`flex max-w-[70%] items-end gap-2 ${
+                  isAdmin ? "flex-row-reverse" : "flex-row"
                 }`}
               >
+                {/* 訊息氣泡 */}
                 <div
                   className={`overflow-hidden ${
                     hasImage && !hasText
                       ? ""
                       : `rounded-2xl px-4 py-2 text-sm ${
                           isAdmin
-                            ? "rounded-br-none bg-[#45cad5] text-white"
-                            : "rounded-bl-none border border-gray-200 bg-white text-gray-800"
+                            ? "bg-[#45cad5] text-white"
+                            : " border-gray-200 bg-white text-gray-800"
                         }`
                   }`}
                 >
@@ -196,13 +197,14 @@ export default function AdminChatPage() {
                     </div>
                   )}
                   {hasText && (
-                    <div className="wrap-break-word whitespace-pre-wrap">
+                    <div className="break-all whitespace-pre-wrap">
                       {m.text}
                     </div>
                   )}
                 </div>
 
-                <div className="mt-1 text-[11px] text-gray-400">
+                {/* 時間 */}
+                <div className="mb-1 shrink-0 text-[11px] whitespace-nowrap text-gray-400">
                   {formatTime(m.created_at)}
                 </div>
               </div>
@@ -219,8 +221,7 @@ export default function AdminChatPage() {
             value={input}
             onChange={(e) => {
               setInput(e.target.value);
-              console.log("送出 admin typing", roomId);
-
+              if (!e.target.value.trim()) return;
               socket.emit("admin-typing", {
                 roomId,
               });

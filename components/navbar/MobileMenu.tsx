@@ -65,10 +65,7 @@ export default function MobileMenu({
 
       {/* 會員 */}
       {isAuthenticated && (
-        <Link
-          href="/member/profile"
-          className="btn btn-ghost btn-circle text-white"
-        >
+        <Link href="/member/" className="btn btn-ghost btn-circle text-white">
           <FaUser className="text-lg" />
         </Link>
       )}
@@ -110,7 +107,7 @@ export default function MobileMenu({
                     登入
                   </Link>
                 </li>
-                <div className=" border-t border-gray-100" />
+                <div className="border-t border-gray-100" />
 
                 <li>
                   <Link

@@ -9,7 +9,10 @@ export default function CartDropdown() {
 
   return (
     <li className="group relative mr-6 cursor-pointer px-3 py-2">
-      <Link href="/cart" className="relative flex shrink-0 items-center">
+      <Link
+        href="/cart"
+        className="relative flex min-w-[20px] shrink-0 items-center"
+      >
         <Image src="/icon/cart.svg" alt="Cart" width={20} height={20} />
         {items.length > 0 && (
           <span className="absolute -top-2.5 -right-2.5 grid h-4 min-w-4 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white shadow-sm">
@@ -61,8 +64,7 @@ export default function CartDropdown() {
               {items.slice(0, 3).map((item) => {
                 const adultQty = Number(item.adultQuantity) || 0;
                 const childQty = Number(item.childQuantity) || 0;
-                const adultPrice =
-                  Number(item.adultPrice) || 0;
+                const adultPrice = Number(item.adultPrice) || 0;
                 const childPrice = Number(item.childPrice) || 0;
 
                 const subtotal =

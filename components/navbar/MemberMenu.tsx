@@ -64,7 +64,7 @@ export default function MemberMenu({
           width={32}
           height={32}
         />
-        <span className="text-sm">{auth.name || "會員"} 你好～</span>
+        <span className="text-sm whitespace-nowrap">{auth.name || "會員"} 你好～</span>
       </div>
 
       <ul
