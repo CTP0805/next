@@ -217,31 +217,6 @@ export default function BlogCommentSection({
     }
   }
 
-  async function handleDelete(commentId: number) {
-    setActionId(commentId);
-    setActionError("");
-    try {
-      await deleteBlogComment(commentId);
-      setComments((previous) =>
-        previous.map((comment) =>
-          comment.id === commentId
-            ? { ...comment, status: "deleted" as const }
-            : comment,
-        ),
-      );
-      if (editingId === commentId) {
-        setEditingId(null);
-        setEditContent("");
-      }
-      setDeleteConfirmId(null);
-      toast.success("留言刪除成功");
-    } catch (error) {
-      setActionError(error instanceof Error ? error.message : "刪除留言失敗");
-    } finally {
-      setActionId(null);
-    }
-  }
-
 
 
   const loginHref = `/auth/login?next=${encodeURIComponent(
