@@ -81,6 +81,11 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 AuthContext.displayName = "MyAuthContext"; // 方便除錯
 
+interface ResendVerifyEmailButtonProps {
+  email: string;
+  onResend: (email: string) => Promise<void>;
+}
+
 // 格式驗證專區
 const loginSchema = z.object({
   email: z
@@ -89,6 +94,38 @@ const loginSchema = z.object({
     .email({ message: "請輸入正確的 Email 格式" }),
   password: z.string().min(1, { message: "請輸入密碼" }),
 });
+
+// 重新發送驗證信按鈕元件
+function ResendVerifyEmailButton({
+  email,
+  onResend,
+}: ResendVerifyEmailButtonProps) {
+  // 狀態放在 toast 按鈕本身，按鈕才會自己重新渲染
+  const [isSending, setIsSending] = useState(false);
+
+  const handleClick = async () => {
+    setIsSending(true);
+
+    try {
+      // 等待寄信 API 完成
+      await onResend(email);
+    } finally {
+      // 成功、後端失敗或網路錯誤時，都恢復可點擊狀態
+      setIsSending(false);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      className="my-2 rounded-md bg-red-400 px-4 py-1 text-center text-white disabled:cursor-not-allowed disabled:opacity-60"
+      disabled={isSending}
+      onClick={() => void handleClick()}
+    >
+      {isSending ? "發送中..." : "重新發送驗證信"}
+    </button>
+  );
+}
 
 // 元件
 export function AuthContextProvider({
@@ -103,6 +140,7 @@ export function AuthContextProvider({
 
   const router = useRouter();
   const searchParams = useSearchParams();
+  
 
   // 這個函式負責向後端確認目前 Cookie 對應哪位使用者。
   const refreshAuth = useCallback(async (): Promise<void> => {
@@ -150,6 +188,7 @@ export function AuthContextProvider({
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
   }, [authInit, refreshAuth]);
+
   const resendVerifyEmail = async (email: string): Promise<void> => {
     try {
       // 把登入表單中的 Email 傳給後端
@@ -173,12 +212,13 @@ export function AuthContextProvider({
         toast.error(result.message || "驗證信寄送失敗，請稍後再試");
         return;
       }
-
+      
+      
       toast.success(result.message || "驗證信已重新寄出，請至信箱查看");
     } catch (error) {
       console.warn("resendVerifyEmail error:", error);
       toast.error("目前無法連線到伺服器，請稍後再試");
-    }
+    } 
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -222,12 +262,10 @@ export function AuthContextProvider({
                 <IoIosWarning className="pr-2 text-[35px] text-yellow-400" />
                 {result.message}
               </p>
-              <button
-                className="my-2 rounded-md bg-red-400 px-4 py-1 text-center text-white"
-                onClick={() => void resendVerifyEmail(trimmedEmail)}
-              >
-                重新發送驗證信
-              </button>
+              <ResendVerifyEmailButton
+  email={trimmedEmail}
+  onResend={resendVerifyEmail}
+/>
             </>
           ),
           {

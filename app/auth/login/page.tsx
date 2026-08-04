@@ -152,6 +152,16 @@ export default function LoginPage() {
                   aria-label="填入我的測試帳號"
                   className="absolute bottom-1 left-1 h-10 w-10 hover:cursor-pointer"
                 ></button>
+                {/* 彥程個人帳號（右上角下面一點點） */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail("kenny94crazy@gmail.com");
+                    
+                  }}
+                  aria-label="填入我的測試帳號"
+                  className="absolute top-48 right-1 h-10 w-10  hover:cursor-pointer"
+                ></button>
 
                 <form onSubmit={handleLogin} className="w-full max-w-[470px]">
                   <h2 className="mb-10 text-center xl:mb-14">立即登入</h2>
