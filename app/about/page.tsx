@@ -303,10 +303,10 @@ export default function AboutPage() {
                 PHONE
               </p>
               <a
-                href="tel:0912345678"
+                href="tel:02 6631 6588"
                 className="text-lg text-[#1e3435] transition hover:text-[#b48a4c]"
               >
-                0912-345-678
+                02 6631 6588
               </a>
             </div>
 
@@ -315,10 +315,10 @@ export default function AboutPage() {
                 EMAIL
               </p>
               <a
-                href="mailto:meetlocals@example.com"
+                href="mailto:meetlocals@gmail.com"
                 className="text-lg text-[#1e3435] transition hover:text-[#b48a4c]"
               >
-                meetlocals@example.com
+                meetlocals@gmail.com
               </a>
             </div>
 
@@ -327,7 +327,7 @@ export default function AboutPage() {
                 ADDRESS
               </p>
               <p className="text-lg text-[#1e3435]">
-                台中市西屯區逢甲路 100 號
+                臺北市大安區和安里復興南路一段390號
               </p>
             </div>
 

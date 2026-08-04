@@ -188,6 +188,28 @@ export default function TestPage() {
           <span className="size-1 rounded-full bg-[#45cad5]" />
         </div>
       </div>
+
+      
+      <div className="w-full h-50 bg-gradient-to-r from-teal-400 to-cyan-500 transition-all duration-500"></div>
+      <div className="w-full h-50 bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-600 transition-all duration-500"></div>
+      <div className="w-full h-50 bg-gradient-to-r from-cyan-400 via-sky-500 to-blue-600 transition-all duration-500"></div>
+      <div className="w-full h-50 bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 transition-all duration-500"></div>
+      <div className="w-full h-50 bg-gradient-to-r from-cyan-400 via-sky-500 to-blue-600 transition-all duration-500"></div>
+      <p>1231</p>
+      <div className="w-full h-50 bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-500 transition-all duration-500"></div>
+
+      <div className="w-full h-50 bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-700 transition-all duration-500"></div>
+      <div className="w-full h-50 bg-gradient-to-r from-sky-600 via-blue-700 to-indigo-800 transition-all duration-500"></div>
+      <div className="w-full h-50 bg-gradient-to-r from-amber-500 via-orange-600 to-red-500 transition-all duration-500"></div>
+      <p>123</p>
+      <div className="w-full h-50 bg-gradient-to-r from-cyan-400 via-sky-500 to-blue-500 "></div>
+      <div className="w-full h-50 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500"></div>
+      <div className="w-full h-50 bg-gradient-to-r from-orange-400 via-rose-500 to-red-500"></div>
+      <p>15467866767678678667686786786786786767867</p>
+      <div className="w-full h-50 bg-gradient-to-r from-teal-400 to-cyan-500 transition-all duration-500"></div>
+      <div className="w-full h-50 bg-gradient-to-r from-yellow-300 via-amber-400 to-orange-400 "></div>
+      <div className="w-full h-50 bg-gradient-to-r from-teal-400 to-cyan-500 transition-all duration-500"></div>
+
     </>
   );
 }
