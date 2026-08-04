@@ -248,14 +248,277 @@ export default function BlogPostForm({
   }
 
   function handleAutoFillArticleInfo() {
-    const plainText = getPlainTextFromHtml(content);
-    if (!plainText) {
-      toast.error("請先輸入文章內容，再自動產生標題與摘要");
-      return;
-    }
-
     setTitle(createTitleFromContent(`一次收藏最浪漫的英倫風景`));
     setExcerpt(truncateText(`走進倫敦最具代表性的城市風景，以經典大笨鐘與壯麗倫敦眼為旅拍背景。從復古優雅的英倫街景，到泰晤士河畔的浪漫光影，用鏡頭記錄專屬於你的倫敦故事。`, 200));
+    setContent(`
+  <div style="max-width: 860px; margin: 0 auto; color: #334155; font-size: 17px; line-height: 2;">
+
+    <p style="margin: 0 0 16px; color: #45aeb8; font-size: 14px; font-weight: 700; letter-spacing: 3px; text-align: center;">
+      LONDON TRAVEL STORY
+    </p>
+
+    <h2 style="margin: 0 0 24px; color: #172033; font-size: 34px; line-height: 1.4; text-align: center;">
+      在倫敦，把旅行拍成一段<br>
+      屬於自己的故事
+    </h2>
+
+    <p style="max-width: 680px; margin: 0 auto 42px; color: #64748b; font-size: 18px; line-height: 2; text-align: center;">
+      從大笨鐘的古典輪廓，到倫敦眼映照在泰晤士河上的光影，
+      跟著城市的節奏慢慢散步，收藏專屬於你的英倫回憶。
+    </p>
+
+    <figure class="image" style="margin: 0 0 44px;">
+      <img
+        src="/London/London15.jpg"
+        alt="大笨鐘與泰晤士河景色"
+        style="display: block; width: 100%; border-radius: 18px;"
+      />
+      <figcaption style="padding-top: 12px; color: #94a3b8; font-size: 14px; text-align: center;">
+        泰晤士河畔的經典景色，是認識倫敦最迷人的起點。
+      </figcaption>
+    </figure>
+
+    <div style="margin: 0 0 48px; padding: 28px 32px; border-left: 5px solid #45cad5; border-radius: 0 16px 16px 0; background: #f0fbfc;">
+      <p style="margin: 0; color: #247f87; font-size: 20px; font-weight: 600; line-height: 1.9;">
+        「最好的旅行照片，不只是記錄你去了哪裡，
+        而是保存當時的光線、心情，以及走在城市裡的自己。」
+      </p>
+    </div>
+
+    <p style="margin: 0 0 10px; color: #45aeb8; font-size: 14px; font-weight: 700; letter-spacing: 2px;">
+      STOP 01
+    </p>
+
+    <h3 style="margin: 0 0 20px; color: #172033; font-size: 27px; line-height: 1.5;">
+      大笨鐘與西敏寺：走進經典英倫風景
+    </h3>
+
+    <p style="margin: 0 0 22px;">
+      旅程從西敏一帶開始。沿著河岸散步，可以將大笨鐘、國會大廈與橋上的城市日常，
+      一起收入畫面。雄偉的哥德式建築帶著濃厚歷史感，無論遠景或近距離取景，
+      都能呈現倫敦獨有的優雅氣質。
+    </p>
+
+    <p style="margin: 0 0 44px;">
+      不需要刻意擺出複雜姿勢，只要自然行走、輕輕回頭，或停在河畔眺望風景，
+      就能捕捉輕鬆而真實的旅行瞬間。上午與日落前的光線較柔和，
+      也更容易拍出溫暖且具有層次的照片。
+    </p>
+
+    <p style="margin: 0 0 22px;">
+      西敏一帶最吸引人的地方，在於每走幾步就會出現不同的畫面。轉身是歷史悠久的國會大廈，
+      往前則是穿梭於橋面的雙層巴士與黑色計程車。這些熟悉的英倫元素不必全部塞進同一張照片，
+      分段記錄反而能讓整組影像更有旅行故事的節奏。
+    </p>
+
+    <p style="margin: 0 0 44px;">
+      如果是第一次面對鏡頭，可以先從散步開始，讓攝影師在稍遠的位置捕捉互動。
+      等習慣鏡頭之後，再慢慢加入靠牆、整理外套或看向遠方等簡單動作，表情通常會比刻意微笑更加自然。
+    </p>
+
+    <hr style="margin: 0 0 44px; border: 0; border-top: 1px solid #e2e8f0;" />
+
+    <p style="margin: 0 0 10px; color: #45aeb8; font-size: 14px; font-weight: 700; letter-spacing: 2px;">
+      STOP 02
+    </p>
+
+    <h3 style="margin: 0 0 20px; color: #172033; font-size: 27px; line-height: 1.5;">
+      倫敦眼：在河岸捕捉城市的浪漫光影
+    </h3>
+
+    <p style="margin: 0 0 30px;">
+      穿過西敏橋後，巨大的倫敦眼會逐漸出現在眼前。
+      摩天輪俐落的圓形線條與泰晤士河的寬闊景色，能為照片帶來豐富的空間感。
+      河岸沿途還有長椅、階梯與街頭表演，讓旅拍不只有地標，也保留城市真實的生活氣息。
+    </p>
+
+    <p style="margin: 0 0 22px;">
+      想拍出更有變化的畫面，可以將倫敦眼安排在人物側後方，利用河岸欄杆作為延伸線條；
+      也可以走到較低的階梯，以仰角帶入完整摩天輪。若是雙人或多人同行，並肩散步、聊天與互相整理衣服，
+      都比整齊站成一排更有溫度。
+    </p>
+
+    <p style="margin: 0 0 38px;">
+      河岸的風通常比市區明顯，輕薄外套、圍巾與自然飄動的髮絲，都能成為畫面的一部分。
+      與其一直等待完全無風的瞬間，不如順著天氣留下倫敦原本的樣子，照片也會更有身歷其境的感覺。
+    </p>
+
+    <figure class="image" style="margin: 0 0 44px;">
+      <img
+        src="/London/London10.jpg"
+        alt="倫敦眼與泰晤士河"
+        style="display: block; width: 100%; border-radius: 18px;"
+      />
+      <figcaption style="padding-top: 12px; color: #94a3b8; font-size: 14px; text-align: center;">
+        以倫敦眼為背景，畫面既有辨識度，也充滿現代城市感。
+      </figcaption>
+    </figure>
+
+    <div style="margin: 0 0 48px; padding: 26px 30px; border: 1px solid #d8f0f2; border-radius: 18px; background: linear-gradient(135deg, #f7feff 0%, #eefafa 100%);">
+      <h4 style="margin: 0 0 14px; color: #247f87; font-size: 19px;">
+        拍攝小技巧
+      </h4>
+
+      <ul style="margin: 0; padding-left: 22px;">
+        <li style="margin-bottom: 8px;">走動時將視線望向河面，畫面會更加自然。</li>
+        <li style="margin-bottom: 8px;">利用橋梁與摩天輪線條，增加照片的延伸感。</li>
+        <li>陰天也不必擔心，柔和光線反而很有倫敦電影氛圍。</li>
+      </ul>
+    </div>
+
+    <p style="margin: 0 0 10px; color: #45aeb8; font-size: 14px; font-weight: 700; letter-spacing: 2px;">
+      STOP 03
+    </p>
+
+    <h3 style="margin: 0 0 20px; color: #172033; font-size: 27px; line-height: 1.5;">
+      塔橋夕陽：等待倫敦亮起燈光
+    </h3>
+
+    <p style="margin: 0 0 30px;">
+      傍晚是倫敦最迷人的時刻之一。天空從淡藍色逐漸染上金色與粉紫色，
+      建築輪廓、橋梁燈光與河面倒影也開始變得溫暖。放慢腳步等待城市點燈，
+      就能拍下與白天截然不同的浪漫氛圍。
+    </p>
+
+    <p style="margin: 0 0 22px;">
+      塔橋附近同時擁有寬闊河景、磚牆街道與帶有工業感的橋體結構，特別適合作為旅程後半段的拍攝場景。
+      白天可以呈現建築細節，入夜後則能利用路燈與水面倒影，拍出帶有電影感的城市人像。
+    </p>
+
+    <p style="margin: 0 0 38px;">
+      日落前後的光線變化很快，建議預留足夠時間，不急著一次完成所有照片。
+      先欣賞景色、感受河畔氣氛，再挑選最喜歡的角度拍攝，往往能留下比打卡照更耐看的回憶。
+    </p>
+
+    <figure class="image" style="margin: 0 0 44px;">
+      <img
+        src="/London/London20.jpg"
+        alt="夕陽下的倫敦塔橋"
+        style="display: block; width: 100%; border-radius: 18px;"
+      />
+      <figcaption style="padding-top: 12px; color: #94a3b8; font-size: 14px; text-align: center;">
+        當夕陽落在泰晤士河上，倫敦展現出沉穩又浪漫的一面。
+      </figcaption>
+    </figure>
+
+<div style="clear: both; width: 100%; margin: 56px 0 48px;">
+
+  <figure class="image" style="clear: both; width: 100%; margin: 0 0 40px;">
+    <img
+      src="/London/London01.jpg"
+      alt="倫敦城市天際線"
+      style="display: block; width: 100%; height: auto; border-radius: 18px;"
+    />
+    <figcaption style="padding: 14px 10px; color: #94a3b8; font-size: 14px; text-align: center;">
+      古典建築與現代城市交錯而成的倫敦天際線
+    </figcaption>
+  </figure>
+
+  <figure class="image" style="clear: both; width: 100%; margin: 0 0 48px;">
+    <img
+      src="/London/London30.jpg"
+      alt="泰晤士河畔街景"
+      style="display: block; width: 100%; height: auto; border-radius: 18px;"
+    />
+    <figcaption style="padding: 14px 10px; color: #94a3b8; font-size: 14px; text-align: center;">
+      藏在橋下與泰晤士河岸之間的倫敦日常
+    </figcaption>
+  </figure>
+
+</div>
+
+<div style="clear: both; margin: 0 0 52px;">
+  <p style="margin: 0 0 10px; color: #45aeb8; font-size: 14px; font-weight: 700; letter-spacing: 2px;">
+    STOP 04
+  </p>
+
+  <h3 style="margin: 0 0 20px; color: #172033; font-size: 27px; line-height: 1.5;">
+    離開地標之後，遇見倫敦真正的日常
+  </h3>
+
+  <p style="margin: 0 0 22px;">
+    經典地標能交代旅行的目的地，但真正讓照片產生個人風格的，往往是途中那些沒有特別安排的片刻。
+    可能是橋下灑落的一束光、擦身而過的紅色巴士，也可能是咖啡店窗邊短暫的休息。
+    把這些細節留進文章與照片裡，整趟旅程就不再只是景點清單。
+  </p>
+
+  <p style="margin: 0 0 22px;">
+    倫敦同時擁有古老與現代、熱鬧與安靜。主街上的節奏快速，轉進巷弄後卻可能立刻遇見安靜的住宅、
+    小型花園與歷史建築。旅拍不妨保留一段沒有明確目的地的散步時間，讓城市主動帶來意想不到的背景。
+  </p>
+
+  <p style="margin: 0;">
+    當你不再只注意鏡頭，而是開始與同行的人聊天、觀察街景或享受當下，表情會自然放鬆。
+    這些不經意的畫面，通常也是多年後重新翻閱時，最能喚起旅行記憶的照片。
+  </p>
+</div>
+
+<div
+  style="
+    clear: both;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0 0 56px;
+    padding: 36px 40px;
+    border-radius: 20px;
+    background: #172033;
+    color: #ffffff;
+  "
+>
+  <p style="margin: 0 0 10px; color: #67dce5; font-size: 13px; font-weight: 700; letter-spacing: 3px;">
+    TRAVEL CHECKLIST
+  </p>
+
+  <h3 style="margin: 0 0 26px; color: #ffffff; font-size: 25px; line-height: 1.5;">
+    倫敦旅拍準備清單
+  </h3>
+
+  <div style="margin: 0 0 14px; padding: 15px 18px; border-radius: 12px; background: #253047;">
+    <p style="margin: 0; color: #ffffff; line-height: 1.8;">
+      ✓ 選擇米色、深藍、酒紅等具有英倫感的服裝色系
+    </p>
+  </div>
+
+  <div style="margin: 0 0 14px; padding: 15px 18px; border-radius: 12px; background: #253047;">
+    <p style="margin: 0; color: #ffffff; line-height: 1.8;">
+      ✓ 攜帶輕便雨具，從容面對倫敦多變的天氣
+    </p>
+  </div>
+
+  <div style="margin: 0 0 14px; padding: 15px 18px; border-radius: 12px; background: #253047;">
+    <p style="margin: 0; color: #ffffff; line-height: 1.8;">
+      ✓ 清晨避開人潮，傍晚捕捉柔和光線與城市夜景
+    </p>
+  </div>
+
+  <div style="padding: 15px 18px; border-radius: 12px; background: #253047;">
+    <p style="margin: 0; color: #ffffff; line-height: 1.8;">
+      ✓ 穿著適合步行的鞋子，讓整個拍攝過程更加自在
+    </p>
+  </div>
+</div>
+
+<div style="clear: both; margin: 0; padding: 42px 34px; border-radius: 20px; background: #f8fafc; text-align: center;">
+  <p style="margin: 0 0 12px; color: #45aeb8; font-size: 13px; font-weight: 700; letter-spacing: 3px;">
+    KEEP YOUR LONDON MOMENT
+  </p>
+
+  <h3 style="margin: 0 0 20px; color: #172033; font-size: 28px; line-height: 1.5;">
+    準備好走進倫敦了嗎？
+  </h3>
+
+  <p style="max-width: 680px; margin: 0 auto 18px; color: #64748b; line-height: 2;">
+    一趟值得記住的旅程，不一定需要追趕很多景點。選擇幾個真正喜歡的地方，
+    為散步、停留與拍照保留時間，才能更完整地感受城市，也讓每張照片擁有不同的情緒。
+  </p>
+
+  <p style="max-width: 680px; margin: 0 auto; color: #64748b; line-height: 2;">
+    讓大笨鐘、倫敦眼與泰晤士河成為故事背景，把笑容、同行者與當天的光線留在畫面裡。
+    當旅程結束後，這些照片仍會帶你回到那一天，想起倫敦的風、河岸的聲音，以及當時自在前行的自己。
+  </p>
+</div>
+`);
   
   }
 
