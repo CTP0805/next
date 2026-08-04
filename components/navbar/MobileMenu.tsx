@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { FaCartShopping, FaUser, FaChevronDown } from "react-icons/fa6";
 import type { NavLink } from "@/types/navbar";
+import { useCart } from "@/contexts/cart";
 
 type MobileMenuProps = {
   isAuthenticated: boolean;
@@ -32,10 +33,10 @@ const destinations = [
 
 export default function MobileMenu({
   isAuthenticated,
-  totalQty,
   navLinks,
   logout,
 }: MobileMenuProps) {
+  const { items } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false); // 控制整個漢堡選單
   const [isExperienceOpen, setIsExperienceOpen] = useState(false); // 控制「所有體驗」
 
@@ -54,9 +55,9 @@ export default function MobileMenu({
           className="btn btn-ghost btn-circle relative text-white"
         >
           <FaCartShopping className="text-lg" />
-          {totalQty > 0 && (
+          {items.length > 0 && (
             <span className="absolute top-1 right-1 grid h-4 min-w-4 place-items-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
-              {totalQty}
+              {items.length}
             </span>
           )}
         </Link>
