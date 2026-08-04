@@ -217,8 +217,6 @@ export default function BlogCommentSection({
     }
   }
 
-
-
   const loginHref = `/auth/login?next=${encodeURIComponent(
     `/blog/${postSlug}`,
   )}`;
