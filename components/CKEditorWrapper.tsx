@@ -108,18 +108,26 @@ interface CKEditorWrapperProps {
   data: string;
   onChange: (data: string) => void;
   placeholder?: string;
+  size?: "default" | "large";
 }
 
 export default function CKEditorWrapper({
   data,
   onChange,
+  size = "default",
   placeholder = "請輸入文章內容...",
 }: CKEditorWrapperProps) {
   const [wordStats, setWordStats] = useState({ words: 0, characters: 0 });
+  const editorHeightClass =
+    size === "large"
+      ? "[&_.ck-editor__editable]:min-h-[600px] sm:[&_.ck-editor__editable]:min-h-[680px]"
+      : "[&_.ck-editor__editable]:min-h-[480px] sm:[&_.ck-editor__editable]:min-h-[560px]";
 
   return (
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-      <div className="[&_.ck-editor__editable]:min-h-[360px] [&_.ck-editor__editable]:text-gray-900 [&_.ck-editor__editable_inline]:px-4 [&_.ck-editor__editable_inline]:py-3 [&_.ck-toolbar__items]:flex-wrap [&_.ck-toolbar__items]:gap-y-1">
+      <div
+        className={`${editorHeightClass} [&_.ck-editor__editable]:text-gray-900 [&_.ck-editor__editable_inline]:px-4 [&_.ck-editor__editable_inline]:py-3 [&_.ck-toolbar__items]:flex-wrap [&_.ck-toolbar__items]:gap-y-1`}
+      >
         <CKEditor
           editor={ClassicEditor}
           data={data}

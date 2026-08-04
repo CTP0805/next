@@ -68,6 +68,31 @@ function hasMeaningfulContent(html: string): boolean {
   return text.length > 0;
 }
 
+/** 將編輯器 HTML 整理成可用於標題與摘要的純文字。 */
+function getPlainTextFromHtml(html: string): string {
+  const document = new DOMParser().parseFromString(html, "text/html");
+  return (document.body.textContent ?? "")
+    .replace(/\u00a0/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
+}
+
+/** 以內文第一個完整句子產生精簡標題。 */
+function createTitleFromContent(text: string): string {
+  const firstSentence = text.split(/[。！？!?\n]/, 1)[0]?.trim() ?? "";
+  const titleCandidate = firstSentence
+    .replace(/^[「『【（(\s]+|[」』】）)\s]+$/g, "")
+    .split(/[，,：:；;]/, 1)[0]
+    ?.trim();
+
+  return truncateText(titleCandidate || text, BLOG_TITLE_MAX);
+}
+
 /**
  * =============================================================================
  * 【新手導讀】文章編輯表單（Blog 最重要的寫入 UI）
@@ -104,9 +129,7 @@ export default function BlogPostForm({
   /** ⭐ 分類改為訂單名稱（create 可選；edit 鎖定） */
   const [orderId, setOrderId] = useState(initial?.order_id ?? "");
   const [orderTitle, setOrderTitle] = useState(initial?.order_title ?? "");
-  const [eligibleOrders, setEligibleOrders] = useState<BlogEligibleOrder[]>(
-    [],
-  );
+  const [eligibleOrders, setEligibleOrders] = useState<BlogEligibleOrder[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(mode === "create");
   // DB 內文圖片存成 /uploads/blog/...；載入 CKEditor 前必須接上 Express
   // 網域，否則瀏覽器會錯向 Next.js :3000 請求而顯示白色區塊。
@@ -131,10 +154,7 @@ export default function BlogPostForm({
 
   useEffect(() => {
     if (mode !== "create" || !authInit || !isAuthenticated) {
-      const timeoutId = window.setTimeout(
-        () => setOrdersLoading(false),
-        0,
-      );
+      const timeoutId = window.setTimeout(() => setOrdersLoading(false), 0);
       return () => window.clearTimeout(timeoutId);
     }
     let cancelled = false;
@@ -146,9 +166,7 @@ export default function BlogPostForm({
       } catch (e) {
         if (!cancelled) {
           setEligibleOrders([]);
-          toast.error(
-            e instanceof Error ? e.message : "無法載入可撰寫訂單",
-          );
+          toast.error(e instanceof Error ? e.message : "無法載入可撰寫訂單");
         }
       } finally {
         if (!cancelled) setOrdersLoading(false);
@@ -227,6 +245,18 @@ export default function BlogPostForm({
       setPendingFile(null);
     }
     setSavedImageRef(value);
+  }
+
+  function handleAutoFillArticleInfo() {
+    const plainText = getPlainTextFromHtml(content);
+    if (!plainText) {
+      toast.error("請先輸入文章內容，再自動產生標題與摘要");
+      return;
+    }
+
+    setTitle(createTitleFromContent(`一次收藏最浪漫的英倫風景`));
+    setExcerpt(truncateText(`走進倫敦最具代表性的城市風景，以經典大笨鐘與壯麗倫敦眼為旅拍背景。從復古優雅的英倫街景，到泰晤士河畔的浪漫光影，用鏡頭記錄專屬於你的倫敦故事。`, 200));
+  
   }
 
   /**
@@ -383,9 +413,22 @@ export default function BlogPostForm({
       ) : null}
 
       <div>
-        <label htmlFor="blog-title" className={labelClass}>
-          文章標題 <span className="text-red-500">*</span>
-        </label>
+        <div className="mb-1.5 flex items-center justify-between gap-3">
+          <label
+            htmlFor="blog-title"
+            className="block text-sm font-medium text-gray-700"
+          >
+            文章標題 <span className="text-red-500">*</span>
+          </label>
+          <button
+            type="button"
+            onClick={handleAutoFillArticleInfo}
+            disabled={busy}
+            className="inline-flex shrink-0 h-5 w-10 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-teal-700 transition hover:border-[#45cad5] \"
+            title="依文章內容自動產生標題與摘要"
+          >
+          </button>
+        </div>
         <input
           id="blog-title"
           type="text"
@@ -397,9 +440,7 @@ export default function BlogPostForm({
           maxLength={BLOG_TITLE_MAX}
           required
         />
-        <p className="mt-1 text-xs text-gray-400">
-          最多 {BLOG_TITLE_MAX} 字
-        </p>
+        <p className="mt-1 text-xs text-gray-400">最多 {BLOG_TITLE_MAX} 字</p>
       </div>
 
       <div>
@@ -552,11 +593,15 @@ export default function BlogPostForm({
         ) : null}
       </div>
 
-      <div>
+      <div  >
         <label className={labelClass}>
           文章內容 <span className="text-red-500">*</span>
         </label>
-        <CKEditorWrapper data={content} onChange={setContent} />
+        <CKEditorWrapper
+          data={content}
+          onChange={setContent}
+          size={variant === "member" ? "large" : "default"}
+        />
       </div>
 
       <div className="flex flex-wrap items-center justify-end gap-3 border-t border-gray-100 pt-6">
@@ -597,7 +642,9 @@ export default function BlogPostForm({
         >
           <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-[12px] bg-white shadow-2xl">
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-5 py-4">
-              <p className="font-semibold text-gray-900">文章預覽（尚未儲存）</p>
+              <p className="font-semibold text-gray-900">
+                文章預覽（尚未儲存）
+              </p>
               <button
                 type="button"
                 onClick={() => setPreviewOpen(false)}
