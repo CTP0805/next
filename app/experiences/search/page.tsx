@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import FilterPanel from "@/app/experiences/_components/FilterPanel";
 import ExperienceCard from "@/app/experiences/_components/ExperienceCard";
 import Link from "next/link";
-import { HiAdjustments, HiChevronUp } from "react-icons/hi";
+import { HiAdjustments, HiChevronUp, HiChevronDown } from "react-icons/hi";
 import Loading from "@/components/Loading";
 
 type Experience = {
@@ -543,18 +543,25 @@ export default function ExperienceListPage() {
                     <span>篩選</span>
                   </button>
 
-                  <select
-                    value={sort}
-                    onChange={(event) =>
-                      handleSortChange(event.target.value as SortOption)
-                    }
-                    aria-label="排序方式"
-                    className="select h-10 min-h-10 w-[116px] rounded-md border border-[#DDE2E4] bg-white px-2 text-sm font-bold text-[#4D545A] shadow-none outline-none hover:border-[#68BBC3] focus:outline-none sm:w-[140px]"
-                  >
-                    <option value="popular">熱門推薦</option>
-                    <option value="rating">評價最高</option>
-                    <option value="price_asc">價格低到高</option>
-                  </select>
+                  <div className="relative w-[124px] sm:w-[124px]">
+                    <select
+                      value={sort}
+                      onChange={(event) =>
+                        handleSortChange(event.target.value as SortOption)
+                      }
+                      aria-label="排序方式"
+                      className="select select-bordered h-10 min-h-10 w-full !appearance-none rounded-md border border-[#E1E5E7] bg-white !bg-none pr-9 pl-4 text-sm font-bold text-[#454B50] outline-none hover:border-[#68BBC3]"
+                    >
+                      <option value="popular">熱門推薦</option>
+                      <option value="rating">評價最高</option>
+                      <option value="price_asc">價格低到高</option>
+                    </select>
+
+                    <HiChevronDown
+                      aria-hidden="true"
+                      className="pointer-events-none absolute top-1/2 right-2.5 size-5 -translate-y-1/2 text-[#687076]"
+                    />
+                  </div>
                 </div>
               </div>
 

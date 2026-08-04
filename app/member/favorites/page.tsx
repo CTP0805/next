@@ -3,6 +3,7 @@
 import { useFavorites } from "@/contexts/FavoriteContext";
 import FavoriteCard from "@/components/FavoriteCard";
 import { useMemo, useState } from "react";
+import { HiChevronDown } from "react-icons/hi";
 
 type FavoriteSort = "latest" | "rating" | "price-low";
 
@@ -71,18 +72,25 @@ export default function FavoritesPage() {
               <span className="text-sm font-medium whitespace-nowrap text-[#8A9196] max-sm:hidden">
                 排序方式
               </span>
-              <select
-                aria-label="排序方式"
-                value={sort}
-                onChange={(event) =>
-                  setSort(event.target.value as FavoriteSort)
-                }
-                className="select select-bordered h-10 min-h-10 rounded-md border border-[#E1E5E7] bg-white pr-10 pl-4 text-sm font-bold text-[#454B50] outline-none hover:border-[#68BBC3]"
-              >
-                <option value="latest">最新收藏</option>
-                <option value="rating">評價最高</option>
-                <option value="price-low">價格低到高</option>
-              </select>
+              <div className="relative w-[124px] sm:w-[124px]">
+                <select
+                  aria-label="排序方式"
+                  value={sort}
+                  onChange={(event) =>
+                    setSort(event.target.value as FavoriteSort)
+                  }
+                  className="select select-bordered h-10 min-h-10 w-full !appearance-none rounded-md border border-[#E1E5E7] bg-white !bg-none pr-9 pl-4 text-sm font-bold text-[#454B50] outline-none hover:border-[#68BBC3]"
+                >
+                  <option value="latest">最新收藏</option>
+                  <option value="rating">評價最高</option>
+                  <option value="price-low">價格低到高</option>
+                </select>
+
+                <HiChevronDown
+                  aria-hidden="true"
+                  className="pointer-events-none absolute top-1/2 right-2.5 size-5 -translate-y-1/2 text-[#687076]"
+                />
+              </div>
             </div>
           </div>
 

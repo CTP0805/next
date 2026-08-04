@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { HiChevronDown } from "react-icons/hi";
 import FavoriteCard from "@/components/FavoriteCard";
 import type { FavoriteItem } from "@/contexts/FavoriteContext";
 import { API_SERVER } from "@/config/api-path";
@@ -42,7 +43,7 @@ export default function RecentlyViewedPage() {
 
       // 新資料排前面
       if (sort === "newest") {
-        return timeB - timeA; 
+        return timeB - timeA;
       }
 
       // 舊資料排前面( JS 規定:相減為負數時，前項擺前面，即:小-->大、相減為正數時，後項擺前面，即:大-->小)
@@ -67,7 +68,7 @@ export default function RecentlyViewedPage() {
 
         const result = (await response.json()) as RecentlyViewedApiResponse;
 
-        if (!response.ok || !result.success  || !result.data) {
+        if (!response.ok || !result.success || !result.data) {
           throw new Error(result.message ?? "取得最近瀏覽資料失敗");
         }
 
@@ -85,8 +86,7 @@ export default function RecentlyViewedPage() {
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "取得最近瀏覽資料失敗";
-        
-        
+
         // setErrorMessage(message);
       } finally {
         //setIsLoading(false);
@@ -130,17 +130,24 @@ export default function RecentlyViewedPage() {
                 排序：
               </span>
 
-              <select
-                aria-label="最近瀏覽排序方式"
-                value={sort}
-                onChange={(event) =>
-                  setSort(event.target.value as RecentlyViewedSort)
-                }
-                className="select select-bordered h-10 min-h-10 rounded-md border border-[#E1E5E7] bg-white pr-10 pl-4 text-sm font-bold text-[#454B50] outline-none hover:border-[#68BBC3]"
-              >
-                <option value="newest">最新</option>
-                <option value="oldest">最舊</option>
-              </select>
+              <div className="relative w-[82px]">
+                <select
+                  aria-label="最近瀏覽排序方式"
+                  value={sort}
+                  onChange={(event) =>
+                    setSort(event.target.value as RecentlyViewedSort)
+                  }
+                  className="select select-bordered h-10 min-h-10 w-full !appearance-none rounded-md border border-[#E1E5E7] bg-white !bg-none pr-9 pl-4 text-sm font-bold text-[#454B50] outline-none hover:border-[#68BBC3]"
+                >
+                  <option value="newest">最新</option>
+                  <option value="oldest">最舊</option>
+                </select>
+
+                <HiChevronDown
+                  aria-hidden="true"
+                  className="pointer-events-none absolute top-1/2 right-2.5 size-5 -translate-y-1/2 text-[#687076]"
+                />
+              </div>
             </div>
           </div>
 
