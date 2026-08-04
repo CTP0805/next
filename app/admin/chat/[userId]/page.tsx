@@ -29,11 +29,10 @@ export default function AdminChatPage() {
   useEffect(() => {
     if (!auth.id) return;
 
-    socket.emit("admin-online", auth.id);
-
-    return () => {
-      socket.disconnect();
-    };
+    // 通知後端客服在線
+    socket.emit("admin-online", {
+      adminId: auth.id,
+    });
   }, [auth.id]);
   // 只滾動聊天區域，不影響整個頁面
   const scrollToBottom = () => {
@@ -65,7 +64,6 @@ export default function AdminChatPage() {
     if (!params.userId || !auth.id) return;
 
     // 通知 Server 客服在線
-    socket.emit("admin-online", auth.id);
 
     // 加入會員聊天室
     socket.emit("join-room", roomId);
